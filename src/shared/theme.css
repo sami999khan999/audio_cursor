@@ -1,0 +1,29 @@
+/* Shared Deep Forest Noir Design System */
+:root {
+    --bg-deep: #001012; /* Primary Dark Base */
+    --bg-surface: #001a1d;
+    --bg-glass: rgba(0, 16, 18, 0.95);
+    --bg-noir: #000809;
+    
+    --accent-primary: #00ff9d; /* More sophisticated Cyber Emerald */
+    --accent-primary-dim: rgba(0, 255, 157, 0.1);
+    --accent-secondary: #00cc7e;
+    --accent-success: #00ff9d;
+    
+    --text-primary: #e0f2f4;
+    --text-muted: #6b8a8e;
+    --text-dim: #2a3d40;
+    
+    --border-glass: 1px solid rgba(255, 255, 255, 0.05);
+    --border-accent: 1px solid rgba(0, 255, 157, 0.2);
+    
+    --radius-main: 16px;
+    --radius-inner: 10px;
+    --radius-pill: 40px;
+
+    --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-code: 'JetBrains Mono', monospace;
+
+    --shadow-neon: 0 0 15px rgba(0, 255, 157, 0.1);
+    --glow-text: 0 0 8px rgba(0, 255, 157, 0.3);
+}
