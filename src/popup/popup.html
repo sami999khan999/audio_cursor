@@ -8,109 +8,75 @@
     <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-    <div class="container cyber-frame">
-        <div class="rivet top-left"></div>
-        <div class="rivet top-right"></div>
-        <div class="rivet bottom-left"></div>
-        <div class="rivet bottom-right"></div>
-
-        <header>
-            <div class="header-module">
-                <div class="label">SYSTEM_IDENT</div>
-                <div class="logo module-content">
-                    <div class="robot-head">
-                        <svg viewBox="0 0 100 100" class="robot-svg">
-                            <rect x="25" y="25" width="50" height="50" rx="10" class="head-shell" />
-                            <rect x="35" y="40" width="10" height="10" rx="2" class="eye left" />
-                            <rect x="55" y="40" width="10" height="10" rx="2" class="eye right" />
-                            <path d="M40 65 Q50 70 60 65" class="mouth" />
-                            <rect x="20" y="45" width="5" height="10" rx="2" class="ear" />
-                            <rect x="75" y="45" width="5" height="10" rx="2" class="ear" />
-                            <rect x="45" y="15" width="10" height="10" rx="2" class="antenna" />
-                        </svg>
-                        <div class="eye-glow"></div>
-                    </div>
-                    <div class="logo-text">
-                        <h1>CORE_SYNC_v2</h1>
-                        <div class="scanline"></div>
-                    </div>
+    <div class="app" id="app">
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 9.5v5a1.5 1.5 0 0 0 1.5 1.5H8l4.3 3.44A1 1 0 0 0 14 18.66V5.34a1 1 0 0 0-1.7-.78L8 8H5.5A1.5 1.5 0 0 0 4 9.5z" fill="currentColor"/>
+                        <path class="wave wave-1" d="M17 9.5a3.5 3.5 0 0 1 0 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <path class="wave wave-2" d="M19 7a7 7 0 0 1 0 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>Audio Cursor</h1>
+                    <span id="status-label">On</span>
                 </div>
             </div>
-
-            <div class="header-module align-right">
-                <div class="label">PROTO_STATUS</div>
-                <div class="status-monitor module-content">
-                    <div class="monitor-screen">
-                        <span id="status-text">DISCONNECTED</span>
-                        <label class="switch">
-                            <input type="checkbox" id="enabled-toggle">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-            </div>
+            <label class="switch" title="Enable or disable Audio Cursor">
+                <input type="checkbox" id="enabled-toggle">
+                <span class="slider"></span>
+            </label>
         </header>
 
         <main>
-            <section class="industrial-panel">
-                <div class="panel-tag">VOICE_SYNTH_INPUT</div>
-                <div class="panel-content">
-                    <div class="panel-body">
-                        <div class="custom-select" id="custom-voice-select">
-                            <div class="select-trigger" id="voice-trigger">
-                                <span id="selected-voice-label">CORE_ENGINE_DEFAULT</span>
-                                <div class="select-arrow-container">
-                                    <span class="select-arrow"></span>
-                                </div>
-                            </div>
-                            <div class="select-options-container" id="voice-options">
-                                <!-- Options populated dynamically -->
-                            </div>
-                        </div>
-                        <!-- Hidden select for compatibility -->
-                        <select id="voice-select" style="display: none;">
-                            <option value="default">CORE_ENGINE_DEFAULT</option>
-                        </select>
+            <section class="card">
+                <div class="card-label">Voice</div>
+                <div class="custom-select" id="custom-voice-select">
+                    <button class="select-trigger" id="voice-trigger" type="button">
+                        <span id="selected-voice-label">System default</span>
+                        <svg class="select-arrow" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M6 9.5l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <div class="select-options" id="voice-options"></div>
+                </div>
+                <select id="voice-select" hidden>
+                    <option value="default">System default</option>
+                </select>
+            </section>
+
+            <section class="card">
+                <div class="control-row">
+                    <div class="control-head">
+                        <span class="card-label">Speed</span>
+                        <span id="rate-value" class="readout">1.0×</span>
                     </div>
+                    <input type="range" id="rate-range" min="0.5" max="2.0" step="0.1" value="1.0">
+                </div>
+                <div class="control-row">
+                    <div class="control-head">
+                        <span class="card-label">Pitch</span>
+                        <span id="pitch-value" class="readout">1.0</span>
+                    </div>
+                    <input type="range" id="pitch-range" min="0" max="2.0" step="0.1" value="1.0">
                 </div>
             </section>
 
-            <section class="industrial-panel">
-                <div class="panel-tag">CALIBRATION_MODULE</div>
-                <div class="panel-content">
-                    <div class="panel-body">
-                        <div class="control-row">
-                            <div class="label-col">
-                                <span class="label">FREQ_SPEED</span>
-                                <span id="rate-value" class="readout">1.0x</span>
-                            </div>
-                            <input type="range" id="rate-range" min="0.5" max="2.0" step="0.1" value="1.0">
-                        </div>
-
-                        <div class="control-row">
-                            <div class="label-col">
-                                <span class="label">PHASE_PITCH</span>
-                                <span id="pitch-value" class="readout">1.0</span>
-                            </div>
-                            <input type="range" id="pitch-range" min="0" max="2.0" step="0.1" value="1.0">
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="industrial-panel feedback-screen">
-                <div class="panel-tag">LIVE_DATA_FEEDBACK</div>
-                <div class="panel-content">
-                    <div class="screen-content" id="last-spoken">
-                        <p>SYSTEM_IDLE... AWAITING_INPUT</p>
-                    </div>
-                </div>
-            </section>
+            <button id="test-speech" class="preview-btn" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M8 5.5v13a1 1 0 0 0 1.52.86l10.2-6.5a1 1 0 0 0 0-1.72L9.52 4.64A1 1 0 0 0 8 5.5z" fill="currentColor"/>
+                </svg>
+                <span>Preview voice</span>
+            </button>
         </main>
 
         <footer>
-            <button id="test-speech">INITIATE_DIAGNOSTIC</button>
-            <div class="unit-stamp">SERIAL_NO: AC-X9000-B</div>
+            <div class="hint">
+                <span class="hint-text">Play / pause</span>
+                <kbd id="shortcut-key">Alt+P</kbd>
+            </div>
+            <button class="link-btn" id="shortcut-link" type="button">Change shortcut</button>
         </footer>
     </div>
     <script src="popup.js"></script>

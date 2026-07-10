@@ -1,73 +1,174 @@
-// Background script - handles TTS execution
-console.log('Audio Cursor Background V2.1 Initializing...');
-var currentSessionId = 0;
+// Audio Cursor — background service worker
+// Splits long text into sentence-aligned chunks and feeds the TTS queue
+// incrementally, so arbitrarily large selections play reliably.
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === 'PLAY_TEXT') {
-        const sessionId = ++currentSessionId;
-        const startOffset = message.offset || 0;
-        
-        // Stop any current speech before starting new
-        chrome.tts.stop();
-        
-        const textToSpeak = message.text.substring(startOffset);
-        
-        chrome.storage.sync.get(['voice', 'rate', 'pitch', 'enabled'], (data) => {
-            if (data.enabled === false) return;
+const MAX_CHUNK = 300;   // chars per utterance — long utterances get cut off by many voices
+const QUEUE_AHEAD = 12;  // how many chunks to keep enqueued ahead of playback
 
-            chrome.tts.speak(textToSpeak, {
-                voiceName: data.voice === 'default' ? undefined : data.voice,
-                rate: parseFloat(data.rate) || 1.0,
-                pitch: parseFloat(data.pitch) || 1.0,
-                onEvent: (event) => {
-                    const sendIfNew = (msg) => {
-                        if (sessionId === currentSessionId) {
-                            chrome.tabs.sendMessage(sender.tab.id, msg);
-                        }
-                    };
+let currentSessionId = 0;
+let session = null; // { id, tabId, chunks, nextToQueue, textLength }
 
-                    if (event.type === 'start') {
-                        sendIfNew({ 
-                            type: 'TTS_STATUS', 
-                            status: 'playing',
-                            totalLength: message.text.length,
-                            offset: startOffset,
-                            rate: parseFloat(data.rate) || 1.0
-                        });
+function chunkText(text, from) {
+    const chunks = [];
+    let pos = from;
+    const len = text.length;
+
+    while (pos < len) {
+        let end = Math.min(pos + MAX_CHUNK, len);
+
+        if (end < len) {
+            const slice = text.slice(pos, end);
+            // Prefer breaking at a sentence end, then a line break, then any space
+            let brk = Math.max(
+                slice.lastIndexOf('. '),
+                slice.lastIndexOf('! '),
+                slice.lastIndexOf('? '),
+                slice.lastIndexOf('.\n'),
+                slice.lastIndexOf('\n')
+            );
+            if (brk < MAX_CHUNK * 0.3) brk = slice.lastIndexOf(' ');
+            if (brk > 0) end = pos + brk + 1;
+        }
+
+        chunks.push({ text: text.slice(pos, end), start: pos, index: chunks.length });
+        pos = end;
+    }
+
+    return chunks;
+}
+
+function sendToTab(tabId, msg) {
+    chrome.tabs.sendMessage(tabId, msg, () => {
+        // Swallow "no receiving end" errors (tab navigated away, etc.)
+        void chrome.runtime.lastError;
+    });
+}
+
+function speakChunk(state, chunk, settings) {
+    const isLast = chunk.index === state.chunks.length - 1;
+
+    chrome.tts.speak(chunk.text, {
+        voiceName: settings.voice === 'default' ? undefined : settings.voice,
+        rate: settings.rate,
+        pitch: settings.pitch,
+        enqueue: true,
+        onEvent: (event) => {
+            if (state.id !== currentSessionId) return;
+
+            switch (event.type) {
+                case 'start':
+                    // Keep the queue topped up as playback advances
+                    queueUpTo(state, chunk.index + QUEUE_AHEAD, settings);
+                    sendToTab(state.tabId, {
+                        type: 'TTS_STATUS',
+                        status: 'playing',
+                        offset: chunk.start,
+                        totalLength: state.textLength,
+                        rate: settings.rate
+                    });
+                    break;
+                case 'word':
+                case 'sentence':
+                    sendToTab(state.tabId, {
+                        type: 'TTS_PROGRESS',
+                        charIndex: chunk.start + event.charIndex
+                    });
+                    break;
+                case 'end':
+                    if (isLast) {
+                        sendToTab(state.tabId, { type: 'TTS_STATUS', status: 'idle' });
                     }
-                    if (event.type === 'word') {
-                        const actualIndex = startOffset + event.charIndex;
-                        sendIfNew({ 
-                            type: 'TTS_PROGRESS', 
-                            charIndex: actualIndex,
-                            totalLength: message.text.length
-                        });
-                    }
-                    if (event.type === 'end' || event.type === 'interrupted' || event.type === 'error') {
-                        sendIfNew({ type: 'TTS_STATUS', status: 'idle' });
-                    }
-                }
-            });
-        });
-    } else if (message.type === 'PAUSE_TTS') {
-        chrome.tts.stop();
-        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-            if (tabs[0]) chrome.tabs.sendMessage(tabs[0].id, { type: 'TTS_STATUS', status: 'paused' });
-        });
-    } else if (message.type === 'RESUME_TTS') {
-        chrome.tts.resume();
-        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-            if (tabs[0]) chrome.tabs.sendMessage(tabs[0].id, { type: 'TTS_STATUS', status: 'playing' });
-        });
-    } else if (message.type === 'STOP_TTS') {
-        currentSessionId++; // Invalidate current session
-        chrome.tts.stop();
-        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-            if (tabs[0]) chrome.tabs.sendMessage(tabs[0].id, { type: 'TTS_STATUS', status: 'idle' });
-        });
+                    break;
+                case 'error':
+                    sendToTab(state.tabId, { type: 'TTS_STATUS', status: 'idle' });
+                    break;
+            }
+        }
+    });
+}
+
+function queueUpTo(state, upto, settings) {
+    const limit = Math.min(upto, state.chunks.length);
+    while (state.nextToQueue < limit) {
+        if (state.id !== currentSessionId) return;
+        speakChunk(state, state.chunks[state.nextToQueue], settings);
+        state.nextToQueue++;
+    }
+}
+
+function startPlayback(text, offset, tabId) {
+    const sessionId = ++currentSessionId;
+    // resume() first: speaking while paused can leave the engine stuck paused
+    chrome.tts.resume();
+    chrome.tts.stop();
+
+    chrome.storage.sync.get(['voice', 'rate', 'pitch', 'enabled'], (data) => {
+        if (data.enabled === false) return;
+        if (sessionId !== currentSessionId) return;
+
+        const settings = {
+            voice: data.voice || 'default',
+            rate: parseFloat(data.rate) || 1.0,
+            pitch: parseFloat(data.pitch) || 1.0
+        };
+
+        session = {
+            id: sessionId,
+            tabId,
+            chunks: chunkText(text, offset),
+            nextToQueue: 0,
+            textLength: text.length
+        };
+
+        if (session.chunks.length === 0) {
+            sendToTab(tabId, { type: 'TTS_STATUS', status: 'idle' });
+            return;
+        }
+
+        queueUpTo(session, QUEUE_AHEAD, settings);
+    });
+}
+
+chrome.runtime.onMessage.addListener((message, sender) => {
+    const tabId = sender.tab && sender.tab.id;
+
+    switch (message.type) {
+        case 'PLAY_TEXT':
+            if (tabId !== undefined) {
+                startPlayback(message.text, message.offset || 0, tabId);
+            }
+            break;
+        case 'PAUSE_TTS':
+            chrome.tts.pause();
+            if (tabId !== undefined) {
+                sendToTab(tabId, { type: 'TTS_STATUS', status: 'paused' });
+            }
+            break;
+        case 'RESUME_TTS':
+            chrome.tts.resume();
+            if (tabId !== undefined) {
+                sendToTab(tabId, { type: 'TTS_STATUS', status: 'playing' });
+            }
+            break;
+        case 'STOP_TTS':
+            currentSessionId++;
+            chrome.tts.resume();
+            chrome.tts.stop();
+            if (tabId !== undefined) {
+                sendToTab(tabId, { type: 'TTS_STATUS', status: 'idle' });
+            }
+            break;
+        case 'KEEPALIVE':
+            // No-op: the message itself keeps the service worker alive during playback
+            break;
     }
 });
 
-chrome.runtime.onInstalled.addListener(() => {
-    console.log('Audio Cursor initialized');
+chrome.commands.onCommand.addListener((command) => {
+    if (command !== 'toggle-playback') return;
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0] && tabs[0].id !== undefined) {
+            sendToTab(tabs[0].id, { type: 'TOGGLE_PLAYBACK' });
+        }
+    });
 });

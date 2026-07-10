@@ -1,382 +1,575 @@
-let playButton = null;
-let selectedText = '';
-let wordMap = []; // Array of { text, start, end }
-let isDragging = false;
-let startX, startY;
-let currentX = 0, currentY = 0;
+// Audio Cursor — content script
+// Floating player pinned to a screen edge. Appears on text selection,
+// shows a sliding word ticker + progress while playing, stops on deselect.
+(() => {
+    'use strict';
 
-let voiceStatus = 'idle'; // 'idle', 'playing', 'paused'
-let isScrubbing = false;
-let currentWordIndex = 0;
-let lastKnownCharIndex = 0;
-let playbackStartTime = 0;
-let playbackStartCharIndex = 0;
-let playbackRate = 1.0;
-let seekLock = false; 
+    const PLAYER_ID = 'audio-cursor-player';
+    const AVG_CHARS_PER_SEC = 16;  // initial pace guess until we measure the real one
+    const EDGE_MARGIN = 20;
+    const TICKER_WINDOW = 28;      // words rendered around the current one
+    const TICKER_ANCHOR = 0.35;    // current word sits at 35% from the left
 
-function tokenizeWords(text) {
-    const map = [];
-    const regex = /\S+/g;
-    let match;
-    while ((match = regex.exec(text)) !== null) {
-        map.push({
-            text: match[0],
-            start: match.index,
-            end: match.index + match[0].length
+    let player = null;
+    let toggleBtn, tickerEl, stripEl, pctEl, trackEl, fillEl, thumbEl;
+
+    let selectedText = '';
+    let wordMap = [];
+    let totalLength = 0;
+
+    let status = 'idle'; // idle | playing | paused
+    let currentCharIndex = 0;
+    let lastWordIndex = -1;
+    let playbackRate = 1;
+
+    // Progress anchors + measured speaking pace (for voices without word events)
+    let anchorChar = 0;
+    let anchorTime = 0;
+    let lastRealEvent = 0;
+    let observedCps = 0;   // EMA of measured chars/sec
+    let emaEventGap = 0;   // EMA of ms between real word events
+    let estimatorTimer = null;
+    let keepAliveTimer = null;
+
+    let scrubbing = false;
+    let awaitingSeek = false; // ignore stale progress between a seek and the restarted playback
+    let seekGuardTimer = null;
+    let dragging = false;
+    let interactingWithPlayer = false;
+    let hasCustomPosition = false;
+    let snapSide = 'right';
+    let snapTimer = null;
+    let hideTimer = null;
+    let selectionDebounce = null;
+
+    let raf = 0;
+    let pendingChar = -1;
+
+    // Ticker window state
+    let winStart = -1;
+    let winEnd = -1;
+    let curSpan = null;
+
+    // ── Text utilities ─────────────────────────────────────────────
+
+    function tokenize(text) {
+        const map = [];
+        const re = /\S+/g;
+        let m;
+        while ((m = re.exec(text)) !== null) {
+            map.push({ text: m[0], start: m.index, end: m.index + m[0].length });
+        }
+        return map;
+    }
+
+    // Word being spoken at charIndex. TTS word events can point at the
+    // whitespace before a word, so if charIndex is past a word's end we
+    // are already on the next one (fixes the display lagging one word behind).
+    function wordIndexAt(charIndex) {
+        let lo = 0, hi = wordMap.length - 1, ans = 0;
+        while (lo <= hi) {
+            const mid = (lo + hi) >> 1;
+            if (wordMap[mid].start <= charIndex) {
+                ans = mid;
+                lo = mid + 1;
+            } else {
+                hi = mid - 1;
+            }
+        }
+        if (wordMap[ans] && charIndex >= wordMap[ans].end && ans < wordMap.length - 1) {
+            ans++;
+        }
+        return ans;
+    }
+
+    function sendMessage(msg) {
+        try {
+            chrome.runtime.sendMessage(msg);
+        } catch (_) {
+            // Extension was reloaded; this content script instance is orphaned
+        }
+    }
+
+    // ── Player DOM ─────────────────────────────────────────────────
+
+    function ensurePlayer() {
+        if (player) return;
+
+        player = document.createElement('div');
+        player.id = PLAYER_ID;
+        player.innerHTML = `
+            <div class="ac-row">
+                <button class="ac-toggle" type="button" aria-label="Play">
+                    <svg class="ac-icon-play" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M8 5.5v13a1 1 0 0 0 1.52.86l10.2-6.5a1 1 0 0 0 0-1.72L9.52 4.64A1 1 0 0 0 8 5.5z" fill="currentColor"/>
+                    </svg>
+                    <svg class="ac-icon-pause" viewBox="0 0 24 24" aria-hidden="true">
+                        <rect x="6.5" y="5" width="4" height="14" rx="1.4" fill="currentColor"/>
+                        <rect x="13.5" y="5" width="4" height="14" rx="1.4" fill="currentColor"/>
+                    </svg>
+                </button>
+                <div class="ac-ticker"><div class="ac-strip"></div></div>
+                <div class="ac-pct">0%</div>
+            </div>
+            <div class="ac-trackwrap">
+                <div class="ac-track" role="slider" aria-label="Playback position">
+                    <div class="ac-rail"></div>
+                    <div class="ac-fill"></div>
+                    <div class="ac-thumb"></div>
+                </div>
+            </div>
+        `;
+        document.documentElement.appendChild(player);
+
+        toggleBtn = player.querySelector('.ac-toggle');
+        tickerEl = player.querySelector('.ac-ticker');
+        stripEl = player.querySelector('.ac-strip');
+        pctEl = player.querySelector('.ac-pct');
+        trackEl = player.querySelector('.ac-track');
+        fillEl = player.querySelector('.ac-fill');
+        thumbEl = player.querySelector('.ac-thumb');
+
+        // Keep the page selection alive when interacting with the player
+        player.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            interactingWithPlayer = true;
+
+            if (e.target.closest('.ac-track')) {
+                startScrub(e);
+            } else {
+                // Drag can start anywhere else, including the play button —
+                // a >4px move is a drag, otherwise the click toggles playback
+                startDrag(e);
+            }
+
+            window.addEventListener('mouseup', () => {
+                setTimeout(() => { interactingWithPlayer = false; }, 100);
+            }, { once: true });
+        });
+
+        toggleBtn.addEventListener('click', () => {
+            if (dragging || scrubbing) return;
+            togglePlayback();
         });
     }
-    return map;
-}
 
-function createPlayButton() {
-    if (playButton) return;
+    function showPlayer() {
+        ensurePlayer();
+        clearTimeout(hideTimer);
+        player.style.display = 'flex';
+        if (!hasCustomPosition) {
+            player.style.left = 'auto';
+            player.style.top = 'auto';
+            player.style.right = EDGE_MARGIN + 'px';
+            player.style.bottom = EDGE_MARGIN + 'px';
+            snapSide = 'right';
+        }
+        // Force reflow so the entrance transition runs
+        void player.offsetWidth;
+        player.classList.add('ac-visible');
+    }
 
-    playButton = document.createElement('div');
-    playButton.id = 'cyber-play-button';
-    playButton.innerHTML = `
-        <div class="button-content">
-            <svg viewBox="0 0 24 24" class="play-icon">
-                <path d="M8 5v14l11-7z" fill="currentColor"/>
-            </svg>
-            <svg viewBox="0 0 24 24" class="pause-icon">
-                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="currentColor"/>
-            </svg>
-        </div>
-        <div class="progress-tray">
-            <div class="subtitle-area">
-                <span class="current-word">---</span>
-            </div>
-            <div class="progress-bar-container">
-                <div class="progress-fill"></div>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(playButton);
+    function hidePlayer() {
+        if (!player) return;
+        player.classList.remove('ac-visible');
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(() => {
+            if (player) player.style.display = 'none';
+        }, 200);
+    }
 
-    playButton.addEventListener('mousedown', (e) => {
-        const scrubTrack = e.target.closest('.progress-bar-container');
-        if (scrubTrack) {
-            startScrubbing(e, scrubTrack);
+    // ── Playback control ───────────────────────────────────────────
+
+    function arm(text) {
+        if (status !== 'idle') {
+            sendMessage({ type: 'STOP_TTS' });
+        }
+        selectedText = text;
+        wordMap = tokenize(text);
+        totalLength = text.length;
+        currentCharIndex = 0;
+        lastWordIndex = -1;
+        observedCps = 0;
+        emaEventGap = 0;
+        winStart = -1;
+        winEnd = -1;
+        curSpan = null;
+
+        setStatus('idle');
+        showPlayer();
+        renderChar(0);
+    }
+
+    function disarm() {
+        if (status !== 'idle') {
+            sendMessage({ type: 'STOP_TTS' });
+        }
+        selectedText = '';
+        wordMap = [];
+        totalLength = 0;
+        currentCharIndex = 0;
+        setStatus('idle');
+        hidePlayer();
+    }
+
+    function playFrom(charIndex) {
+        if (!selectedText) return;
+        const clamped = Math.max(0, Math.min(charIndex, totalLength - 1));
+        sendMessage({ type: 'PLAY_TEXT', text: selectedText, offset: clamped });
+    }
+
+    function togglePlayback() {
+        if (status === 'playing') {
+            sendMessage({ type: 'PAUSE_TTS' });
+        } else if (status === 'paused') {
+            sendMessage({ type: 'RESUME_TTS' });
+        } else if (selectedText) {
+            playFrom(currentCharIndex);
+        }
+    }
+
+    function setStatus(next) {
+        status = next;
+        if (!player) return;
+
+        player.classList.toggle('ac-playing', next === 'playing');
+        player.classList.toggle('ac-paused', next === 'paused');
+        player.classList.toggle('ac-active', next !== 'idle');
+        toggleBtn.setAttribute('aria-label', next === 'playing' ? 'Pause' : 'Play');
+
+        if (next === 'playing') {
+            startEstimator();
+            startKeepAlive();
+        } else {
+            stopEstimator();
+            if (next === 'idle') {
+                stopKeepAlive();
+                currentCharIndex = 0;
+                lastWordIndex = -1;
+                renderChar(0);
+            }
+        }
+    }
+
+    // ── Word ticker ────────────────────────────────────────────────
+
+    function rebuildTickerWindow(center) {
+        winStart = Math.max(0, center - 10);
+        winEnd = Math.min(wordMap.length, winStart + TICKER_WINDOW);
+
+        const frag = document.createDocumentFragment();
+        for (let i = winStart; i < winEnd; i++) {
+            const span = document.createElement('span');
+            span.className = 'ac-w';
+            span.textContent = wordMap[i].text;
+            frag.appendChild(span);
+        }
+        stripEl.textContent = '';
+        stripEl.appendChild(frag);
+        curSpan = null;
+    }
+
+    function updateTicker(wi, instant) {
+        if (!wordMap.length) {
+            stripEl.textContent = '';
+            winStart = winEnd = -1;
+            curSpan = null;
             return;
         }
-        
-        if (!e.target.closest('.control-icon') && !e.target.closest('.progress-tray')) {
-            startDrag(e);
-        }
-    });
 
-    playButton.addEventListener('click', (e) => {
-        if (isDragging || isScrubbing) return;
-        
-        const mainBtn = e.target.closest('.button-content');
-        if (mainBtn || e.target === playButton) {
-            if (voiceStatus === 'playing') {
-                chrome.runtime.sendMessage({ type: 'PAUSE_TTS' });
-            } else if (voiceStatus === 'paused') {
-                chrome.runtime.sendMessage({ type: 'PLAY_TEXT', text: selectedText, offset: wordMap[currentWordIndex]?.start || 0 });
-            } else if (selectedText) {
-                chrome.runtime.sendMessage({ type: 'PLAY_TEXT', text: selectedText, offset: wordMap[currentWordIndex]?.start || 0 });
-            }
-        }
-    });
-}
-
-
-function startDrag(e) {
-    if (e.button !== 0) return;
-    
-    let dragFrame;
-    const initialX = e.clientX - currentX;
-    const initialY = e.clientY - currentY;
-    
-    const onMouseMove = (moveEvent) => {
-        if (dragFrame) cancelAnimationFrame(dragFrame);
-        
-        dragFrame = requestAnimationFrame(() => {
-            const newX = moveEvent.clientX - initialX;
-            const newY = moveEvent.clientY - initialY;
-            
-            const dx = newX - currentX;
-            const dy = newY - currentY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            
-            if (!isDragging && distance > 3) {
-                isDragging = true;
-                playButton.classList.add('is-dragging');
-            }
-            
-            if (isDragging) {
-                currentX = newX;
-                currentY = newY;
-                playButton.style.transform = `translate(${currentX}px, ${currentY}px)`;
-            }
-        });
-    };
-
-    const onMouseUp = () => {
-        if (dragFrame) cancelAnimationFrame(dragFrame);
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-        
-        playButton.classList.remove('is-dragging');
-        setTimeout(() => isDragging = false, 50);
-    };
-
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-}
-
-function startScrubbing(e, track) {
-    if (!playButton || !selectedText || wordMap.length === 0) return;
-    isScrubbing = true;
-    
-    // Disable animation for mouse follow
-    const fill = playButton.querySelector('.progress-fill');
-    if (fill) fill.classList.add('no-anim');
-
-    const updateScrub = (event) => {
-        const rect = track.getBoundingClientRect();
-        const x = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
-        const percent = (x / rect.width);
-        
-        // Manual override: Bypass updateProgressUI as it checks isScrubbing
-        if (fill) fill.style.width = `${percent * 100}%`;
-    };
-
-    const stopScrubbing = (event) => {
-        const rect = track.getBoundingClientRect();
-        const x = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
-        const percent = x / rect.width;
-        
-        seekToPercentage(percent);
-        
-        window.removeEventListener('mousemove', updateScrub);
-        window.removeEventListener('mouseup', stopScrubbing);
-        
-        // Hold lock briefly to allow background to catch up
-        setTimeout(() => {
-            isScrubbing = false;
-            if (fill) fill.classList.remove('no-anim');
-        }, 150);
-    };
-
-    updateScrub(e);
-    window.addEventListener('mousemove', updateScrub);
-    window.addEventListener('mouseup', stopScrubbing);
-}
-
-function seekToWord(index) {
-    if (wordMap.length === 0) return;
-    const newIndex = Math.max(0, Math.min(wordMap.length - 1, index));
-    currentWordIndex = newIndex;
-    
-    const targetCharIndex = wordMap[newIndex].start;
-    const percent = newIndex / (wordMap.length - 1 || 1);
-    
-    // Snappy visual update to the exact word boundary
-    const fill = playButton.querySelector('.progress-fill');
-    if (fill) {
-        fill.classList.add('no-anim');
-        fill.style.width = `${percent * 100}%`;
-        setTimeout(() => {
-            if (!isScrubbing) fill.classList.remove('no-anim');
-        }, 150);
-    }
-
-    // Debounced seek message
-    if (seekLock) return;
-    seekLock = true;
-    
-    chrome.runtime.sendMessage({ 
-        type: 'PLAY_TEXT', 
-        text: selectedText, 
-        offset: targetCharIndex 
-    });
-    
-    setTimeout(() => { seekLock = false; }, 100); // Faster response
-}
-
-function seekToPercentage(percent) {
-    if (wordMap.length === 0) return;
-    
-    // Find the word whose START is closest to this percentage
-    // This is more precise than Math.floor(percent * length)
-    const targetCharPos = percent * selectedText.length;
-    let closestWordIndex = 0;
-    let minDiff = Infinity;
-    
-    for (let i = 0; i < wordMap.length; i++) {
-        const diff = Math.abs(wordMap[i].start - targetCharPos);
-        if (diff < minDiff) {
-            minDiff = diff;
-            closestWordIndex = i;
-        }
-    }
-    
-    seekToWord(closestWordIndex);
-}
-
-function handleSelection() {
-    const selection = window.getSelection();
-    const text = selection.toString().trim();
-
-    if (text && text.length > 0) {
-        selectedText = text;
-        wordMap = tokenizeWords(text);
-        currentWordIndex = 0;
-        
-        createPlayButton();
-        
-        playButton.style.display = 'flex';
-        playButton.style.position = 'fixed'; // Ensure it's relative to viewport
-        playButton.style.right = '40px';
-        playButton.style.bottom = '40px';
-        playButton.style.left = 'auto';
-        playButton.style.top = 'auto';
-        
-        // Reset transform
-        playButton.style.transform = 'none';
-        currentX = 0;
-        currentY = 0;
-        
-        updateProgressUI(0);
-    } else {
-        if (playButton && !isDragging) {
-            playButton.style.display = 'none';
-        }
-    }
-}
-
-
-document.addEventListener('mouseup', (e) => {
-    // Small delay to allow selection to finalize
-    setTimeout(handleSelection, 10);
-});
-
-// Hide button when clicking elsewhere (if not clicking the button itself)
-document.addEventListener('mousedown', (e) => {
-    if (playButton && !playButton.contains(e.target)) {
-        const selection = window.getSelection();
-        if (!selection.toString().trim()) {
-            playButton.style.display = 'none';
-        }
-    }
-});
-
-let progressTimer = null;
-
-// Listen for status updates from background
-chrome.runtime.onMessage.addListener((message) => {
-    if (!playButton) return;
-
-    if (message.type === 'TTS_STATUS') {
-        voiceStatus = message.status;
-        
-        if (message.status === 'playing') {
-            playButton.classList.remove('is-paused', 'is-idle');
-            playButton.classList.add('is-playing');
-            
-            playbackStartTime = performance.now();
-            playbackRate = message.rate || 1.0;
-            if (message.offset !== undefined) {
-                lastKnownCharIndex = message.offset;
-                playbackStartCharIndex = message.offset;
-                syncWordIndexFromChar(message.offset);
+        // Re-window when the current word drifts near the rendered edge
+        if (winStart < 0 || wi < winStart || wi >= winEnd - 6) {
+            if (winEnd >= wordMap.length && wi >= winStart && wi < winEnd) {
+                // tail of the text: window can't advance further, keep it
             } else {
-                playbackStartCharIndex = lastKnownCharIndex;
+                rebuildTickerWindow(wi);
+                instant = true;
             }
-            startProgressFallback();
-        } else if (message.status === 'paused') {
-            playButton.classList.remove('is-playing', 'is-idle');
-            playButton.classList.add('is-paused');
-            stopProgressFallback();
-        } else if (message.status === 'idle') {
-            playButton.classList.remove('is-playing', 'is-paused');
-            playButton.classList.add('is-idle');
-            stopProgressFallback();
-            currentWordIndex = 0;
-            updateProgressUI(0);
         }
-    } else if (message.type === 'TTS_PROGRESS') {
-        lastKnownCharIndex = message.charIndex;
-        syncWordIndexFromChar(message.charIndex);
-    }
-});
 
-function syncWordIndexFromChar(charIndex) {
-    if (wordMap.length === 0) return;
-    
-    // Find the word that contains this charIndex
-    let foundIndex = 0;
-    for (let i = 0; i < wordMap.length; i++) {
-        if (charIndex >= wordMap[i].start && charIndex < wordMap[i].end) {
-            foundIndex = i;
-            break;
+        const span = stripEl.children[wi - winStart];
+        if (!span) return;
+
+        if (curSpan !== span) {
+            if (curSpan) curSpan.classList.remove('ac-cur');
+            span.classList.add('ac-cur');
+            curSpan = span;
         }
-        if (charIndex >= wordMap[i].end) {
-            foundIndex = i;
+
+        const viewW = tickerEl.clientWidth;
+        if (!viewW) return;
+        let tx = viewW * TICKER_ANCHOR - (span.offsetLeft + span.offsetWidth / 2);
+        tx = Math.min(0, tx);
+
+        if (instant || scrubbing) {
+            stripEl.classList.add('ac-noanim');
+            stripEl.style.transform = `translateX(${tx}px)`;
+            void stripEl.offsetWidth;
+            stripEl.classList.remove('ac-noanim');
+        } else {
+            stripEl.style.transform = `translateX(${tx}px)`;
         }
     }
-    
-    currentWordIndex = foundIndex;
-    const ratio = currentWordIndex / (wordMap.length - 1 || 1);
-    updateProgressUI(ratio);
-}
 
-function updateProgressUI(ratio) {
-    if (isScrubbing || !playButton) return;
-    const percent = Math.max(0, Math.min(ratio * 100, 100));
-    const fill = playButton.querySelector('.progress-fill');
-    const subtitle = playButton.querySelector('.current-word');
+    // ── Rendering (rAF-batched for large text) ─────────────────────
 
-    // Update Subtitle based on currentWordIndex
-    if (subtitle && wordMap[currentWordIndex]) {
-        const text = wordMap[currentWordIndex].text;
-        if (subtitle.textContent !== text) {
-            subtitle.classList.remove('active');
+    function renderChar(charIndex) {
+        pendingChar = Math.max(0, Math.min(charIndex, totalLength));
+        currentCharIndex = pendingChar;
+        if (!raf) raf = requestAnimationFrame(applyRender);
+    }
+
+    function applyRender() {
+        raf = 0;
+        if (!player) return;
+
+        const pct = totalLength ? (pendingChar / totalLength) * 100 : 0;
+        fillEl.style.width = pct + '%';
+        thumbEl.style.left = pct + '%';
+        pctEl.textContent = Math.round(pct) + '%';
+
+        if (wordMap.length) {
+            const wi = wordIndexAt(pendingChar);
+            if (wi !== lastWordIndex) {
+                const jumped = lastWordIndex < 0 || Math.abs(wi - lastWordIndex) > 3;
+                lastWordIndex = wi;
+                updateTicker(wi, jumped);
+            }
+        }
+    }
+
+    // ── Progress estimator (fallback for voices without word events) ──
+
+    function startEstimator() {
+        stopEstimator();
+        anchorChar = currentCharIndex;
+        anchorTime = performance.now();
+        estimatorTimer = setInterval(() => {
+            if (status !== 'playing' || scrubbing || !totalLength) return;
+            const now = performance.now();
+            // Only estimate when real events have gone quiet
+            const quietThreshold = Math.max(1200, emaEventGap * 4);
+            if (now - lastRealEvent < quietThreshold) return;
+            const cps = observedCps || AVG_CHARS_PER_SEC * playbackRate;
+            const est = anchorChar + ((now - anchorTime) / 1000) * cps;
+            renderChar(Math.min(est, totalLength - 1));
+        }, 120);
+    }
+
+    function stopEstimator() {
+        if (estimatorTimer) {
+            clearInterval(estimatorTimer);
+            estimatorTimer = null;
+        }
+    }
+
+    function onRealProgress(charIndex) {
+        const now = performance.now();
+        // Measure the actual speaking pace so the estimator stays honest
+        if (lastRealEvent && charIndex > anchorChar) {
+            const dt = now - lastRealEvent;
+            if (dt > 30 && dt < 3000) {
+                const cps = (charIndex - anchorChar) / (dt / 1000);
+                observedCps = observedCps ? observedCps * 0.8 + cps * 0.2 : cps;
+                emaEventGap = emaEventGap ? emaEventGap * 0.8 + dt * 0.2 : dt;
+            }
+        }
+        lastRealEvent = now;
+        anchorChar = charIndex;
+        anchorTime = now;
+    }
+
+    function startKeepAlive() {
+        stopKeepAlive();
+        keepAliveTimer = setInterval(() => sendMessage({ type: 'KEEPALIVE' }), 15000);
+    }
+
+    function stopKeepAlive() {
+        if (keepAliveTimer) {
+            clearInterval(keepAliveTimer);
+            keepAliveTimer = null;
+        }
+    }
+
+    // ── Scrubbing ──────────────────────────────────────────────────
+
+    function charFromEvent(e) {
+        const rect = trackEl.getBoundingClientRect();
+        const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+        return (x / rect.width) * totalLength;
+    }
+
+    function startScrub(e) {
+        if (!selectedText || !wordMap.length) return;
+        scrubbing = true;
+        player.classList.add('ac-scrubbing');
+        renderChar(charFromEvent(e));
+
+        const onMove = (ev) => renderChar(charFromEvent(ev));
+        const onUp = (ev) => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+
+            const wi = wordIndexAt(charFromEvent(ev));
+            const target = wordMap[wi] ? wordMap[wi].start : 0;
+            renderChar(target);
+
+            // Re-anchor the estimator at the seek target so it can't pull
+            // the bar back to the pre-seek position while TTS restarts.
+            anchorChar = target;
+            anchorTime = performance.now();
+            lastRealEvent = anchorTime;
+
+            if (status === 'playing' || status === 'paused') {
+                awaitingSeek = true;
+                clearTimeout(seekGuardTimer);
+                seekGuardTimer = setTimeout(() => { awaitingSeek = false; }, 1200);
+                playFrom(target);
+            } else {
+                currentCharIndex = target;
+            }
+
             setTimeout(() => {
-                subtitle.textContent = text;
-                subtitle.classList.add('active');
-            }, 50);
+                scrubbing = false;
+                if (player) player.classList.remove('ac-scrubbing');
+            }, 120);
+        };
+
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+    }
+
+    // ── Dragging + edge snap ───────────────────────────────────────
+
+    function startDrag(e) {
+        if (e.button !== 0) return;
+        const rect = player.getBoundingClientRect();
+        const offsetX = e.clientX - rect.left;
+        const offsetY = e.clientY - rect.top;
+        let moved = false;
+        let frame = 0;
+
+        const onMove = (ev) => {
+            if (!moved && Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) < 4) return;
+            if (!moved) {
+                moved = true;
+                dragging = true;
+                hasCustomPosition = true;
+                clearTimeout(snapTimer);
+                player.classList.remove('ac-snap');
+                player.classList.add('ac-dragging');
+            }
+
+            if (frame) cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(() => {
+                const x = ev.clientX - offsetX;
+                const y = ev.clientY - offsetY;
+                player.style.left = x + 'px';
+                player.style.top = y + 'px';
+                player.style.right = 'auto';
+                player.style.bottom = 'auto';
+            });
+        };
+
+        const onUp = () => {
+            if (frame) cancelAnimationFrame(frame);
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+            player.classList.remove('ac-dragging');
+            if (moved) snapToEdge();
+            setTimeout(() => { dragging = false; }, 50);
+        };
+
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+    }
+
+    function snapToEdge() {
+        const rect = player.getBoundingClientRect();
+        snapSide = rect.left + rect.width / 2 < window.innerWidth / 2 ? 'left' : 'right';
+
+        const targetLeft = snapSide === 'left'
+            ? EDGE_MARGIN
+            : window.innerWidth - rect.width - EDGE_MARGIN;
+        const targetTop = Math.max(
+            EDGE_MARGIN,
+            Math.min(rect.top, window.innerHeight - rect.height - EDGE_MARGIN)
+        );
+
+        player.classList.add('ac-snap'); // springy left/top transition
+        player.style.left = targetLeft + 'px';
+        player.style.top = targetTop + 'px';
+
+        clearTimeout(snapTimer);
+        snapTimer = setTimeout(() => {
+            if (!player) return;
+            player.classList.remove('ac-snap');
+            if (snapSide === 'right') {
+                // Anchor to the right edge so the player grows leftward when it expands
+                player.style.right = EDGE_MARGIN + 'px';
+                player.style.left = 'auto';
+            }
+        }, 520);
+    }
+
+    // ── Selection tracking ─────────────────────────────────────────
+
+    document.addEventListener('selectionchange', () => {
+        clearTimeout(selectionDebounce);
+        selectionDebounce = setTimeout(onSelectionSettled, 180);
+    });
+
+    function onSelectionSettled() {
+        if (interactingWithPlayer || scrubbing || dragging) return;
+
+        const sel = window.getSelection();
+        const text = sel ? sel.toString().trim() : '';
+
+        if (text) {
+            if (text !== selectedText) arm(text);
+        } else if (selectedText) {
+            disarm(); // deselected → stop playback and hide
         }
     }
 
-    if (fill) {
-        fill.style.width = `${percent}%`;
-        
-        let thumb = fill.querySelector('.progress-thumb');
-        if (!thumb) {
-            thumb = document.createElement('div');
-            thumb.className = 'progress-thumb';
-            fill.appendChild(thumb);
+    // ── Messages from background ───────────────────────────────────
+
+    chrome.runtime.onMessage.addListener((message) => {
+        if (message.type === 'TOGGLE_PLAYBACK') {
+            togglePlayback();
+            return;
         }
-    }
-}
+        if (!player) return;
 
-function startProgressFallback() {
-    stopProgressFallback();
-    
-    // Calibrated base: ~15 chars per second at rate 1.0
-    const BASE_CHARS_PER_MS = 0.015; 
-    const currentCharsPerMs = BASE_CHARS_PER_MS * playbackRate;
-    
-    progressTimer = setInterval(() => {
-        if (voiceStatus !== 'playing' || wordMap.length === 0) return;
-        if (isScrubbing) return;
+        if (message.type === 'TTS_STATUS') {
+            if (message.rate) playbackRate = message.rate;
 
-        const elapased = performance.now() - playbackStartTime;
-        const estimatedAdvance = elapased * currentCharsPerMs;
-        const estimatedCharIndex = playbackStartCharIndex + estimatedAdvance;
-        
-        // Sync word index and update UI (including subtitle)
-        syncWordIndexFromChar(estimatedCharIndex);
-    }, 150); 
-}
-
-function stopProgressFallback() {
-    if (progressTimer) {
-        clearInterval(progressTimer);
-        progressTimer = null;
-    }
-}
+            if (message.status === 'playing') {
+                if (typeof message.offset === 'number') {
+                    // Chunk boundary or seek restart: hard re-anchor
+                    awaitingSeek = false;
+                    clearTimeout(seekGuardTimer);
+                    lastRealEvent = performance.now();
+                    anchorChar = message.offset;
+                    anchorTime = lastRealEvent;
+                    if (!scrubbing && (message.offset > currentCharIndex || status !== 'playing')) {
+                        renderChar(message.offset);
+                    }
+                } else {
+                    anchorChar = currentCharIndex;
+                    anchorTime = performance.now();
+                }
+                setStatus('playing');
+            } else if (message.status === 'paused') {
+                setStatus('paused');
+            } else {
+                setStatus('idle');
+            }
+        } else if (message.type === 'TTS_PROGRESS') {
+            if (scrubbing || awaitingSeek) return;
+            onRealProgress(message.charIndex);
+            renderChar(message.charIndex);
+        }
+    });
+})();
