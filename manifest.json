@@ -13,14 +13,6 @@
   "background": {
     "service_worker": "dist/background.js"
   },
-  "commands": {
-    "toggle-playback": {
-      "suggested_key": {
-        "default": "Alt+P"
-      },
-      "description": "Play or pause the selected text"
-    }
-  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],

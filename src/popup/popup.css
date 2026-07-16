@@ -402,6 +402,43 @@ kbd {
     padding: 2px 7px;
 }
 
+.keybind-display {
+    min-width: 54px;
+    height: 22px;
+    background: var(--ac-surface-2);
+    border: 1px solid var(--ac-border-strong);
+    border-radius: 6px;
+    color: var(--ac-text);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.keybind-display:hover {
+    border-color: var(--ac-accent);
+    color: var(--ac-accent-strong);
+}
+
+.keybind-display.recording {
+    border-color: var(--ac-accent);
+    color: var(--ac-accent-strong);
+    background: var(--ac-accent-soft);
+    animation: keybind-record-blink 0.8s infinite alternate;
+}
+
+@keyframes keybind-record-blink {
+    from { opacity: 1; }
+    to { opacity: 0.55; }
+}
+
 .link-btn {
     background: none;
     border: none;

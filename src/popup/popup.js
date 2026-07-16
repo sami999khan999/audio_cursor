@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const pitchValue = document.getElementById('pitch-value');
     const testButton = document.getElementById('test-speech');
     const testLabel = testButton.querySelector('span');
-    const shortcutKey = document.getElementById('shortcut-key');
-    const shortcutLink = document.getElementById('shortcut-link');
+    const keybindDisplay = document.getElementById('keybind-display');
+    const keybindResetBtn = document.getElementById('keybind-reset');
 
     const customVoiceSelect = document.getElementById('custom-voice-select');
     const voiceTrigger = document.getElementById('voice-trigger');
@@ -191,16 +191,100 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // ── Shortcut ───────────────────────────────────────
+    // ── Keyboard shortcut (recordable, in-extension) ───
 
-    if (chrome.commands && chrome.commands.getAll) {
-        chrome.commands.getAll((commands) => {
-            const cmd = commands.find((c) => c.name === 'toggle-playback');
-            shortcutKey.textContent = cmd && cmd.shortcut ? cmd.shortcut : 'Not set';
-        });
+    const DEFAULT_KEYBINDS = { togglePlayback: 'Alt+P' };
+    let keybindSettings = { ...DEFAULT_KEYBINDS };
+    let isRecordingKeybind = false;
+
+    function renderKeybind() {
+        keybindDisplay.textContent = keybindSettings.togglePlayback || 'None';
     }
 
-    shortcutLink.addEventListener('click', () => {
-        chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
+    chrome.storage.sync.get(['keybinds'], (data) => {
+        if (data.keybinds) keybindSettings = { ...DEFAULT_KEYBINDS, ...data.keybinds };
+        renderKeybind();
+    });
+
+    function getReadableKeyName(e) {
+        const modifiers = {
+            ShiftLeft: 'Shift', ShiftRight: 'Shift',
+            ControlLeft: 'Ctrl', ControlRight: 'Ctrl',
+            AltLeft: 'Alt', AltRight: 'Alt',
+            MetaLeft: 'Meta', MetaRight: 'Meta'
+        };
+        if (modifiers[e.code]) return modifiers[e.code];
+        if (e.key === ' ') return 'Space';
+        if (e.key.length === 1) return e.key.toUpperCase();
+        return e.key;
+    }
+
+    keybindDisplay.addEventListener('click', () => {
+        if (isRecordingKeybind) return;
+        isRecordingKeybind = true;
+
+        const originalText = keybindDisplay.textContent;
+        keybindDisplay.classList.add('recording');
+        keybindDisplay.textContent = 'Press keys...';
+
+        let activeKeys = [];
+        const pressedCodes = new Set();
+
+        const handleKeyDown = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (e.key === 'Escape') {
+                cancelRecording();
+                return;
+            }
+
+            const keyName = getReadableKeyName(e);
+            if (!pressedCodes.has(e.code)) {
+                pressedCodes.add(e.code);
+                if (!activeKeys.includes(keyName)) activeKeys.push(keyName);
+                keybindDisplay.textContent = activeKeys.join('+');
+            }
+        };
+
+        const handleKeyUp = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            pressedCodes.delete(e.code);
+            if (pressedCodes.size === 0 && activeKeys.length > 0) {
+                finalizeRecording();
+            }
+        };
+
+        const finalizeRecording = () => {
+            const combination = activeKeys.join('+');
+            keybindSettings.togglePlayback = combination;
+            keybindDisplay.textContent = combination;
+            chrome.storage.sync.set({ keybinds: keybindSettings });
+            cleanup();
+        };
+
+        const cancelRecording = () => {
+            keybindDisplay.textContent = originalText;
+            cleanup();
+        };
+
+        const cleanup = () => {
+            isRecordingKeybind = false;
+            keybindDisplay.classList.remove('recording');
+            window.removeEventListener('keydown', handleKeyDown, true);
+            window.removeEventListener('keyup', handleKeyUp, true);
+            window.removeEventListener('blur', cancelRecording);
+        };
+
+        window.addEventListener('keydown', handleKeyDown, true);
+        window.addEventListener('keyup', handleKeyUp, true);
+        window.addEventListener('blur', cancelRecording);
+    });
+
+    keybindResetBtn.addEventListener('click', () => {
+        keybindSettings = { ...DEFAULT_KEYBINDS };
+        chrome.storage.sync.set({ keybinds: keybindSettings });
+        renderKeybind();
     });
 });
