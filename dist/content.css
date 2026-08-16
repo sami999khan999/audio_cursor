@@ -1,4 +1,4 @@
-/* Unified Styles Bundle — Built at: 2026-08-16T11:19:53.505Z */
+/* Unified Styles Bundle — Built at: 2026-08-16T16:27:10.874Z */
 
 /* ─── shared/theme.css ─── */
 /* Audio Cursor — shared design tokens */
@@ -404,23 +404,47 @@ html.ac-caret-mode #audio-cursor-player .ac-track {
     cursor: pointer !important;
 }
 
-/* designMode outlines the editing host on some pages */
-html.ac-caret-mode body:focus,
-html.ac-caret-mode [contenteditable]:focus {
+/* designMode turns the page into an editing host, and the browser paints a
+   focus ring around it — and around every block that takes focus while the
+   caret moves. Reading text should never show one. */
+html.ac-caret-mode,
+html.ac-caret-mode body,
+html.ac-caret-mode *,
+html.ac-caret-mode *:focus,
+html.ac-caret-mode *:focus-visible,
+html.ac-caret-mode *:focus-within {
     outline: none !important;
+    outline-width: 0 !important;
 }
+
+/* Sites draw their own ring on whatever holds focus — a coloured border or a
+   box-shadow, neither of which `outline: none` reaches. The caret puts focus
+   inside ordinary prose, so those rings light up all over a page that is only
+   being read. Strip them, but leave our own UI alone. */
+html.ac-caret-mode
+    *:is(:focus, :focus-visible, :focus-within):not(
+        #audio-cursor-player,
+        #audio-cursor-player *,
+        #audio-cursor-kbhint,
+        #audio-cursor-kbhint *
+    ) {
+    box-shadow: none !important;
+    border-color: transparent !important;
+}
+
+/* ── Caret-mode hint bar ─────────────────────────────── */
 
 #audio-cursor-kbhint {
     position: fixed !important;
-    top: 20px;
+    top: 18px;
     left: 50%;
     z-index: 2147483647;
 
     display: none;
     align-items: center;
-    gap: 10px;
-    max-width: min(92vw, 620px);
-    padding: 9px 15px;
+    gap: 9px;
+    max-width: min(92vw, 520px);
+    padding: 6px 13px;
 
     background: rgba(21, 23, 31, 0.92);
     backdrop-filter: blur(24px) saturate(1.6);
@@ -439,7 +463,7 @@ html.ac-caret-mode [contenteditable]:focus {
         Roboto,
         sans-serif
     );
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.3;
     letter-spacing: normal;
     color: #c9cede;
@@ -463,32 +487,56 @@ html.ac-caret-mode [contenteditable]:focus {
     transform: translate(-50%, 0);
 }
 
+/* Accent dot instead of a coloured label — one spot of colour is enough */
+#audio-cursor-kbhint .ac-kb-mark {
+    flex: 0 0 auto;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #7c8cf8;
+}
+
 #audio-cursor-kbhint .ac-kb-title {
-    font-size: 12px;
-    font-weight: 650;
-    color: #a5b1ff;
+    flex: 0 0 auto;
+    font-weight: 600;
+    color: #edeff4;
+}
+
+#audio-cursor-kbhint .ac-kb-sep {
+    flex: 0 0 auto;
+    width: 1px;
+    height: 11px;
+    background: rgba(255, 255, 255, 0.12);
 }
 
 #audio-cursor-kbhint .ac-kb-keys {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 11px;
+    min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
+}
+
+#audio-cursor-kbhint .ac-kb-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: rgba(201, 206, 222, 0.55);
 }
 
 #audio-cursor-kbhint b {
+    font-size: 10px;
     font-weight: 600;
-    color: #edeff4;
-    background: rgba(255, 255, 255, 0.09);
-    border: 1px solid rgba(255, 255, 255, 0.13);
-    border-radius: 5px;
+    line-height: 1.5;
+    color: #dfe3ee;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 4px;
     padding: 1px 5px;
 }
 
-#audio-cursor-kbhint i {
-    font-style: normal;
-    color: rgba(201, 206, 222, 0.4);
+/* Short one-off messages: just the dot and the text */
+#audio-cursor-kbhint.ac-kb-compact {
+    padding: 6px 14px;
 }
 
 

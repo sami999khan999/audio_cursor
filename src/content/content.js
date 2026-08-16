@@ -1041,7 +1041,6 @@
                <span class="ac-kb-keys">
                    <span class="ac-kb-item"><b>↑↓←→</b>move</span>
                    <span class="ac-kb-item"><b>Shift</b>select</span>
-                   <span class="ac-kb-item"><b>Ctrl</b><b>Shift</b>by word</span>
                    <span class="ac-kb-item"><b>${offKey}</b>off</span>
                </span>`;
         kbHintEl.classList.toggle('ac-kb-compact', !!message);
