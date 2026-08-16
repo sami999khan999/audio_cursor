@@ -50,18 +50,27 @@
     let winEnd = -1;
     let curSpan = null;
 
-    // ── Keybind settings ────────────────────────────────────────────
+    // ── Settings: enabled + keybinds ────────────────────────────────
 
-    const DEFAULT_KEYBINDS = { togglePlayback: 'Alt+P' };
+    const DEFAULT_KEYBINDS = { togglePlayback: 'Alt+P', keyboardSelect: 'Alt+S' };
     let keybindSettings = { ...DEFAULT_KEYBINDS };
+    let extensionEnabled = true;
 
-    chrome.storage.sync.get(['keybinds'], (data) => {
+    chrome.storage.sync.get(['enabled', 'keybinds'], (data) => {
+        extensionEnabled = data.enabled !== false;
         if (data.keybinds) keybindSettings = { ...DEFAULT_KEYBINDS, ...data.keybinds };
+        if (!extensionEnabled) disableCaretFeature();
     });
 
     chrome.storage.onChanged.addListener((changes, area) => {
-        if (area === 'sync' && changes.keybinds) {
+        if (area !== 'sync') return;
+
+        if (changes.keybinds) {
             keybindSettings = { ...DEFAULT_KEYBINDS, ...(changes.keybinds.newValue || {}) };
+        }
+        if (changes.enabled) {
+            extensionEnabled = changes.enabled.newValue !== false;
+            if (!extensionEnabled) disableCaretFeature();
         }
     });
 
@@ -79,7 +88,11 @@
     function matchesKeybind(e, bindString) {
         if (!bindString) return false;
         const bind = parseKeybind(bindString);
-        if (e.key.toLowerCase() !== bind.key) return false;
+        // Alt combos report the composed character on some layouts, so fall
+        // back to the physical key (KeyS → 's').
+        const key = e.key.toLowerCase();
+        const code = (e.code || '').replace(/^(Key|Digit)/, '').toLowerCase();
+        if (key !== bind.key && code !== bind.key) return false;
         if (e.altKey !== bind.alt) return false;
         if (e.shiftKey !== bind.shift) return false;
         if (e.ctrlKey !== bind.ctrl) return false;
@@ -88,15 +101,41 @@
     }
 
     window.addEventListener('keydown', (e) => {
-        // Ignore while typing in an input/textarea
-        const tag = e.target.tagName ? e.target.tagName.toLowerCase() : '';
-        if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
+        // Ignore while typing in a real field. In caret mode designMode makes
+        // everything report as editable, so check the page's own fields instead.
+        const tag = e.target && e.target.tagName ? e.target.tagName.toLowerCase() : '';
+        const inField = tag === 'input' || tag === 'textarea' ||
+            (caretMode ? isRealEditable(e.target) : !!(e.target && e.target.isContentEditable));
+        if (inField) return;
+
+        if (matchesKeybind(e, keybindSettings.keyboardSelect)) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            toggleCaretFeature();
+            return;
+        }
 
         if (matchesKeybind(e, keybindSettings.togglePlayback)) {
             e.preventDefault();
             e.stopImmediatePropagation();
             togglePlayback();
+            return;
         }
+
+        if (!caretMode) return;
+
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            disableCaretFeature();
+            return;
+        }
+
+        // Caret movement, selection and copy are Chrome's own editing
+        // behaviour — never preventDefault them. But stop the event here so
+        // page shortcut handlers can't hijack (or cancel) the key first,
+        // which is what breaks Ctrl+Shift+arrow on many sites.
+        if (isEditorKey(e)) e.stopImmediatePropagation();
     }, true);
 
     // ── Text utilities ─────────────────────────────────────────────
@@ -146,6 +185,9 @@
 
         player = document.createElement('div');
         player.id = PLAYER_ID;
+        // Keeps the player inert while caret mode has designMode on
+        player.setAttribute('contenteditable', 'false');
+        player.spellcheck = false;
         player.innerHTML = `
             <div class="ac-row">
                 <button class="ac-toggle" type="button" aria-label="Play">
@@ -562,6 +604,466 @@
         }, 520);
     }
 
+    // ── Caret browsing (text-editor style) ─────────────────────────
+    // The remappable key (Alt+S by default) switches the feature on: a real
+    // blinking caret lands in the first paragraph in view, pressing on any
+    // text moves it, and the page behaves like a read-only text editor —
+    // arrows move, Shift/Ctrl+Shift select, Ctrl+C copies. Pressing the key
+    // again switches it off.
+    //
+    // Two pieces of state: caretEnabled is the feature switch, caretMode is
+    // whether designMode is on right now. Clicking a link or a control drops
+    // designMode for that click (an editing host swallows them) while the
+    // feature stays on, so the next press on text brings the caret straight
+    // back.
+
+    const KB_HINT_ID = 'audio-cursor-kbhint';
+    const BLOCK_SELECTOR =
+        'p,li,dd,dt,blockquote,pre,h1,h2,h3,h4,h5,h6,figcaption,td,th,summary,' +
+        'div,section,article,aside,main';
+    const SEMANTIC_BLOCKS = new Set([
+        'P', 'LI', 'DD', 'DT', 'BLOCKQUOTE', 'PRE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+        'FIGCAPTION', 'TD', 'TH', 'SUMMARY'
+    ]);
+    const SKIP_TEXT_PARENTS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA']);
+    const MIN_FALLBACK_CHARS = 40;  // generic containers need real prose to qualify
+    const EDITABLE_SELECTOR = 'input,textarea,select,[contenteditable=""],[contenteditable="true"]';
+
+    // Deliberately narrow: [tabindex] and [onclick] sit on article wrappers all
+    // over the web, and matching those would hand every click back to the page
+    // and the caret would never appear.
+    const INTERACTIVE_SELECTOR = [
+        'a[href]', 'button', 'input', 'select', 'textarea', 'label', 'summary',
+        'audio', 'video', 'iframe', 'embed', 'object',
+        '[contenteditable=""]', '[contenteditable="true"]',
+        '[role="button"]', '[role="link"]', '[role="tab"]', '[role="checkbox"]',
+        '[role="radio"]', '[role="switch"]', '[role="menuitem"]', '[role="combobox"]',
+        '[role="textbox"]', '[role="slider"]'
+    ].join(',');
+
+    let caretEnabled = false;   // the Alt+S switch
+    let caretMode = false;      // designMode currently on
+    let prevDesignMode = 'off';
+    let prevSpellcheck = null;
+    let kbHintEl = null;
+    let kbHintTimer = null;
+
+    // Turn on with localStorage.setItem('audioCursorDebug', '1') and reload —
+    // logs why a click did or didn't produce a caret.
+    let debugMode = false;
+    try {
+        debugMode = localStorage.getItem('audioCursorDebug') === '1';
+    } catch (_) {
+        // storage blocked on this origin
+    }
+
+    function debugLog(...args) {
+        if (debugMode) console.log('[Audio Cursor]', ...args);
+    }
+
+    function escapeHtml(text) {
+        return String(text).replace(/[&<>"]/g, (c) => (
+            { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]
+        ));
+    }
+
+    // ── Paragraph discovery (for the caret's landing spot) ──
+
+    function isVisibleBlock(el) {
+        const rect = el.getBoundingClientRect();
+        if (rect.width < 2 || rect.height < 2) return false;
+        const st = getComputedStyle(el);
+        if (st.visibility === 'hidden' || st.display === 'none') return false;
+        if (parseFloat(st.opacity) === 0) return false;
+        return true;
+    }
+
+    function collectBlocks() {
+        const root = document.body;
+        if (!root) return [];
+
+        const found = [];
+        root.querySelectorAll(BLOCK_SELECTOR).forEach((el) => {
+            if (player && player.contains(el)) return;
+            if (el.getAttribute('aria-hidden') === 'true') return;
+
+            const text = (el.textContent || '').trim();
+            if (!text) return;
+            if (SEMANTIC_BLOCKS.has(el.tagName)) {
+                if (text.length < 2) return;
+            } else if (text.length < MIN_FALLBACK_CHARS) {
+                return;
+            }
+            found.push(el);
+        });
+
+        // Keep only the innermost candidates — a wrapper holding paragraphs
+        // is never where the caret belongs.
+        const set = new Set(found);
+        const containers = new Set();
+        for (const el of found) {
+            for (let p = el.parentElement; p; p = p.parentElement) {
+                if (set.has(p)) containers.add(p);
+            }
+        }
+
+        return found.filter((el) => !containers.has(el) && isVisibleBlock(el));
+    }
+
+    function firstTextPoint(el) {
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+            acceptNode(node) {
+                if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+                const parent = node.parentElement;
+                if (!parent || SKIP_TEXT_PARENTS.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        });
+
+        const node = walker.nextNode();
+        if (!node) return null;
+        const m = /\S/.exec(node.nodeValue);
+        return { node, offset: m ? m.index : 0 };
+    }
+
+    function isOurNode(node) {
+        const el = node && node.nodeType === 1 ? node : (node && node.parentElement);
+        if (!el) return false;
+        return !!((player && player.contains(el)) || (kbHintEl && kbHintEl.contains(el)));
+    }
+
+    function textPointAt(x, y) {
+        let node = null;
+        let offset = 0;
+
+        if (document.caretRangeFromPoint) {
+            const range = document.caretRangeFromPoint(x, y);
+            if (range) {
+                node = range.startContainer;
+                offset = range.startOffset;
+            }
+        } else if (document.caretPositionFromPoint) {
+            const pos = document.caretPositionFromPoint(x, y);
+            if (pos) {
+                node = pos.offsetNode;
+                offset = pos.offset;
+            }
+        }
+
+        if (!node || node.nodeType !== 3) return null;
+        if (!node.nodeValue || !node.nodeValue.trim()) return null;
+        if (isOurNode(node)) return null;
+        return { node, offset };
+    }
+
+    // Topmost text actually painted in the viewport — used when no paragraph
+    // *starts* on screen (one long paragraph scrolled past its first line).
+    function topVisibleTextPoint() {
+        const vw = window.innerWidth || document.documentElement.clientWidth;
+        const vh = window.innerHeight || document.documentElement.clientHeight;
+        const columns = [vw * 0.12, vw * 0.3, vw * 0.5, vw * 0.72];
+
+        for (let y = 6; y < vh - 6; y += 14) {
+            for (const x of columns) {
+                const point = textPointAt(x, y);
+                if (point) return point;
+            }
+        }
+        return null;
+    }
+
+    // Where the caret goes when the feature switches on: the first paragraph
+    // beginning inside the viewport, else the topmost visible text, else the
+    // first paragraph on the page.
+    function initialCaretPoint() {
+        const blocks = collectBlocks();
+        const vh = window.innerHeight || document.documentElement.clientHeight;
+
+        for (const el of blocks) {
+            const r = el.getBoundingClientRect();
+            if (r.bottom <= 0 || r.top >= vh) continue;
+            if (r.top < -2) continue;              // started above the fold
+            const point = firstTextPoint(el);
+            if (point) return point;
+        }
+
+        const visible = topVisibleTextPoint();
+        if (visible) return visible;
+
+        for (const el of blocks) {
+            const point = firstTextPoint(el);
+            if (point) return point;
+        }
+        return null;
+    }
+
+    function ensureCaretVisible() {
+        const sel = window.getSelection();
+        if (!sel || !sel.rangeCount) return;
+
+        const rect = sel.getRangeAt(0).getBoundingClientRect();
+        if (!rect || (!rect.top && !rect.bottom && !rect.height)) return;
+
+        const vh = window.innerHeight || document.documentElement.clientHeight;
+        if (rect.top >= 8 && rect.bottom <= vh - 8) return;
+        window.scrollBy({ top: rect.top - vh * 0.3, behavior: 'smooth' });
+    }
+
+    // ── Read-only guard ──
+
+    function isRealEditable(node) {
+        const el = node && node.nodeType === 1 ? node : (node && node.parentElement);
+        // designMode never sets contenteditable, so this still finds only the
+        // fields the page itself made editable.
+        return !!(el && el.closest && el.closest(EDITABLE_SELECTOR));
+    }
+
+    function blockEdit(e) {
+        if (isRealEditable(e.target)) return;   // leave the page's own inputs alone
+        e.preventDefault();
+    }
+
+    const EDIT_EVENTS = ['beforeinput', 'paste', 'cut', 'drop', 'dragstart'];
+
+    // ── Key + selection shield ──
+    // Sites bind their own shortcuts to arrows, Ctrl+A, Ctrl+C and often
+    // cancel selectstart outright. While the caret is on, those handlers must
+    // not see the event — the browser's native editing behaviour has to win.
+
+    const NAV_KEYS = new Set([
+        'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+        'Home', 'End', 'PageUp', 'PageDown'
+    ]);
+
+    function isEditorKey(e) {
+        if (NAV_KEYS.has(e.key)) return true;
+        if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+            const k = e.key.toLowerCase();
+            if (k === 'a' || k === 'c' || k === 'insert') return true;
+        }
+        return false;
+    }
+
+    const SHIELD_EVENTS = ['selectstart', 'copy', 'keypress'];
+
+    function shieldEvent(e) {
+        if (isRealEditable(e.target)) return;
+        e.stopImmediatePropagation();
+    }
+
+    // ── Press on text to move the caret ──
+
+    let pendingPoint = null;
+
+    window.addEventListener('mousedown', (e) => {
+        pendingPoint = null;
+        if (!caretEnabled || !extensionEnabled) return;
+        if (e.button !== 0) return;
+        if (isOurNode(e.target)) return;          // the player runs its own drag/scrub
+
+        const el = e.target && e.target.nodeType === 1 ? e.target : (e.target && e.target.parentElement);
+
+        // Links, buttons and fields must behave normally — an editing host
+        // swallows their clicks, so drop designMode before this click resolves.
+        const interactive = el && el.closest && el.closest(INTERACTIVE_SELECTOR);
+        if (interactive) {
+            debugLog('stepping aside for', interactive);
+            exitCaretMode();
+            return;
+        }
+
+        const point = textPointAt(e.clientX, e.clientY);
+        if (!point) {
+            debugLog('no text under the pointer');
+            return;
+        }
+
+        enterCaretMode();
+        if (e.shiftKey) return;   // shift+click extends the selection natively
+
+        placeCaret(point);
+        pendingPoint = point;
+    }, true);
+
+    // designMode only starts painting a caret once the editing host has
+    // settled, and a page that cancels mousedown never places one at all —
+    // so put the caret in again once the click is over.
+    window.addEventListener('mouseup', (e) => {
+        const point = pendingPoint;
+        pendingPoint = null;
+        if (!point || !caretMode) return;
+
+        setTimeout(() => {
+            const sel = window.getSelection();
+            if (!caretMode || !sel) return;
+            if (sel.rangeCount && !sel.isCollapsed) return;   // a drag-select — leave it alone
+            focusEditingHost();
+            placeCaret(textPointAt(e.clientX, e.clientY) || point);
+        }, 0);
+    }, true);
+
+    function focusEditingHost() {
+        const active = document.activeElement;
+        if (active && active !== document.body && typeof active.blur === 'function') {
+            if (!isRealEditable(active)) active.blur();
+        }
+        try {
+            if (document.body && document.body.focus) document.body.focus({ preventScroll: true });
+        } catch (_) {
+            // body isn't focusable on this page; the selection alone has to do
+        }
+    }
+
+    // ── Feature switch (the remappable key) ──
+
+    function toggleCaretFeature() {
+        if (caretEnabled) disableCaretFeature();
+        else enableCaretFeature();
+    }
+
+    function enableCaretFeature() {
+        if (!extensionEnabled) return;
+
+        const point = initialCaretPoint();
+        const sx = window.scrollX;
+        const sy = window.scrollY;
+
+        caretEnabled = true;
+        enterCaretMode();
+
+        if (!caretMode) {                      // the document refused designMode
+            caretEnabled = false;
+            showKbHint('This page does not allow a text cursor');
+            return;
+        }
+
+        // Turning designMode on (and moving focus) can nudge the scroll
+        // position — put it back before the caret lands.
+        if (window.scrollX !== sx || window.scrollY !== sy) window.scrollTo(sx, sy);
+
+        if (point) {
+            placeCaret(point);
+            ensureCaretVisible();
+        }
+        showKbHint();
+    }
+
+    function disableCaretFeature() {
+        const wasOn = caretEnabled;
+        caretEnabled = false;
+        exitCaretMode();
+        if (wasOn) showKbHint('Text cursor off');
+    }
+
+    // ── designMode on / off ──
+
+    function enterCaretMode() {
+        if (caretMode || !extensionEnabled) return;
+
+        prevDesignMode = document.designMode;
+        try {
+            document.designMode = 'on';
+        } catch (_) {
+            return;   // some documents refuse it; selection still works normally
+        }
+
+        caretMode = true;
+        prevSpellcheck = document.documentElement.spellcheck;
+        document.documentElement.spellcheck = false;
+        document.documentElement.classList.add('ac-caret-mode');
+        EDIT_EVENTS.forEach((type) => document.addEventListener(type, blockEdit, true));
+        SHIELD_EVENTS.forEach((type) => window.addEventListener(type, shieldEvent, true));
+        focusEditingHost();   // the caret only paints in the focused editing host
+        debugLog('caret on, designMode =', document.designMode);
+    }
+
+    function placeCaret(point) {
+        if (!point || !point.node.isConnected) return;
+
+        const range = document.createRange();
+        try {
+            range.setStart(point.node, Math.min(point.offset, point.node.nodeValue.length));
+        } catch (_) {
+            return;
+        }
+        range.collapse(true);
+
+        const sel = window.getSelection();
+        if (!sel) return;
+        sel.removeAllRanges();
+        sel.addRange(range);
+
+        debugLog('caret at offset', point.offset, 'in', JSON.stringify(point.node.nodeValue.slice(0, 40)));
+    }
+
+    function exitCaretMode(clearSelection) {
+        if (!caretMode) return;
+        caretMode = false;
+
+        try {
+            document.designMode = prevDesignMode || 'off';
+        } catch (_) {
+            // page tore the document down under us
+        }
+        if (prevSpellcheck !== null) document.documentElement.spellcheck = prevSpellcheck;
+        document.documentElement.classList.remove('ac-caret-mode');
+        EDIT_EVENTS.forEach((type) => document.removeEventListener(type, blockEdit, true));
+        SHIELD_EVENTS.forEach((type) => window.removeEventListener(type, shieldEvent, true));
+        hideKbHint();
+
+        // Switching off keeps whatever is selected (and playing) — same as
+        // letting go of the mouse after a drag-select.
+        if (clearSelection) {
+            const sel = window.getSelection();
+            if (sel) sel.removeAllRanges();
+            disarm();
+        }
+    }
+
+
+    // ── Mode hint ──
+
+    function showKbHint(message) {
+        if (!kbHintEl) {
+            kbHintEl = document.createElement('div');
+            kbHintEl.id = KB_HINT_ID;
+            kbHintEl.setAttribute('contenteditable', 'false');
+            document.documentElement.appendChild(kbHintEl);
+        }
+
+        const offKey = escapeHtml(keybindSettings.keyboardSelect || 'Esc');
+        kbHintEl.innerHTML = message
+            ? `<span class="ac-kb-mark"></span>
+               <span class="ac-kb-title">${escapeHtml(message)}</span>`
+            : `<span class="ac-kb-mark"></span>
+               <span class="ac-kb-title">Text cursor</span>
+               <span class="ac-kb-sep"></span>
+               <span class="ac-kb-keys">
+                   <span class="ac-kb-item"><b>↑↓←→</b>move</span>
+                   <span class="ac-kb-item"><b>Shift</b>select</span>
+                   <span class="ac-kb-item"><b>Ctrl</b><b>Shift</b>by word</span>
+                   <span class="ac-kb-item"><b>${offKey}</b>off</span>
+               </span>`;
+        kbHintEl.classList.toggle('ac-kb-compact', !!message);
+
+        kbHintEl.style.display = 'flex';
+        void kbHintEl.offsetWidth;
+        kbHintEl.classList.add('ac-kb-visible');
+
+        clearTimeout(kbHintTimer);
+        kbHintTimer = setTimeout(hideKbHint, message ? 2400 : 4600);
+    }
+
+    function hideKbHint() {
+        if (!kbHintEl) return;
+        clearTimeout(kbHintTimer);
+        kbHintEl.classList.remove('ac-kb-visible');
+        kbHintTimer = setTimeout(() => {
+            if (kbHintEl) kbHintEl.style.display = 'none';
+        }, 220);
+    }
+
+
     // ── Selection tracking ─────────────────────────────────────────
 
     document.addEventListener('selectionchange', () => {
@@ -571,6 +1073,10 @@
 
     function onSelectionSettled() {
         if (interactingWithPlayer || scrubbing || dragging) return;
+        if (!extensionEnabled) {
+            if (selectedText) disarm();
+            return;
+        }
 
         const sel = window.getSelection();
         const text = sel ? sel.toString().trim() : '';

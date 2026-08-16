@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pitchValue = document.getElementById('pitch-value');
     const testButton = document.getElementById('test-speech');
     const testLabel = testButton.querySelector('span');
-    const keybindDisplay = document.getElementById('keybind-display');
+    const keybindList = document.getElementById('keybind-list');
     const keybindResetBtn = document.getElementById('keybind-reset');
 
     const customVoiceSelect = document.getElementById('custom-voice-select');
@@ -191,19 +191,53 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // ── Keyboard shortcut (recordable, in-extension) ───
+    // ── Keyboard shortcuts (recordable, in-extension) ──
 
-    const DEFAULT_KEYBINDS = { togglePlayback: 'Alt+P' };
+    const DEFAULT_KEYBINDS = { togglePlayback: 'Alt+P', keyboardSelect: 'Alt+S' };
+    const KEYBIND_ACTIONS = [
+        { id: 'togglePlayback', label: 'Play / pause' },
+        { id: 'keyboardSelect', label: 'Text cursor' }
+    ];
+
     let keybindSettings = { ...DEFAULT_KEYBINDS };
     let isRecordingKeybind = false;
+    const keybindDisplays = {};
 
-    function renderKeybind() {
-        keybindDisplay.textContent = keybindSettings.togglePlayback || 'None';
+    function buildKeybindRows() {
+        keybindList.innerHTML = '';
+        KEYBIND_ACTIONS.forEach((action) => {
+            const row = document.createElement('div');
+            row.className = 'keybind-row';
+
+            const label = document.createElement('span');
+            label.className = 'hint-text';
+            label.textContent = action.label;
+
+            const display = document.createElement('div');
+            display.className = 'keybind-display';
+            display.title = 'Click to remap';
+            display.addEventListener('click', () => recordKeybind(action.id, display));
+
+            row.appendChild(label);
+            row.appendChild(display);
+            keybindList.appendChild(row);
+
+            keybindDisplays[action.id] = display;
+        });
     }
+
+    function renderKeybinds() {
+        KEYBIND_ACTIONS.forEach((action) => {
+            keybindDisplays[action.id].textContent = keybindSettings[action.id] || 'None';
+        });
+    }
+
+    buildKeybindRows();
+    renderKeybinds();
 
     chrome.storage.sync.get(['keybinds'], (data) => {
         if (data.keybinds) keybindSettings = { ...DEFAULT_KEYBINDS, ...data.keybinds };
-        renderKeybind();
+        renderKeybinds();
     });
 
     function getReadableKeyName(e) {
@@ -215,11 +249,13 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         if (modifiers[e.code]) return modifiers[e.code];
         if (e.key === ' ') return 'Space';
+        // Alt composes characters on some layouts — name the physical key
+        if (/^(Key|Digit)/.test(e.code)) return e.code.replace(/^(Key|Digit)/, '');
         if (e.key.length === 1) return e.key.toUpperCase();
         return e.key;
     }
 
-    keybindDisplay.addEventListener('click', () => {
+    function recordKeybind(actionId, keybindDisplay) {
         if (isRecordingKeybind) return;
         isRecordingKeybind = true;
 
@@ -258,9 +294,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const finalizeRecording = () => {
             const combination = activeKeys.join('+');
-            keybindSettings.togglePlayback = combination;
-            keybindDisplay.textContent = combination;
+
+            // A combo can only drive one action — free it from any other row
+            KEYBIND_ACTIONS.forEach((other) => {
+                if (other.id !== actionId && keybindSettings[other.id] === combination) {
+                    keybindSettings[other.id] = '';
+                }
+            });
+
+            keybindSettings[actionId] = combination;
             chrome.storage.sync.set({ keybinds: keybindSettings });
+            renderKeybinds();
             cleanup();
         };
 
@@ -280,11 +324,11 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('keydown', handleKeyDown, true);
         window.addEventListener('keyup', handleKeyUp, true);
         window.addEventListener('blur', cancelRecording);
-    });
+    }
 
     keybindResetBtn.addEventListener('click', () => {
         keybindSettings = { ...DEFAULT_KEYBINDS };
         chrome.storage.sync.set({ keybinds: keybindSettings });
-        renderKeybind();
+        renderKeybinds();
     });
 });

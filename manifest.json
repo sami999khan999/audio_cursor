@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Audio Cursor",
   "version": "2.0.0",
-  "description": "Select any text and listen to it — floating player, live word sync, keyboard shortcut.",
+  "description": "Read any page like a text editor — click to place a cursor, select with the keyboard, and listen to it.",
   "permissions": [
     "storage",
     "tts"
@@ -17,7 +17,8 @@
     {
       "matches": ["<all_urls>"],
       "js": ["dist/content.js"],
-      "css": ["dist/content.css"]
+      "css": ["dist/content.css"],
+      "run_at": "document_start"
     }
   ]
 }

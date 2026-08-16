@@ -69,13 +69,19 @@
                 </svg>
                 <span>Preview voice</span>
             </button>
+
+            <section class="card">
+                <div class="card-label">Shortcuts</div>
+                <div class="keybind-list" id="keybind-list"></div>
+                <div class="keybind-note">
+                    Text cursor stays on until pressed again. Press text or use
+                    <b>arrows</b> to move, <b>Shift</b> to select.
+                </div>
+            </section>
         </main>
 
         <footer>
-            <div class="hint">
-                <span class="hint-text">Play / pause</span>
-                <div class="keybind-display" id="keybind-display" title="Click to remap">Alt+P</div>
-            </div>
+            <span class="hint-text">Click a shortcut to remap</span>
             <button class="link-btn" id="keybind-reset" type="button">Reset</button>
         </footer>
     </div>

@@ -1,4 +1,4 @@
-/* Unified Styles Bundle — Built at: 2026-07-16T08:56:17.937Z */
+/* Unified Styles Bundle — Built at: 2026-08-16T11:19:53.505Z */
 
 /* ─── shared/theme.css ─── */
 /* Audio Cursor — shared design tokens */
@@ -368,6 +368,127 @@
 /* Follow the pointer instantly while dragging */
 #audio-cursor-player.ac-scrubbing .ac-fill {
     transition: height 0.12s ease;
+}
+
+/* ── Caret browsing mode ─────────────────────────────────────── */
+
+/* Visible accent caret, I-beam pointer, and text stays selectable even on
+   pages that disable it. Selection itself keeps the page's own look. */
+html.ac-caret-mode,
+html.ac-caret-mode * {
+    caret-color: #7c8cf8 !important;
+    cursor: text !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+}
+
+html.ac-caret-mode img,
+html.ac-caret-mode svg,
+html.ac-caret-mode video,
+html.ac-caret-mode canvas {
+    cursor: default !important;
+}
+
+html.ac-caret-mode #audio-cursor-player,
+html.ac-caret-mode #audio-cursor-player *,
+html.ac-caret-mode #audio-cursor-kbhint,
+html.ac-caret-mode #audio-cursor-kbhint * {
+    caret-color: transparent !important;
+    cursor: grab !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
+
+html.ac-caret-mode #audio-cursor-player .ac-toggle,
+html.ac-caret-mode #audio-cursor-player .ac-track {
+    cursor: pointer !important;
+}
+
+/* designMode outlines the editing host on some pages */
+html.ac-caret-mode body:focus,
+html.ac-caret-mode [contenteditable]:focus {
+    outline: none !important;
+}
+
+#audio-cursor-kbhint {
+    position: fixed !important;
+    top: 20px;
+    left: 50%;
+    z-index: 2147483647;
+
+    display: none;
+    align-items: center;
+    gap: 10px;
+    max-width: min(92vw, 620px);
+    padding: 9px 15px;
+
+    background: rgba(21, 23, 31, 0.92);
+    backdrop-filter: blur(24px) saturate(1.6);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    border-radius: 999px;
+    box-shadow:
+        0 16px 40px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+    font-family: var(
+        --ac-font,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif
+    );
+    font-size: 12px;
+    line-height: 1.3;
+    letter-spacing: normal;
+    color: #c9cede;
+    text-align: left;
+    white-space: nowrap;
+
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+
+    opacity: 0;
+    transform: translate(-50%, -8px);
+    transition:
+        opacity 0.22s cubic-bezier(0.32, 0.72, 0, 1),
+        transform 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+#audio-cursor-kbhint.ac-kb-visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+#audio-cursor-kbhint .ac-kb-title {
+    font-size: 12px;
+    font-weight: 650;
+    color: #a5b1ff;
+}
+
+#audio-cursor-kbhint .ac-kb-keys {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#audio-cursor-kbhint b {
+    font-weight: 600;
+    color: #edeff4;
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 5px;
+    padding: 1px 5px;
+}
+
+#audio-cursor-kbhint i {
+    font-style: normal;
+    color: rgba(201, 206, 222, 0.4);
 }
 
 
