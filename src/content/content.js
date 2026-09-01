@@ -52,12 +52,18 @@
 
     // ── Settings: enabled + keybinds ────────────────────────────────
 
-    const DEFAULT_KEYBINDS = { togglePlayback: 'Alt+P', keyboardSelect: 'Alt+S' };
+    const DEFAULT_KEYBINDS = {
+        togglePlayback: 'Alt+P',
+        keyboardSelect: 'Alt+S',
+        autoPlaySelect: 'Ctrl+Alt'
+    };
     let keybindSettings = { ...DEFAULT_KEYBINDS };
+    let repeatEnabled = false;
     let extensionEnabled = true;
 
-    chrome.storage.sync.get(['enabled', 'keybinds'], (data) => {
+    chrome.storage.sync.get(['enabled', 'keybinds', 'repeat'], (data) => {
         extensionEnabled = data.enabled !== false;
+        repeatEnabled = data.repeat === true;
         if (data.keybinds) keybindSettings = { ...DEFAULT_KEYBINDS, ...data.keybinds };
         if (!extensionEnabled) disableCaretFeature();
     });
@@ -68,6 +74,9 @@
         if (changes.keybinds) {
             keybindSettings = { ...DEFAULT_KEYBINDS, ...(changes.keybinds.newValue || {}) };
         }
+        if (changes.repeat) {
+            repeatEnabled = changes.repeat.newValue === true;
+        }
         if (changes.enabled) {
             extensionEnabled = changes.enabled.newValue !== false;
             if (!extensionEnabled) disableCaretFeature();
@@ -75,9 +84,11 @@
     });
 
     function parseKeybind(bindString) {
-        const parts = bindString.split('+');
+        const parts = (bindString || '').split('+').map((p) => p.trim()).filter(Boolean);
+        const MODIFIERS = new Set(['Ctrl', 'Control', 'Alt', 'Shift', 'Meta', 'Command']);
+        const nonModKeys = parts.filter((p) => !MODIFIERS.has(p)).map((p) => p.toLowerCase());
         return {
-            key: parts[parts.length - 1].toLowerCase(),
+            key: nonModKeys.length > 0 ? nonModKeys[nonModKeys.length - 1] : (parts.length > 0 ? parts[parts.length - 1].toLowerCase() : ''),
             alt: parts.includes('Alt'),
             shift: parts.includes('Shift'),
             ctrl: parts.includes('Ctrl') || parts.includes('Control'),
@@ -85,12 +96,65 @@
         };
     }
 
+    function parseModifierBind(bindString) {
+        if (!bindString) return null;
+        const parts = bindString.split('+').map((p) => p.trim()).filter(Boolean);
+        const MODIFIERS = new Set(['Ctrl', 'Control', 'Alt', 'Shift', 'Meta', 'Command']);
+        const hasCtrl = parts.some((p) => p === 'Ctrl' || p === 'Control');
+        const hasAlt = parts.some((p) => p === 'Alt');
+        const hasShift = parts.some((p) => p === 'Shift');
+        const hasMeta = parts.some((p) => p === 'Meta' || p === 'Command');
+        const nonModKeys = parts.filter((p) => !MODIFIERS.has(p)).map((p) => p.toLowerCase());
+
+        return {
+            ctrl: hasCtrl,
+            alt: hasAlt,
+            shift: hasShift,
+            meta: hasMeta,
+            key: nonModKeys.length > 0 ? nonModKeys[nonModKeys.length - 1] : null,
+            hasModifiersOnly: nonModKeys.length === 0 && (hasCtrl || hasAlt || hasShift || hasMeta)
+        };
+    }
+
+    function checkAutoPlayModifier(eOrState) {
+        if (!keybindSettings.autoPlaySelect || !eOrState) return false;
+        const bind = parseModifierBind(keybindSettings.autoPlaySelect);
+        if (!bind) return false;
+
+        const ctrl = !!(eOrState.ctrlKey !== undefined ? eOrState.ctrlKey : eOrState.ctrl);
+        const alt = !!(eOrState.altKey !== undefined ? eOrState.altKey : eOrState.alt);
+        const shift = !!(eOrState.shiftKey !== undefined ? eOrState.shiftKey : eOrState.shift);
+        const meta = !!(eOrState.metaKey !== undefined ? eOrState.metaKey : eOrState.meta);
+
+        if (bind.ctrl !== ctrl) return false;
+        if (bind.alt !== alt) return false;
+        if (bind.meta !== meta) return false;
+
+        // Shift check: allow Shift during keyboard selection if bind doesn't require shift
+        if (bind.shift !== shift) {
+            if (!bind.shift && shift) {
+                // Shift is allowed when navigating/selecting with keyboard
+            } else {
+                return false;
+            }
+        }
+
+        if (bind.key) {
+            if (!eOrState.key && !eOrState.code) return false;
+            const key = (eOrState.key || '').toLowerCase();
+            const code = (eOrState.code || '').replace(/^(Key|Digit)/, '').toLowerCase();
+            if (key !== bind.key && code !== bind.key) return false;
+        }
+
+        return true;
+    }
+
     function matchesKeybind(e, bindString) {
         if (!bindString) return false;
         const bind = parseKeybind(bindString);
         // Alt combos report the composed character on some layouts, so fall
         // back to the physical key (KeyS → 's').
-        const key = e.key.toLowerCase();
+        const key = (e.key || '').toLowerCase();
         const code = (e.code || '').replace(/^(Key|Digit)/, '').toLowerCase();
         if (key !== bind.key && code !== bind.key) return false;
         if (e.altKey !== bind.alt) return false;
@@ -100,7 +164,23 @@
         return true;
     }
 
+    const activeModifiers = { ctrl: false, alt: false, shift: false, meta: false };
+    let selectionInitiatedWithModifiers = false;
+
+    function updateModifiersFromEvent(e) {
+        if (!e) return;
+        activeModifiers.ctrl = !!e.ctrlKey;
+        activeModifiers.alt = !!e.altKey;
+        activeModifiers.shift = !!e.shiftKey;
+        activeModifiers.meta = !!e.metaKey;
+    }
+
     window.addEventListener('keydown', (e) => {
+        updateModifiersFromEvent(e);
+        if (checkAutoPlayModifier(e)) {
+            selectionInitiatedWithModifiers = true;
+        }
+
         // Ignore while typing in a real field. In caret mode designMode makes
         // everything report as editable, so check the page's own fields instead.
         const tag = e.target && e.target.tagName ? e.target.tagName.toLowerCase() : '';
@@ -137,6 +217,45 @@
         // which is what breaks Ctrl+Shift+arrow on many sites.
         if (isEditorKey(e)) e.stopImmediatePropagation();
     }, true);
+
+    window.addEventListener('keyup', (e) => {
+        updateModifiersFromEvent(e);
+    }, true);
+
+    window.addEventListener('mousedown', (e) => {
+        updateModifiersFromEvent(e);
+        if (checkAutoPlayModifier(e)) {
+            selectionInitiatedWithModifiers = true;
+        } else {
+            selectionInitiatedWithModifiers = false;
+        }
+    }, true);
+
+    window.addEventListener('mousemove', (e) => {
+        if (e.buttons > 0) {
+            updateModifiersFromEvent(e);
+            if (checkAutoPlayModifier(e)) {
+                selectionInitiatedWithModifiers = true;
+            }
+        }
+    }, true);
+
+    window.addEventListener('mouseup', (e) => {
+        updateModifiersFromEvent(e);
+        if (checkAutoPlayModifier(e) || checkAutoPlayModifier(activeModifiers)) {
+            selectionInitiatedWithModifiers = true;
+            clearTimeout(selectionDebounce);
+            selectionDebounce = setTimeout(onSelectionSettled, 40);
+        }
+    }, true);
+
+    window.addEventListener('blur', () => {
+        activeModifiers.ctrl = false;
+        activeModifiers.alt = false;
+        activeModifiers.shift = false;
+        activeModifiers.meta = false;
+        selectionInitiatedWithModifiers = false;
+    });
 
     // ── Text utilities ─────────────────────────────────────────────
 
@@ -1066,6 +1185,9 @@
     // ── Selection tracking ─────────────────────────────────────────
 
     document.addEventListener('selectionchange', () => {
+        if (checkAutoPlayModifier(activeModifiers)) {
+            selectionInitiatedWithModifiers = true;
+        }
         clearTimeout(selectionDebounce);
         selectionDebounce = setTimeout(onSelectionSettled, 180);
     });
@@ -1081,8 +1203,19 @@
         const text = sel ? sel.toString().trim() : '';
 
         if (text) {
-            if (text !== selectedText) arm(text);
+            const isAutoPlay = selectionInitiatedWithModifiers || checkAutoPlayModifier(activeModifiers);
+            selectionInitiatedWithModifiers = false;
+
+            if (text !== selectedText) {
+                arm(text);
+                if (isAutoPlay) {
+                    playFrom(0);
+                }
+            } else if (isAutoPlay && status !== 'playing') {
+                playFrom(0);
+            }
         } else if (selectedText) {
+            selectionInitiatedWithModifiers = false;
             disarm(); // deselected → stop playback and hide
         }
     }

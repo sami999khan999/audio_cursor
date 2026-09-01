@@ -61,6 +61,15 @@
                     </div>
                     <input type="range" id="pitch-range" min="0" max="2.0" step="0.1" value="1.0">
                 </div>
+                <div class="control-row toggle-row">
+                    <div class="control-head">
+                        <span class="card-label">Repeat playback</span>
+                    </div>
+                    <label class="switch sm" title="Automatically repeat audio when playback finishes">
+                        <input type="checkbox" id="repeat-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
             </section>
 
             <button id="test-speech" class="preview-btn" type="button">
@@ -74,6 +83,7 @@
                 <div class="card-label">Shortcuts</div>
                 <div class="keybind-list" id="keybind-list"></div>
                 <div class="keybind-note">
+                    Select text while holding <b>Ctrl+Alt</b> to auto-play.<br>
                     Text cursor stays on until pressed again. Press text or use
                     <b>arrows</b> to move, <b>Shift</b> to select.
                 </div>

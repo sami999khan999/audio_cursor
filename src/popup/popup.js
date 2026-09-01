@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rateValue = document.getElementById('rate-value');
     const pitchRange = document.getElementById('pitch-range');
     const pitchValue = document.getElementById('pitch-value');
+    const repeatToggle = document.getElementById('repeat-toggle');
     const testButton = document.getElementById('test-speech');
     const testLabel = testButton.querySelector('span');
     const keybindList = document.getElementById('keybind-list');
@@ -31,6 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
         chrome.storage.sync.set({ enabled });
         updateStatusUI(enabled);
     });
+
+    if (repeatToggle) {
+        repeatToggle.addEventListener('change', () => {
+            chrome.storage.sync.set({ repeat: repeatToggle.checked });
+        });
+    }
 
     // ── Sliders ────────────────────────────────────────
 
@@ -59,10 +66,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Load saved settings ────────────────────────────
 
-    chrome.storage.sync.get(['enabled', 'rate', 'pitch'], (data) => {
+    chrome.storage.sync.get(['enabled', 'rate', 'pitch', 'repeat'], (data) => {
         const enabled = data.enabled !== undefined ? data.enabled : true;
         enabledToggle.checked = enabled;
         updateStatusUI(enabled);
+
+        if (repeatToggle) {
+            repeatToggle.checked = data.repeat === true;
+        }
 
         if (data.rate) {
             rateRange.value = data.rate;
@@ -193,10 +204,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Keyboard shortcuts (recordable, in-extension) ──
 
-    const DEFAULT_KEYBINDS = { togglePlayback: 'Alt+P', keyboardSelect: 'Alt+S' };
+    const DEFAULT_KEYBINDS = {
+        togglePlayback: 'Alt+P',
+        keyboardSelect: 'Alt+S',
+        autoPlaySelect: 'Ctrl+Alt'
+    };
     const KEYBIND_ACTIONS = [
         { id: 'togglePlayback', label: 'Play / pause' },
-        { id: 'keyboardSelect', label: 'Text cursor' }
+        { id: 'keyboardSelect', label: 'Text cursor' },
+        { id: 'autoPlaySelect', label: 'Auto-play selection' }
     ];
 
     let keybindSettings = { ...DEFAULT_KEYBINDS };
@@ -255,6 +271,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return e.key;
     }
 
+    function normalizeKeybind(keys) {
+        const order = { Ctrl: 1, Alt: 2, Shift: 3, Meta: 4 };
+        const modifiers = [];
+        const regularKeys = [];
+        for (const k of keys) {
+            if (order[k]) {
+                if (!modifiers.includes(k)) modifiers.push(k);
+            } else {
+                if (!regularKeys.includes(k)) regularKeys.push(k);
+            }
+        }
+        modifiers.sort((a, b) => order[a] - order[b]);
+        return [...modifiers, ...regularKeys].join('+');
+    }
+
     function recordKeybind(actionId, keybindDisplay) {
         if (isRecordingKeybind) return;
         isRecordingKeybind = true;
@@ -279,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!pressedCodes.has(e.code)) {
                 pressedCodes.add(e.code);
                 if (!activeKeys.includes(keyName)) activeKeys.push(keyName);
-                keybindDisplay.textContent = activeKeys.join('+');
+                keybindDisplay.textContent = normalizeKeybind(activeKeys);
             }
         };
 
@@ -293,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const finalizeRecording = () => {
-            const combination = activeKeys.join('+');
+            const combination = normalizeKeybind(activeKeys);
 
             // A combo can only drive one action — free it from any other row
             KEYBIND_ACTIONS.forEach((other) => {

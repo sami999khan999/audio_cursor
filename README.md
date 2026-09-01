@@ -43,10 +43,12 @@ And when a page won't let you select cleanly, `Alt+S` drops a real caret into it
 | | |
 |---|---|
 | 🖱️ **Select-to-play** | Highlight text and the player appears. Deselect and playback stops automatically. |
+| ⚡ **Auto-play on select** | Hold `Ctrl+Alt` while selecting text to automatically start playing it instantly. Remappable from popup settings. |
+| 🔁 **Repeat playback** | Optional repeat mode to loop audio continuously when playback finishes. |
 | 🎞️ **Live word ticker** | A sliding strip highlights the exact word being spoken, anchored at 35% of the view. |
 | 🎚️ **Scrub to seek** | Drag the progress bar to jump anywhere in the text — playback restarts from that word. |
 | 🧲 **Draggable + edge snap** | Move the player anywhere; release and it springs to the nearest screen edge. |
-| ⌨️ **Recordable hotkeys** | Press your own key combos for play/pause and the text cursor. Defaults `Alt+P` and `Alt+S`, remappable from the popup. |
+| ⌨️ **Recordable hotkeys** | Press your own key combos for play/pause, text cursor, and auto-play selection. Remappable from the popup. |
 | ✍️ **Text cursor** | `Alt+S` drops a real blinking caret into the page. Arrows move, `Shift` selects, `Ctrl+C` copies — any page reads like a text editor, without editing it. |
 | 📚 **Handles huge selections** | Text is split into sentence-aligned chunks and streamed to the TTS queue, so entire articles play without cutting off. |
 | 🗣️ **Any system voice** | Pick from every voice Chrome exposes, with speed (0.5×–2.0×) and pitch controls. |
@@ -80,7 +82,9 @@ node build.js          # bundles src/ → dist/
 | Action | How |
 |---|---|
 | **Start listening** | Select text → click ▶ on the floating player |
+| **Auto-play selection** | Select text while holding `Ctrl+Alt` (or your mapped key) |
 | **Play / pause** | `Alt+P` (or your own binding), or click the button |
+| **Repeat / loop** | Toggle "Repeat playback" in popup settings |
 | **Seek** | Drag anywhere along the progress bar |
 | **Move the player** | Drag it — a move over 4px is a drag, anything less is a click |
 | **Stop** | Click elsewhere to clear the selection |
@@ -106,7 +110,8 @@ All settings live in `chrome.storage.sync`, so they follow your Chrome profile:
 | `voice` | `string` | `"default"` | Chrome TTS voice name |
 | `rate` | `number` | `1.0` | Speech speed, 0.5–2.0 |
 | `pitch` | `number` | `1.0` | Voice pitch, 0–2.0 |
-| `keybinds` | `object` | `{ togglePlayback: "Alt+P", keyboardSelect: "Alt+S" }` | User-recorded shortcuts |
+| `repeat` | `boolean` | `false` | Loop playback continuously |
+| `keybinds` | `object` | `{ togglePlayback: "Alt+P", keyboardSelect: "Alt+S", autoPlaySelect: "Ctrl+Alt" }` | User-recorded shortcuts |
 
 Recording a combo that's already taken clears it from the other action, so two shortcuts can never collide.
 

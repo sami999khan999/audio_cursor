@@ -76,7 +76,13 @@ function speakChunk(state, chunk, settings) {
                     break;
                 case 'end':
                     if (isLast) {
-                        sendToTab(state.tabId, { type: 'TTS_STATUS', status: 'idle' });
+                        chrome.storage.sync.get(['repeat'], (data) => {
+                            if (data.repeat && state.id === currentSessionId && state.fullText) {
+                                startPlayback(state.fullText, 0, state.tabId);
+                            } else {
+                                sendToTab(state.tabId, { type: 'TTS_STATUS', status: 'idle' });
+                            }
+                        });
                     }
                     break;
                 case 'error':
@@ -117,7 +123,8 @@ function startPlayback(text, offset, tabId) {
             tabId,
             chunks: chunkText(text, offset),
             nextToQueue: 0,
-            textLength: text.length
+            textLength: text.length,
+            fullText: text
         };
 
         if (session.chunks.length === 0) {
