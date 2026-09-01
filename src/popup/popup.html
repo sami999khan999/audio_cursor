@@ -72,12 +72,20 @@
                 </div>
             </section>
 
-            <button id="test-speech" class="preview-btn" type="button">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M8 5.5v13a1 1 0 0 0 1.52.86l10.2-6.5a1 1 0 0 0 0-1.72L9.52 4.64A1 1 0 0 0 8 5.5z" fill="currentColor"/>
-                </svg>
-                <span>Preview voice</span>
-            </button>
+            <div class="btn-group">
+                <button id="test-speech" class="preview-btn" type="button">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M8 5.5v13a1 1 0 0 0 1.52.86l10.2-6.5a1 1 0 0 0 0-1.72L9.52 4.64A1 1 0 0 0 8 5.5z" fill="currentColor"/>
+                    </svg>
+                    <span>Preview</span>
+                </button>
+                <button id="read-clipboard" class="preview-btn secondary" type="button" title="Speak copied text from clipboard (PDFs / Docs)">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v3h10V5h2v14z" fill="currentColor"/>
+                    </svg>
+                    <span>Read clipboard</span>
+                </button>
+            </div>
 
             <section class="card">
                 <div class="card-label">Shortcuts</div>

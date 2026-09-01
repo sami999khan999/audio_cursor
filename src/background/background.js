@@ -170,3 +170,51 @@ chrome.runtime.onMessage.addListener((message, sender) => {
             break;
     }
 });
+
+// ── Context Menu & Commands (Universal fallback for PDFs & Docs) ──
+
+function setupContextMenu() {
+    chrome.contextMenus.removeAll(() => {
+        chrome.contextMenus.create({
+            id: 'audio-cursor-play',
+            title: 'Read with Audio Cursor',
+            contexts: ['selection']
+        });
+    });
+}
+
+chrome.runtime.onInstalled.addListener(setupContextMenu);
+chrome.runtime.onStartup.addListener(setupContextMenu);
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === 'audio-cursor-play' && info.selectionText) {
+        const tabId = tab && tab.id;
+        if (tabId !== undefined) {
+            startPlayback(info.selectionText.trim(), 0, tabId);
+        }
+    }
+});
+
+chrome.commands.onCommand.addListener((command) => {
+    if (command === 'play-selection') {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (!tabs || !tabs[0]) return;
+            const tab = tabs[0];
+            const tabId = tab.id;
+
+            // Toggle play/pause if already in an active session on this tab
+            if (session && session.tabId === tabId) {
+                chrome.tts.pause();
+                sendToTab(tabId, { type: 'TTS_STATUS', status: 'paused' });
+                return;
+            }
+
+            // Ask tab content script to trigger playback of whatever is selected
+            if (tabId !== undefined) {
+                chrome.tabs.sendMessage(tabId, { type: 'TRIGGER_PLAYBACK' }, () => {
+                    void chrome.runtime.lastError;
+                });
+            }
+        });
+    }
+});

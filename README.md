@@ -44,6 +44,7 @@ And when a page won't let you select cleanly, `Alt+S` drops a real caret into it
 |---|---|
 | 🖱️ **Select-to-play** | Highlight text and the player appears. Deselect and playback stops automatically. |
 | ⚡ **Auto-play on select** | Hold `Ctrl+Alt` while selecting text to automatically start playing it instantly. Remappable from popup settings. |
+| 📄 **Google Docs & PDFs** | Full compatibility with Google Docs (canvas & text layers) and PDF documents (embedded and web). |
 | 🔁 **Repeat playback** | Optional repeat mode to loop audio continuously when playback finishes. |
 | 🎞️ **Live word ticker** | A sliding strip highlights the exact word being spoken, anchored at 35% of the view. |
 | 🎚️ **Scrub to seek** | Drag the progress bar to jump anywhere in the text — playback restarts from that word. |

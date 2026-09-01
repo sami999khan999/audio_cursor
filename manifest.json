@@ -5,8 +5,19 @@
   "description": "Read any page like a text editor — click to place a cursor, select with the keyboard, and listen to it.",
   "permissions": [
     "storage",
-    "tts"
+    "tts",
+    "contextMenus",
+    "clipboardRead"
   ],
+  "commands": {
+    "play-selection": {
+      "suggested_key": {
+        "default": "Alt+P",
+        "mac": "Alt+P"
+      },
+      "description": "Read selected text with Audio Cursor"
+    }
+  },
   "action": {
     "default_popup": "src/popup/popup.html"
   },
@@ -15,10 +26,19 @@
   },
   "content_scripts": [
     {
+      "matches": ["*://docs.google.com/*"],
+      "js": ["dist/docs-bridge.js"],
+      "world": "MAIN",
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
       "matches": ["<all_urls>"],
       "js": ["dist/content.js"],
       "css": ["dist/content.css"],
-      "run_at": "document_start"
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_about_blank": true
     }
   ]
 }

@@ -1,4 +1,4 @@
-/* Unified Styles Bundle — Built at: 2026-09-01T04:37:35.122Z */
+/* Unified Styles Bundle — Built at: 2026-09-01T05:53:16.121Z */
 
 /* ─── shared/theme.css ─── */
 /* Audio Cursor — shared design tokens */
@@ -84,8 +84,22 @@
     will-change: transform, opacity;
 }
 
-#audio-cursor-player * {
+#audio-cursor-player,
+#audio-cursor-player *,
+#audio-cursor-kbhint,
+#audio-cursor-kbhint * {
     box-sizing: border-box;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+#audio-cursor-player::-webkit-scrollbar,
+#audio-cursor-player *::-webkit-scrollbar,
+#audio-cursor-kbhint::-webkit-scrollbar,
+#audio-cursor-kbhint *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 
 #audio-cursor-player.ac-visible {

@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const repeatToggle = document.getElementById('repeat-toggle');
     const testButton = document.getElementById('test-speech');
     const testLabel = testButton.querySelector('span');
+    const readClipboardBtn = document.getElementById('read-clipboard');
+    const readClipboardLabel = readClipboardBtn ? readClipboardBtn.querySelector('span') : null;
     const keybindList = document.getElementById('keybind-list');
     const keybindResetBtn = document.getElementById('keybind-reset');
 
@@ -196,11 +198,59 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (event.type === 'end' || event.type === 'interrupted' || event.type === 'cancelled' || event.type === 'error') {
                     previewing = false;
                     testButton.classList.remove('speaking');
-                    testLabel.textContent = event.type === 'error' ? 'Voice unavailable' : 'Preview voice';
+                    testLabel.textContent = event.type === 'error' ? 'Voice unavailable' : 'Preview';
                 }
             }
         });
     });
+
+    if (readClipboardBtn) {
+        let readingClipboard = false;
+        readClipboardBtn.addEventListener('click', async () => {
+            if (readingClipboard) {
+                chrome.tts.stop();
+                readingClipboard = false;
+                readClipboardBtn.classList.remove('speaking');
+                if (readClipboardLabel) readClipboardLabel.textContent = 'Read clipboard';
+                return;
+            }
+
+            try {
+                const text = await navigator.clipboard.readText();
+                if (!text || !text.trim()) {
+                    if (readClipboardLabel) {
+                        const prev = readClipboardLabel.textContent;
+                        readClipboardLabel.textContent = 'Clipboard empty';
+                        setTimeout(() => { readClipboardLabel.textContent = prev; }, 1500);
+                    }
+                    return;
+                }
+
+                chrome.tts.speak(text.trim(), {
+                    voiceName: voiceSelect.value === 'default' ? undefined : voiceSelect.value,
+                    rate: parseFloat(rateRange.value) || 1.0,
+                    pitch: parseFloat(pitchRange.value) || 1.0,
+                    onEvent: (event) => {
+                        if (event.type === 'start') {
+                            readingClipboard = true;
+                            readClipboardBtn.classList.add('speaking');
+                            if (readClipboardLabel) readClipboardLabel.textContent = 'Stop reading';
+                        }
+                        if (event.type === 'end' || event.type === 'interrupted' || event.type === 'cancelled' || event.type === 'error') {
+                            readingClipboard = false;
+                            readClipboardBtn.classList.remove('speaking');
+                            if (readClipboardLabel) readClipboardLabel.textContent = 'Read clipboard';
+                        }
+                    }
+                });
+            } catch (err) {
+                if (readClipboardLabel) {
+                    readClipboardLabel.textContent = 'Copy text first';
+                    setTimeout(() => { readClipboardLabel.textContent = 'Read clipboard'; }, 1500);
+                }
+            }
+        });
+    }
 
     // ── Keyboard shortcuts (recordable, in-extension) ──
 

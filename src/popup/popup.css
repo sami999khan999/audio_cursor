@@ -3,10 +3,19 @@
     padding: 0;
     box-sizing: border-box;
     -webkit-font-smoothing: antialiased;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+*::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 
 html {
-    overflow: hidden;
+    overflow: hidden !important;
+    scrollbar-width: none !important;
 }
 
 body {
@@ -14,14 +23,16 @@ body {
     font-family: var(--ac-font);
     background: var(--ac-bg);
     color: var(--ac-text);
-    overflow: hidden;
+    overflow: hidden !important;
+    scrollbar-width: none !important;
 }
 
 .app {
-    padding: 14px;
+    padding: 12px 13px;
     display: flex;
     flex-direction: column;
-    gap: 11px;
+    gap: 9px;
+    overflow: hidden;
 }
 
 /* ── Header ─────────────────────────────────────────── */
@@ -240,6 +251,8 @@ main {
     z-index: 50;
     max-height: 208px;
     overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     background: var(--ac-surface-2);
     border: 1px solid var(--ac-border-strong);
     border-radius: var(--ac-radius);
@@ -257,12 +270,9 @@ main {
 }
 
 .select-options::-webkit-scrollbar {
-    width: 6px;
-}
-
-.select-options::-webkit-scrollbar-thumb {
-    background: var(--ac-surface-3);
-    border-radius: 3px;
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 
 .voice-option {
@@ -358,24 +368,41 @@ input[type="range"]::-moz-range-thumb {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
 }
 
-/* ── Preview button ─────────────────────────────────── */
+/* ── Buttons ────────────────────────────────────────── */
+
+.btn-group {
+    display: flex;
+    gap: 8px;
+}
 
 .preview-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 10px;
+    gap: 7px;
+    flex: 1;
+    padding: 9px;
     background: var(--ac-accent-soft);
     border: 1px solid transparent;
     border-radius: var(--ac-radius);
     color: var(--ac-accent-strong);
     font-family: inherit;
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.preview-btn.secondary {
+    background: var(--ac-surface-2);
+    border: 1px solid var(--ac-border-strong);
+    color: var(--ac-text);
+}
+
+.preview-btn.secondary:hover {
+    background: var(--ac-surface-3);
+    border-color: var(--ac-accent);
+    color: var(--ac-accent-strong);
 }
 
 .preview-btn:hover {

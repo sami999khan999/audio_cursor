@@ -31,8 +31,9 @@ function bundle(files, outputName, isCss = false) {
     console.log(`✅ Build complete: dist/${outputName} (${(fs.statSync(outputPath).size / 1024).toFixed(1)} KB)`);
 }
 
-// Bundle Content Script
+// Bundle Content Scripts
 bundle(['content/content.js'], 'content.js');
+bundle(['content/docs-bridge.js'], 'docs-bridge.js');
 bundle(['shared/theme.css', 'content/content.css'], 'content.css', true);
 
 // Bundle Background Script
