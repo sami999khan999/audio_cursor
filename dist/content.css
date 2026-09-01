@@ -1,4 +1,4 @@
-/* Unified Styles Bundle — Built at: 2026-09-01T11:42:20.180Z */
+/* Unified Styles Bundle — Built at: 2026-09-01T12:28:48.117Z */
 
 /* ─── shared/theme.css ─── */
 /* Audio Cursor — shared design tokens */
@@ -551,6 +551,63 @@ html.ac-caret-mode
 /* Short one-off messages: just the dot and the text */
 #audio-cursor-kbhint.ac-kb-compact {
     padding: 6px 14px;
+}
+
+/* ── Audio Cursor Download Spinner ──────────────────────────── */
+
+#audio-cursor-toast {
+    position: fixed !important;
+    top: 16px !important;
+    right: 16px !important;
+    bottom: auto !important;
+    left: auto !important;
+    z-index: 2147483647 !important;
+
+    width: 22px !important;
+    height: 22px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    pointer-events: none !important;
+    user-select: none !important;
+    touch-action: none !important;
+
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: opacity 0.18s ease, visibility 0.18s ease !important;
+}
+
+#audio-cursor-toast.ac-toast-visible {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.ac-toast-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(141, 155, 255, 0.2);
+    border-top-color: #8d9bff;
+    border-radius: 50%;
+    animation: acSpin 0.7s linear infinite;
+}
+
+@keyframes acSpin {
+    to { transform: rotate(360deg); }
+}
+
+/* hide text and icon parts — spinner-only mode */
+.ac-toast-text,
+.ac-toast-icon {
+    display: none !important;
 }
 
 

@@ -298,6 +298,67 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             break;
         }
 
+        case 'EXPORT_MP3': {
+            const text = message.text;
+            if (text && text.trim()) {
+                chrome.storage.sync.get(['voice', 'rate', 'pitch'], async (data) => {
+                    const voice = data.voice || 'en-US-JennyNeural';
+                    const rate = parseFloat(data.rate) || 1.0;
+                    const pitch = parseFloat(data.pitch) || 1.0;
+                    const cleanName = voice.replace(/^[a-z]{2,3}-[A-Z]{2,4}-/, '').replace(/Neural$/, '');
+                    const filename = `AudioCursor_${cleanName.replace(/\s+/g, '_')}_${Date.now()}.mp3`;
+
+                    sendToTab(tabId, { type: 'DOWNLOAD_STATUS', status: 'loading', voiceName: cleanName });
+
+                    try {
+                        await ensureOffscreenDocument();
+                        const requestId = 'export_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+
+                        const resultListener = (msg) => {
+                            if (msg.type === 'AC_EXPORT_RESULT' && msg.requestId === requestId) {
+                                chrome.runtime.onMessage.removeListener(resultListener);
+                                if (msg.success && msg.base64) {
+                                    const dataUrl = `data:audio/mp3;base64,${msg.base64}`;
+                                    if (chrome.downloads && chrome.downloads.download) {
+                                        chrome.downloads.download({
+                                            url: dataUrl,
+                                            filename: filename,
+                                            saveAs: false
+                                        }, () => {
+                                            if (chrome.runtime.lastError) {
+                                                sendToTab(tabId, { type: 'TRIGGER_ANCHOR_DOWNLOAD', dataUrl, filename });
+                                            }
+                                        });
+                                    } else {
+                                        sendToTab(tabId, { type: 'TRIGGER_ANCHOR_DOWNLOAD', dataUrl, filename });
+                                    }
+                                    sendToTab(tabId, { type: 'DOWNLOAD_STATUS', status: 'success', filename });
+                                } else {
+                                    console.warn('Export audio failed:', msg.error);
+                                    sendToTab(tabId, { type: 'DOWNLOAD_STATUS', status: 'error', error: msg.error });
+                                }
+                            }
+                        };
+
+                        chrome.runtime.onMessage.addListener(resultListener);
+
+                        chrome.runtime.sendMessage({
+                            type: 'AC_EXPORT_AUDIO',
+                            requestId,
+                            text: text.trim(),
+                            voice,
+                            rate,
+                            pitch
+                        }, () => void chrome.runtime.lastError);
+                    } catch (err) {
+                        console.warn('Audio export error:', err);
+                        sendToTab(tabId, { type: 'DOWNLOAD_STATUS', status: 'error', error: err.message });
+                    }
+                });
+            }
+            break;
+        }
+
         case 'AC_CHUNK_ENDED':
             if (neuralSession && message.sessionId === neuralSession.sessionId) {
                 playNeuralChunk(neuralSession, message.chunkIndex + 1);
@@ -308,19 +369,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             if (neuralSession && message.sessionId === neuralSession.sessionId) {
                 const session = neuralSession;
                 if (message.fatal) {
-                    // Synthesis failed (network / Edge TTS handshake). Keep the page
-                    // readable by finishing with a local system voice instead of
-                    // going silent, but make the reason obvious in the console.
-                    console.error(
-                        `Audio Cursor: Edge Neural TTS synthesis failed for "${session.voice}" ` +
-                        `(${message.error}). Falling back to a local system voice.`
-                    );
+                    // Synthesis failed — silently fall back to local voice.
                     const chunk = session.chunks[message.chunkIndex];
                     const resumeAt = chunk ? chunk.start : 0;
                     neuralSession = null;
                     startLocalPlayback(session.text, resumeAt, session.tabId, session.sessionId, session.voice, session.rate, session.pitch);
                 } else {
-                    console.warn('Audio Cursor: chunk playback error', message.error);
                     playNeuralChunk(session, message.chunkIndex + 1);
                 }
             }
@@ -391,6 +445,18 @@ chrome.commands.onCommand.addListener((command) => {
 
             if (tabId !== undefined) {
                 chrome.tabs.sendMessage(tabId, { type: 'TRIGGER_PLAYBACK' }, () => {
+                    void chrome.runtime.lastError;
+                });
+            }
+        });
+    } else if (command === 'download-selection') {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (!tabs || !tabs[0]) return;
+            const tab = tabs[0];
+            const tabId = tab.id;
+
+            if (tabId !== undefined) {
+                chrome.tabs.sendMessage(tabId, { type: 'TRIGGER_DOWNLOAD_AUDIO' }, () => {
                     void chrome.runtime.lastError;
                 });
             }

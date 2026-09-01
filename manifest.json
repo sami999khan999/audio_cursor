@@ -9,11 +9,13 @@
     "contextMenus",
     "clipboardRead",
     "offscreen",
-    "declarativeNetRequest"
+    "declarativeNetRequest",
+    "downloads"
   ],
   "host_permissions": [
     "*://speech.platform.bing.com/*",
-    "wss://speech.platform.bing.com/*"
+    "wss://speech.platform.bing.com/*",
+    "https://translate.google.com/*"
   ],
   "commands": {
     "play-selection": {
@@ -22,6 +24,13 @@
         "mac": "Alt+P"
       },
       "description": "Read selected text with Audio Cursor"
+    },
+    "download-selection": {
+      "suggested_key": {
+        "default": "Alt+D",
+        "mac": "Alt+D"
+      },
+      "description": "Download selected text as MP3 audio"
     }
   },
   "declarative_net_request": {

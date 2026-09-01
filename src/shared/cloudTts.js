@@ -1,5 +1,5 @@
 // Audio Cursor — Cloud & Natural Speech Engine for Browser Extension
-// Provides fast, reliable Natural Cloud speech synthesis with MP3 streaming.
+// Provides fast, reliable Natural Cloud speech synthesis with MP3 streaming and file export.
 
 const NATURAL_CLOUD_VOICES = [
     { name: 'cloud-en-US-1', cleanName: 'Google Natural (US)', lang: 'en-US', country: 'United States', flag: '🇺🇸', gender: 'Female', isNeural: true, langCode: 'en-US' },
@@ -42,6 +42,47 @@ function uint8ToBase64(bytes) {
 }
 
 /**
+ * Split long text into speakable segments under 180 chars.
+ * @param {string} text 
+ * @returns {string[]}
+ */
+function chunkSpeechText(text) {
+    if (!text) return [];
+    const sentences = text.match(/[^.!?\n\r]+[.!?\n\r]+|[^.!?\n\r]+$/g) || [text];
+    const chunks = [];
+    let cur = '';
+
+    for (const s of sentences) {
+        const trimmed = s.trim();
+        if (!trimmed) continue;
+
+        if ((cur + ' ' + trimmed).trim().length <= 180) {
+            cur = (cur + ' ' + trimmed).trim();
+        } else {
+            if (cur) chunks.push(cur);
+            if (trimmed.length > 180) {
+                const words = trimmed.split(/\s+/);
+                let sub = '';
+                for (const w of words) {
+                    if ((sub + ' ' + w).trim().length <= 180) {
+                        sub = (sub + ' ' + w).trim();
+                    } else {
+                        if (sub) chunks.push(sub);
+                        sub = w;
+                    }
+                }
+                if (sub) chunks.push(sub);
+                cur = '';
+            } else {
+                cur = trimmed;
+            }
+        }
+    }
+    if (cur) chunks.push(cur);
+    return chunks;
+}
+
+/**
  * Synthesize text using Google Cloud TTS endpoint.
  * Returns base64 MP3 string.
  * @param {string} text 
@@ -50,7 +91,7 @@ function uint8ToBase64(bytes) {
  */
 async function synthesizeCloudAudio(text, langCode = 'en') {
     if (!text || !text.trim()) return { base64: '' };
-    const clean = encodeURIComponent(text.trim().slice(0, 200));
+    const clean = encodeURIComponent(text.trim().slice(0, 180));
     const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${clean}&tl=${langCode}&client=tw-ob`;
     
     const resp = await fetch(url);
@@ -60,8 +101,63 @@ async function synthesizeCloudAudio(text, langCode = 'en') {
     return { base64 };
 }
 
+/**
+ * Synthesize entire text into a merged MP3 Blob (handles long text automatically).
+ * @param {string} text 
+ * @param {string} langCode 
+ * @returns {Promise<Blob>}
+ */
+async function synthesizeTextToMp3Blob(text, langCode = 'en') {
+    if (!text || !text.trim()) throw new Error('No text provided to synthesize');
+    const chunks = chunkSpeechText(text);
+    if (chunks.length === 0) throw new Error('Empty text');
+
+    const buffers = [];
+    for (const chunk of chunks) {
+        const clean = encodeURIComponent(chunk.trim());
+        const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${clean}&tl=${langCode}&client=tw-ob`;
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`Cloud TTS synthesis failed: ${resp.status}`);
+        const ab = await resp.arrayBuffer();
+        buffers.push(new Uint8Array(ab));
+    }
+
+    const totalLen = buffers.reduce((acc, b) => acc + b.length, 0);
+    const merged = new Uint8Array(totalLen);
+    let offset = 0;
+    for (const b of buffers) {
+        merged.set(b, offset);
+        offset += b.length;
+    }
+
+    return new Blob([merged], { type: 'audio/mp3' });
+}
+
+/**
+ * Download synthesized speech audio as an MP3 file directly to the user's computer.
+ * @param {string} text 
+ * @param {string} filename 
+ * @param {string} langCode 
+ */
+async function downloadSpeechMp3(text, filename = 'speech.mp3', langCode = 'en') {
+    const blob = await synthesizeTextToMp3Blob(text, langCode);
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename.endsWith('.mp3') ? filename : `${filename}.mp3`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+    }, 1500);
+}
+
 globalThis.CloudTTS = {
     NATURAL_CLOUD_VOICES,
     synthesizeCloudAudio,
+    synthesizeTextToMp3Blob,
+    downloadSpeechMp3,
+    chunkSpeechText,
     uint8ToBase64
 };

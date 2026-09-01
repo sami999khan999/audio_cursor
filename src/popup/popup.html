@@ -33,7 +33,14 @@
             </label>
         </header>
 
-        <main class="app-main">
+        <!-- Tab Navigation -->
+        <nav class="popup-tabs">
+            <button class="popup-tab active" data-tab="settings" type="button">Settings</button>
+            <button class="popup-tab" data-tab="shortcuts" type="button">Shortcuts</button>
+        </nav>
+
+        <!-- Settings Screen -->
+        <main class="app-main screen" id="screen-settings">
             <!-- Voice Selector Card -->
             <section class="card voice-section">
                 <div class="card-header">
@@ -125,11 +132,13 @@
                     <span>Read clipboard</span>
                 </button>
             </div>
+        </main>
 
-            <!-- Shortcuts Card -->
-            <section class="card shortcuts-section">
+        <!-- Shortcuts Screen -->
+        <main class="app-main screen" id="screen-shortcuts" style="display:none;">
+            <section class="card shortcuts-full-card">
                 <div class="card-header">
-                    <span class="card-title">SHORTCUTS</span>
+                    <span class="card-title">KEYBOARD SHORTCUTS</span>
                 </div>
                 <div class="keybind-list" id="keybind-list"></div>
                 <div class="shortcuts-footer">
@@ -138,13 +147,23 @@
                         <line x1="12" y1="16" x2="12" y2="12"></line>
                         <line x1="12" y1="8" x2="12.01" y2="8"></line>
                     </svg>
-                    <span>Press <kbd>Alt+P</kbd> on any page to read selected text.</span>
+                    <span>Shortcuts apply on any webpage while text is selected.</span>
                 </div>
             </section>
+
+            <!-- Change shortcuts hint -->
+            <div class="shortcuts-change-hint">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+                To change shortcuts go to
+                <button class="link-btn" id="open-chrome-shortcuts" type="button">chrome://extensions/shortcuts</button>
+            </div>
         </main>
 
         <footer class="app-footer">
-            <span class="footer-hint">Click a shortcut to configure</span>
+            <span class="footer-hint" id="footer-hint-text">Click a shortcut to configure</span>
             <button class="footer-reset-btn" id="keybind-reset" type="button">Reset</button>
         </footer>
     </div>

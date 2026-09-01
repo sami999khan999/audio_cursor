@@ -248,6 +248,69 @@ async function playPreview(msg) {
     });
 }
 
+// ── Full Audio Export ─────────────────────────────────────────────────────────
+
+async function exportAudio(msg) {
+    const { requestId, text, voice, rate, pitch } = msg;
+    try {
+        const isNeural = voice && voice.includes('Neural');
+        let chunks;
+        if (typeof Chunk !== 'undefined' && Chunk.chunkText) {
+            chunks = Chunk.chunkText(text);
+        } else {
+            chunks = [{ text: text.trim(), start: 0, end: text.length }];
+        }
+
+        const buffers = [];
+        for (const chunk of chunks) {
+            if (!chunk.text || !chunk.text.trim()) continue;
+            let base64;
+            if (isNeural) {
+                base64 = await synthesizeWithRetry(chunk.text, voice, rate, pitch);
+            } else {
+                const langMatch = voice.match(/^[a-z]{2,3}/);
+                const langCode = langMatch ? langMatch[0] : 'en';
+                const res = await CloudTTS.synthesizeCloudAudio(chunk.text, langCode);
+                base64 = res.base64;
+            }
+
+            if (base64) {
+                const bin = atob(base64);
+                const bytes = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+                buffers.push(bytes);
+            }
+        }
+
+        const totalLen = buffers.reduce((a, b) => a + b.length, 0);
+        const merged = new Uint8Array(totalLen);
+        let offset = 0;
+        for (const b of buffers) {
+            merged.set(b, offset);
+            offset += b.length;
+        }
+
+        let binary = '';
+        for (let i = 0; i < merged.length; i++) binary += String.fromCharCode(merged[i]);
+        const base64 = btoa(binary);
+
+        post({
+            type: 'AC_EXPORT_RESULT',
+            requestId,
+            base64,
+            success: true
+        });
+    } catch (err) {
+        console.warn('Offscreen audio export error:', err);
+        post({
+            type: 'AC_EXPORT_RESULT',
+            requestId,
+            error: (err && err.message) || String(err),
+            success: false
+        });
+    }
+}
+
 // ── Message router ────────────────────────────────────────────────────────────
 
 chrome.runtime.onMessage.addListener((message) => {
@@ -272,6 +335,9 @@ chrome.runtime.onMessage.addListener((message) => {
             break;
         case 'AC_PREVIEW_STOP':
             stopPreview();
+            break;
+        case 'AC_EXPORT_AUDIO':
+            exportAudio(message);
             break;
     }
 });
