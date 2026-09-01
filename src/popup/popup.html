@@ -9,100 +9,239 @@
 </head>
 <body>
     <div class="app" id="app">
+        <!-- Header -->
         <header class="app-header">
             <div class="brand">
-                <div class="brand-icon">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M4 9.5v5a1.5 1.5 0 0 0 1.5 1.5H8l4.3 3.44A1 1 0 0 0 14 18.66V5.34a1 1 0 0 0-1.7-.78L8 8H5.5A1.5 1.5 0 0 0 4 9.5z" fill="currentColor"/>
-                        <path class="wave wave-1" d="M17 9.5a3.5 3.5 0 0 1 0 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                        <path class="wave wave-2" d="M19 7a7 7 0 0 1 0 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <div class="brand-icon-wrap">
+                    <svg class="brand-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 3V21M12 3L6 8H3C2.44772 8 2 8.44772 2 9V15C2 15.5523 2.44772 16 3 16H6L12 21M12 3V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M16 8C17.3333 9.33333 18 10.6667 18 12C18 13.3333 17.3333 14.6667 16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M19.5 5.5C21.5 7.5 22.5 9.5 22.5 12C22.5 14.5 21.5 16.5 19.5 18.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
                 </div>
-                <div class="brand-text">
-                    <h1>Audio Cursor</h1>
-                    <span id="status-label">On</span>
+                <div class="brand-info">
+                    <div class="brand-title">Audio Cursor</div>
+                    <div class="brand-status">
+                        <span class="status-indicator"></span>
+                        <span id="status-label">ON</span>
+                    </div>
                 </div>
             </div>
-            <label class="switch" title="Enable or disable Audio Cursor">
-                <input type="checkbox" id="enabled-toggle">
-                <span class="slider"></span>
+            <label class="switch-modern" title="Toggle Audio Cursor">
+                <input type="checkbox" id="enabled-toggle" checked>
+                <span class="switch-slider"></span>
             </label>
         </header>
 
-        <main>
-            <section class="card">
-                <div class="card-label">Voice</div>
-                <div class="custom-select" id="custom-voice-select">
-                    <button class="select-trigger" id="voice-trigger" type="button">
-                        <span id="selected-voice-label">System default</span>
-                        <svg class="select-arrow" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M6 9.5l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </button>
-                    <div class="select-options" id="voice-options"></div>
+        <main class="app-main">
+            <!-- Voice Selector Card -->
+            <section class="card voice-section">
+                <div class="card-header">
+                    <span class="card-title">VOICE ENGINE</span>
+                    <span class="badge-count" id="voice-count-meta">322 voices</span>
                 </div>
-                <select id="voice-select" hidden>
-                    <option value="default">System default</option>
-                </select>
+                <div class="voice-selector-card" id="voice-card-trigger" role="button" tabindex="0">
+                    <div class="voice-avatar" id="current-voice-flag">✨</div>
+                    <div class="voice-meta">
+                        <div class="voice-primary">
+                            <span class="voice-name" id="current-voice-name">Jenny</span>
+                            <span class="pill-badge badge-ai" id="current-voice-badge">Natural AI</span>
+                        </div>
+                        <div class="voice-secondary">
+                            <span id="current-voice-country">United States</span>
+                            <span class="sep">•</span>
+                            <span id="current-voice-gender">Female</span>
+                        </div>
+                    </div>
+                    <div class="voice-chevron">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </div>
+                </div>
             </section>
 
-            <section class="card">
-                <div class="control-row">
-                    <div class="control-head">
-                        <span class="card-label">Speed</span>
-                        <span id="rate-value" class="readout">1.0×</span>
+            <!-- Playback Tuning Card -->
+            <section class="card settings-section">
+                <!-- Speed Slider & Pills -->
+                <div class="setting-group">
+                    <div class="setting-header">
+                        <span class="setting-label">SPEED</span>
+                        <span id="rate-value" class="setting-val">1.0×</span>
                     </div>
-                    <input type="range" id="rate-range" min="0.5" max="2.0" step="0.1" value="1.0">
+                    <div class="slider-wrap">
+                        <input type="range" id="rate-range" min="0.5" max="2.0" step="0.1" value="1.0">
+                    </div>
+                    <div class="speed-chips">
+                        <button class="speed-pill" data-speed="0.8" type="button">0.8×</button>
+                        <button class="speed-pill active" data-speed="1.0" type="button">1.0×</button>
+                        <button class="speed-pill" data-speed="1.2" type="button">1.2×</button>
+                        <button class="speed-pill" data-speed="1.5" type="button">1.5×</button>
+                        <button class="speed-pill" data-speed="2.0" type="button">2.0×</button>
+                    </div>
                 </div>
-                <div class="control-row">
-                    <div class="control-head">
-                        <span class="card-label">Pitch</span>
-                        <span id="pitch-value" class="readout">1.0</span>
+
+                <div class="divider"></div>
+
+                <!-- Pitch Slider -->
+                <div class="setting-group">
+                    <div class="setting-header">
+                        <span class="setting-label">PITCH</span>
+                        <span id="pitch-value" class="setting-val">1.0</span>
                     </div>
-                    <input type="range" id="pitch-range" min="0" max="2.0" step="0.1" value="1.0">
+                    <div class="slider-wrap">
+                        <input type="range" id="pitch-range" min="0.5" max="1.5" step="0.1" value="1.0">
+                    </div>
                 </div>
-                <div class="control-row toggle-row">
-                    <div class="control-head">
-                        <span class="card-label">Repeat playback</span>
+
+                <div class="divider"></div>
+
+                <!-- Repeat Toggle -->
+                <div class="setting-row">
+                    <div class="setting-label-block">
+                        <span class="setting-label">REPEAT PLAYBACK</span>
+                        <span class="setting-desc">Loop audio continuously</span>
                     </div>
-                    <label class="switch sm" title="Automatically repeat audio when playback finishes">
+                    <label class="switch-modern sm" title="Automatically repeat audio">
                         <input type="checkbox" id="repeat-toggle">
-                        <span class="slider"></span>
+                        <span class="switch-slider"></span>
                     </label>
                 </div>
             </section>
 
-            <div class="btn-group">
-                <button id="test-speech" class="preview-btn" type="button">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M8 5.5v13a1 1 0 0 0 1.52.86l10.2-6.5a1 1 0 0 0 0-1.72L9.52 4.64A1 1 0 0 0 8 5.5z" fill="currentColor"/>
+            <!-- Actions Group -->
+            <div class="actions-grid">
+                <button id="test-speech" class="btn-action btn-primary" type="button">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5.5v13a1 1 0 0 0 1.52.86l10.2-6.5a1 1 0 0 0 0-1.72L9.52 4.64A1 1 0 0 0 8 5.5z"/>
                     </svg>
                     <span>Preview</span>
                 </button>
-                <button id="read-clipboard" class="preview-btn secondary" type="button" title="Speak copied text from clipboard (PDFs / Docs)">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v3h10V5h2v14z" fill="currentColor"/>
+                <button id="read-clipboard" class="btn-action btn-secondary" type="button" title="Read copied text from clipboard">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
                     </svg>
                     <span>Read clipboard</span>
                 </button>
             </div>
 
-            <section class="card">
-                <div class="card-label">Shortcuts</div>
+            <!-- Shortcuts Card -->
+            <section class="card shortcuts-section">
+                <div class="card-header">
+                    <span class="card-title">SHORTCUTS</span>
+                </div>
                 <div class="keybind-list" id="keybind-list"></div>
-                <div class="keybind-note">
-                    Select text while holding <b>Ctrl+Alt</b> to auto-play.<br>
-                    Text cursor stays on until pressed again. Press text or use
-                    <b>arrows</b> to move, <b>Shift</b> to select.
+                <div class="shortcuts-footer">
+                    <svg class="info-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <span>Press <kbd>Alt+P</kbd> on any page to read selected text.</span>
                 </div>
             </section>
         </main>
 
-        <footer>
-            <span class="hint-text">Click a shortcut to remap</span>
-            <button class="link-btn" id="keybind-reset" type="button">Reset</button>
+        <footer class="app-footer">
+            <span class="footer-hint">Click a shortcut to configure</span>
+            <button class="footer-reset-btn" id="keybind-reset" type="button">Reset</button>
         </footer>
     </div>
+
+    <!-- Voice Browser Modal -->
+    <div class="voice-modal-backdrop" id="voice-modal" style="display: none;">
+        <div class="voice-modal-dialog">
+            <!-- Modal Header -->
+            <div class="voice-modal-header">
+                <div class="voice-modal-title">
+                    <span>Voice Library</span>
+                    <span class="badge-count" id="modal-voice-count">322</span>
+                </div>
+                <button class="btn-modal-close" id="btn-close-voice-modal" type="button" aria-label="Close">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Search input -->
+            <div class="voice-modal-search-wrap">
+                <div class="search-input-box">
+                    <svg class="search-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="voice-search-input" placeholder="Search voices, languages, countries..." autocomplete="off">
+                </div>
+            </div>
+
+            <!-- Custom Filter Dropdowns Bar -->
+            <div class="voice-modal-filters-bar">
+                <!-- Language Dropdown -->
+                <div class="custom-dropdown" id="dropdown-lang">
+                    <button class="custom-dropdown-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+                        <span class="custom-dropdown-val">🌐 All Languages</span>
+                        <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="custom-dropdown-menu" role="listbox">
+                        <div class="custom-dropdown-item active" data-val="all">🌐 All Languages</div>
+                        <div class="custom-dropdown-item" data-val="en-US">🇺🇸 US English</div>
+                        <div class="custom-dropdown-item" data-val="en-GB">🇬🇧 UK English</div>
+                        <div class="custom-dropdown-item" data-val="en-AU">🇦🇺 Australia</div>
+                        <div class="custom-dropdown-item" data-val="en-CA">🇨🇦 Canada</div>
+                        <div class="custom-dropdown-item" data-val="en-IN">🇮🇳 India</div>
+                        <div class="custom-dropdown-item" data-val="es">🇪🇸 Spanish</div>
+                        <div class="custom-dropdown-item" data-val="fr">🇫🇷 French</div>
+                        <div class="custom-dropdown-item" data-val="de">🇩🇪 German</div>
+                        <div class="custom-dropdown-item" data-val="ja">🇯🇵 Japanese</div>
+                        <div class="custom-dropdown-item" data-val="zh">🇨🇳 Chinese</div>
+                        <div class="custom-dropdown-item" data-val="it">🇮🇹 Italian</div>
+                        <div class="custom-dropdown-item" data-val="pt">🇧🇷 Portuguese</div>
+                        <div class="custom-dropdown-item" data-val="ko">🇰🇷 Korean</div>
+                    </div>
+                </div>
+
+                <!-- Gender Dropdown -->
+                <div class="custom-dropdown" id="dropdown-gender">
+                    <button class="custom-dropdown-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+                        <span class="custom-dropdown-val">⚧ All Genders</span>
+                        <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="custom-dropdown-menu" role="listbox">
+                        <div class="custom-dropdown-item active" data-val="all">⚧ All Genders</div>
+                        <div class="custom-dropdown-item" data-val="Female">♀ Female</div>
+                        <div class="custom-dropdown-item" data-val="Male">♂ Male</div>
+                    </div>
+                </div>
+
+                <!-- Engine Type Dropdown -->
+                <div class="custom-dropdown" id="dropdown-type">
+                    <button class="custom-dropdown-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+                        <span class="custom-dropdown-val">⚡ All Types</span>
+                        <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="custom-dropdown-menu" role="listbox">
+                        <div class="custom-dropdown-item active" data-val="all">⚡ All Types</div>
+                        <div class="custom-dropdown-item" data-val="neural">✨ Natural AI</div>
+                        <div class="custom-dropdown-item" data-val="local">💻 Offline</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Voice List -->
+            <div class="voice-modal-list" id="voice-modal-list"></div>
+        </div>
+    </div>
+
+    <script src="../shared/cloudTts.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>

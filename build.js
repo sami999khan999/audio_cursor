@@ -31,10 +31,35 @@ function bundle(files, outputName, isCss = false) {
     console.log(`✅ Build complete: dist/${outputName} (${(fs.statSync(outputPath).size / 1024).toFixed(1)} KB)`);
 }
 
+function copyFile(srcRel, distRel) {
+    const srcPath = path.join(SRC_DIR, srcRel);
+    const distPath = path.join(DIST_DIR, distRel);
+    if (fs.existsSync(srcPath)) {
+        fs.copyFileSync(srcPath, distPath);
+        console.log(`✅ Copied: dist/${distRel}`);
+    }
+}
+
 // Bundle Content Scripts
 bundle(['content/content.js'], 'content.js');
 bundle(['content/docs-bridge.js'], 'docs-bridge.js');
 bundle(['shared/theme.css', 'content/content.css'], 'content.css', true);
 
-// Bundle Background Script
-bundle(['background/background.js'], 'background.js');
+// Bundle Background Script (chunking + orchestration; no synthesis)
+bundle(['shared/chunk.js', 'shared/cloudTts.js', 'background/background.js'], 'background.js');
+
+// Bundle the Offscreen document with the Edge Neural TTS client.
+// Synthesis lives here because declarativeNetRequest header rules are not applied
+// to WebSocket upgrades started from a service worker (crbug.com/1285664).
+bundle(['shared/edgeTts.js', 'offscreen/offscreen.js'], 'offscreen.js');
+
+// Copy Offscreen shell and Shared Assets
+copyFile('offscreen/offscreen.html', 'offscreen.html');
+copyFile('shared/voices.json', 'voices.json');
+
+const rootRules = path.join(__dirname, 'rules.json');
+const distRules = path.join(DIST_DIR, 'rules.json');
+if (fs.existsSync(rootRules)) {
+    fs.copyFileSync(rootRules, distRules);
+    console.log('✅ Copied: dist/rules.json');
+}

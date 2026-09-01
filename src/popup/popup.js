@@ -2,38 +2,54 @@ document.addEventListener('DOMContentLoaded', () => {
     const app = document.getElementById('app');
     const enabledToggle = document.getElementById('enabled-toggle');
     const statusLabel = document.getElementById('status-label');
-    const voiceSelect = document.getElementById('voice-select');
     const rateRange = document.getElementById('rate-range');
     const rateValue = document.getElementById('rate-value');
     const pitchRange = document.getElementById('pitch-range');
     const pitchValue = document.getElementById('pitch-value');
     const repeatToggle = document.getElementById('repeat-toggle');
     const testButton = document.getElementById('test-speech');
-    const testLabel = testButton.querySelector('span');
+    const testLabel = testButton ? testButton.querySelector('span') : null;
     const readClipboardBtn = document.getElementById('read-clipboard');
-    const readClipboardLabel = readClipboardBtn ? readClipboardBtn.querySelector('span') : null;
     const keybindList = document.getElementById('keybind-list');
-    const keybindResetBtn = document.getElementById('keybind-reset');
 
-    const customVoiceSelect = document.getElementById('custom-voice-select');
-    const voiceTrigger = document.getElementById('voice-trigger');
-    const voiceOptionsContainer = document.getElementById('voice-options');
-    const selectedVoiceLabel = document.getElementById('selected-voice-label');
+    // Voice Card & Modal elements
+    const voiceCardTrigger = document.getElementById('voice-card-trigger');
+    const currentVoiceFlag = document.getElementById('current-voice-flag');
+    const currentVoiceName = document.getElementById('current-voice-name');
+    const currentVoiceBadge = document.getElementById('current-voice-badge');
+    const currentVoiceCountry = document.getElementById('current-voice-country');
+    const currentVoiceGender = document.getElementById('current-voice-gender');
+    const voiceCountMeta = document.getElementById('voice-count-meta');
 
-    const PREVIEW_TEXT = 'Hi! Select any text on a page, and I will read it out loud for you.';
+    const voiceModal = document.getElementById('voice-modal');
+    const btnCloseVoiceModal = document.getElementById('btn-close-voice-modal');
+    const voiceSearchInput = document.getElementById('voice-search-input');
+    const voiceModalList = document.getElementById('voice-modal-list');
+    const modalVoiceCount = document.getElementById('modal-voice-count');
+
+    let allVoices = [];
+    let systemVoicesList = [];
+    let currentVoice = 'en-US-JennyNeural';
+    let voiceSearchQuery = '';
+    let activeLangFilter = 'all';
+    let activeGenderFilter = 'all';
+    let activeTypeFilter = 'all';
+    let isSpeakingPreview = false;
 
     // ── Enabled state ──────────────────────────────────
 
     function updateStatusUI(enabled) {
-        statusLabel.textContent = enabled ? 'On' : 'Off';
-        app.classList.toggle('off', !enabled);
+        if (statusLabel) statusLabel.textContent = enabled ? 'On' : 'Off';
+        if (app) app.classList.toggle('off', !enabled);
     }
 
-    enabledToggle.addEventListener('change', () => {
-        const enabled = enabledToggle.checked;
-        chrome.storage.sync.set({ enabled });
-        updateStatusUI(enabled);
-    });
+    if (enabledToggle) {
+        enabledToggle.addEventListener('change', () => {
+            const enabled = enabledToggle.checked;
+            chrome.storage.sync.set({ enabled });
+            updateStatusUI(enabled);
+        });
+    }
 
     if (repeatToggle) {
         repeatToggle.addEventListener('change', () => {
@@ -41,36 +57,573 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ── Sliders ────────────────────────────────────────
+    // ── Sliders & Speed Pills ──────────────────────────
 
     function paintRange(input) {
+        if (!input) return;
         const min = parseFloat(input.min);
         const max = parseFloat(input.max);
         const val = parseFloat(input.value);
         input.style.setProperty('--val', ((val - min) / (max - min)) * 100 + '%');
     }
 
-    rateRange.addEventListener('input', () => {
-        rateValue.textContent = `${parseFloat(rateRange.value).toFixed(1)}×`;
+    function setRate(val) {
+        val = Math.round(val * 10) / 10;
+        if (rateRange) rateRange.value = val;
+        if (rateValue) rateValue.textContent = `${val.toFixed(1)}×`;
+        document.querySelectorAll('.speed-pill').forEach(p => {
+            p.classList.toggle('active', parseFloat(p.dataset.speed) === val);
+        });
         paintRange(rateRange);
-    });
-    rateRange.addEventListener('change', () => {
-        chrome.storage.sync.set({ rate: rateRange.value });
+        chrome.storage.sync.set({ rate: String(val) });
+    }
+
+    if (rateRange) {
+        rateRange.addEventListener('input', () => {
+            const val = parseFloat(rateRange.value);
+            if (rateValue) rateValue.textContent = `${val.toFixed(1)}×`;
+            document.querySelectorAll('.speed-pill').forEach(p => {
+                p.classList.toggle('active', parseFloat(p.dataset.speed) === val);
+            });
+            paintRange(rateRange);
+        });
+        rateRange.addEventListener('change', () => {
+            chrome.storage.sync.set({ rate: rateRange.value });
+        });
+    }
+
+    document.querySelectorAll('.speed-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            const speed = parseFloat(pill.dataset.speed);
+            if (!isNaN(speed)) {
+                setRate(speed);
+            }
+        });
     });
 
-    pitchRange.addEventListener('input', () => {
-        pitchValue.textContent = parseFloat(pitchRange.value).toFixed(1);
-        paintRange(pitchRange);
-    });
-    pitchRange.addEventListener('change', () => {
-        chrome.storage.sync.set({ pitch: pitchRange.value });
+    if (pitchRange) {
+        pitchRange.addEventListener('input', () => {
+            if (pitchValue) pitchValue.textContent = parseFloat(pitchRange.value).toFixed(1);
+            paintRange(pitchRange);
+        });
+        pitchRange.addEventListener('change', () => {
+            chrome.storage.sync.set({ pitch: pitchRange.value });
+        });
+    }
+
+    // ── Load Voices & Enriched Data ────────────────────
+
+    const COUNTRY_MAP = {
+        'en-US': { name: 'United States', flag: '🇺🇸', lang: 'English' },
+        'en-GB': { name: 'United Kingdom', flag: '🇬🇧', lang: 'English' },
+        'en-AU': { name: 'Australia', flag: '🇦🇺', lang: 'English' },
+        'en-CA': { name: 'Canada', flag: '🇨🇦', lang: 'English' },
+        'en-IN': { name: 'India', flag: '🇮🇳', lang: 'English' },
+        'es-ES': { name: 'Spain', flag: '🇪🇸', lang: 'Spanish' },
+        'es-MX': { name: 'Mexico', flag: '🇲🇽', lang: 'Spanish' },
+        'fr-FR': { name: 'France', flag: '🇫🇷', lang: 'French' },
+        'de-DE': { name: 'Germany', flag: '🇩🇪', lang: 'German' },
+        'ja-JP': { name: 'Japan', flag: '🇯🇵', lang: 'Japanese' },
+        'zh-CN': { name: 'China', flag: '🇨🇳', lang: 'Chinese' },
+        'ko-KR': { name: 'South Korea', flag: '🇰🇷', lang: 'Korean' },
+        'it-IT': { name: 'Italy', flag: '🇮🇹', lang: 'Italian' },
+        'pt-BR': { name: 'Brazil', flag: '🇧🇷', lang: 'Portuguese' }
+    };
+
+    function findBestVoiceName(vObj, systemVoices) {
+        if (!systemVoices || systemVoices.length === 0) return undefined;
+
+        // 1. Match friendlyName (e.g. 'Microsoft Jenny Online (Natural)...')
+        if (vObj.friendlyName) {
+            const m = systemVoices.find(s => s.voiceName === vObj.friendlyName);
+            if (m) return m.voiceName;
+        }
+
+        // 2. Match exact name or voiceURI
+        let m = systemVoices.find(s => s.voiceName === vObj.name || s.voiceName === vObj.voiceURI);
+        if (m) return m.voiceName;
+
+        // 3. Partial match on cleanName
+        if (vObj.cleanName) {
+            m = systemVoices.find(s => s.voiceName.toLowerCase().includes(vObj.cleanName.toLowerCase()));
+            if (m) return m.voiceName;
+        }
+
+        // 4. Match lang + gender
+        if (vObj.lang) {
+            const sameLangList = systemVoices.filter(s => s.lang && s.lang.toLowerCase().replace('_', '-').startsWith(vObj.lang.slice(0, 2).toLowerCase()));
+            if (sameLangList.length > 0) {
+                if (vObj.gender === 'Male') {
+                    const maleVoice = sameLangList.find(s => s.voiceName.toLowerCase().includes('male') || s.voiceName.toLowerCase().includes('david') || s.voiceName.toLowerCase().includes('guy'));
+                    if (maleVoice) return maleVoice.voiceName;
+                } else if (vObj.gender === 'Female') {
+                    const femaleVoice = sameLangList.find(s => s.voiceName.toLowerCase().includes('female') || s.voiceName.toLowerCase().includes('zira') || s.voiceName.toLowerCase().includes('jenny'));
+                    if (femaleVoice) return femaleVoice.voiceName;
+                }
+                return sameLangList[0].voiceName;
+            }
+        }
+
+        return systemVoices[0].voiceName;
+    }
+
+    async function loadAllVoices() {
+        let neuralVoices = [];
+        try {
+            const url = chrome.runtime.getURL('dist/voices.json');
+            const resp = await fetch(url);
+            neuralVoices = await resp.json();
+        } catch (e) {
+            try {
+                const url2 = chrome.runtime.getURL('src/shared/voices.json');
+                const resp2 = await fetch(url2);
+                neuralVoices = await resp2.json();
+            } catch (err) {
+                console.warn('Could not load voices.json:', err);
+            }
+        }
+
+        chrome.tts.getVoices((localVoices) => {
+            systemVoicesList = (localVoices || []).filter(v => v.voiceName);
+
+            const formattedLocal = systemVoicesList.map(v => {
+                const isOnline = v.voiceName.toLowerCase().includes('natural') || v.voiceName.toLowerCase().includes('online');
+                const isFemale = v.voiceName.toLowerCase().includes('female') || v.voiceName.toLowerCase().includes('zira');
+                const isMale = v.voiceName.toLowerCase().includes('male') || v.voiceName.toLowerCase().includes('david');
+                const gender = isFemale ? 'Female' : (isMale ? 'Male' : 'Local');
+
+                const clean = v.voiceName
+                    .replace(/^Microsoft /, '')
+                    .replace(/ Online \(Natural\)/, '')
+                    .replace(/ - English \([^)]+\)/, '')
+                    .replace(/ Desktop/, '');
+
+                const loc = COUNTRY_MAP[v.lang] || {
+                    name: v.lang || 'System',
+                    flag: '💻',
+                    lang: v.lang ? v.lang.split('-')[0].toUpperCase() : 'System'
+                };
+
+                return {
+                    name: v.voiceName,
+                    cleanName: clean,
+                    displayName: v.voiceName,
+                    friendlyName: v.voiceName,
+                    country: loc.name,
+                    flag: loc.flag,
+                    lang: v.lang || 'en-US',
+                    languageName: loc.lang,
+                    gender,
+                    isNeural: isOnline,
+                    voiceURI: v.voiceName
+                };
+            });
+
+            const map = new Map();
+            neuralVoices.forEach(v => map.set(v.name, v));
+            formattedLocal.forEach(v => {
+                if (!map.has(v.name)) map.set(v.name, v);
+            });
+
+            allVoices = Array.from(map.values());
+            if (voiceCountMeta) voiceCountMeta.textContent = `${allVoices.length} voices`;
+
+            chrome.storage.sync.get(['voice'], (data) => {
+                currentVoice = data.voice || (allVoices.length > 0 ? allVoices[0].name : 'en-US-JennyNeural');
+                updateVoiceCardUI();
+            });
+        });
+    }
+
+    function getVoiceInfo(voiceName) {
+        if (!voiceName || voiceName === 'default') {
+            return {
+                name: 'default',
+                cleanName: 'System Default Voice',
+                country: 'Operating System',
+                flag: '💻',
+                gender: 'Local',
+                isNeural: false
+            };
+        }
+        const found = allVoices.find(v => v.name === voiceName || v.voiceURI === voiceName);
+        if (found) return found;
+
+        return {
+            name: voiceName,
+            cleanName: voiceName.replace(/^[a-z]{2,3}-[A-Z]{2,4}-/, '').replace(/Neural$/, ''),
+            country: 'Natural Voice',
+            flag: '✨',
+            gender: 'AI',
+            isNeural: true
+        };
+    }
+
+    function updateVoiceCardUI() {
+        const v = getVoiceInfo(currentVoice);
+        if (currentVoiceFlag) currentVoiceFlag.textContent = (v.flag && v.flag.length > 2) ? v.flag : (v.isNeural ? '✨' : '🎙️');
+        if (currentVoiceName) currentVoiceName.textContent = v.cleanName || v.name;
+        if (currentVoiceCountry) currentVoiceCountry.textContent = v.country || v.lang || '';
+        if (currentVoiceGender) currentVoiceGender.textContent = v.gender || (v.isNeural ? 'Natural' : 'Local');
+
+        if (currentVoiceBadge) {
+            currentVoiceBadge.textContent = v.isNeural ? 'Natural AI' : 'Local';
+            currentVoiceBadge.className = 'pill-badge ' + (v.isNeural ? 'badge-ai' : '');
+        }
+    }
+
+    // ── Voice Browser Modal ────────────────────────────
+
+    function openVoiceModal() {
+        if (voiceModal) {
+            voiceModal.style.display = 'flex';
+            if (voiceSearchInput) {
+                voiceSearchInput.value = voiceSearchQuery;
+                voiceSearchInput.focus();
+            }
+            renderVoiceModalList();
+        }
+    }
+
+    function closeVoiceModal() {
+        if (voiceModal) voiceModal.style.display = 'none';
+        stopPreview();
+    }
+
+    function getFilteredVoices() {
+        return allVoices.filter(v => {
+            if (voiceSearchQuery) {
+                const q = voiceSearchQuery.toLowerCase();
+                const matchName = (v.cleanName || v.name || '').toLowerCase().includes(q);
+                const matchCountry = (v.country || '').toLowerCase().includes(q);
+                const matchLang = (v.languageName || v.lang || '').toLowerCase().includes(q);
+                const matchGender = (v.gender || '').toLowerCase().includes(q);
+                if (!matchName && !matchCountry && !matchLang && !matchGender) {
+                    return false;
+                }
+            }
+
+            if (activeLangFilter !== 'all') {
+                if (activeLangFilter === 'en-US' && v.lang !== 'en-US') return false;
+                if (activeLangFilter === 'en-GB' && v.lang !== 'en-GB') return false;
+                if (activeLangFilter === 'en-AU' && v.lang !== 'en-AU') return false;
+                if (activeLangFilter === 'en-CA' && v.lang !== 'en-CA') return false;
+                if (activeLangFilter === 'en-IN' && v.lang !== 'en-IN') return false;
+                if (activeLangFilter === 'es' && !v.lang.startsWith('es-')) return false;
+                if (activeLangFilter === 'fr' && !v.lang.startsWith('fr-')) return false;
+                if (activeLangFilter === 'de' && !v.lang.startsWith('de-')) return false;
+                if (activeLangFilter === 'ja' && !v.lang.startsWith('ja-')) return false;
+                if (activeLangFilter === 'zh' && !v.lang.startsWith('zh-')) return false;
+                if (activeLangFilter === 'it' && !v.lang.startsWith('it-')) return false;
+                if (activeLangFilter === 'pt' && !v.lang.startsWith('pt-')) return false;
+                if (activeLangFilter === 'ko' && !v.lang.startsWith('ko-')) return false;
+            }
+
+            if (activeGenderFilter !== 'all') {
+                if (v.gender && v.gender !== activeGenderFilter) return false;
+            }
+
+            if (activeTypeFilter === 'neural' && !v.isNeural) return false;
+            if (activeTypeFilter === 'local' && v.isNeural) return false;
+
+            return true;
+        });
+    }
+
+    function renderVoiceModalList() {
+        if (!voiceModalList) return;
+        const filtered = getFilteredVoices();
+        if (modalVoiceCount) modalVoiceCount.textContent = `${filtered.length} of ${allVoices.length}`;
+
+        voiceModalList.innerHTML = '';
+
+        if (filtered.length === 0) {
+            voiceModalList.innerHTML = `
+                <div style="text-align: center; padding: 36px 12px; color: var(--text-muted);">
+                    <div style="font-weight: 700; font-size: 13px; color: var(--text-primary);">No matching voices</div>
+                    <div style="font-size: 12px; margin-top: 5px;">Try searching for a different language, country, or accent.</div>
+                </div>
+            `;
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        filtered.forEach(v => {
+            const isSelected = v.name === currentVoice;
+            const itemEl = document.createElement('div');
+            itemEl.className = 'voice-item' + (isSelected ? ' selected' : '');
+
+            const genderClass = v.gender === 'Female' ? 'badge-female' : (v.gender === 'Male' ? 'badge-male' : '');
+            const typeBadge = v.isNeural ? '<span class="pill-badge badge-ai">Natural AI</span>' : '<span class="pill-badge">Local</span>';
+            const genderBadge = v.gender ? `<span class="pill-badge ${genderClass}">${v.gender}</span>` : '';
+
+            itemEl.innerHTML = `
+                <div class="voice-item-left">
+                    <span style="font-size: 16px; font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;">${v.flag || '✨'}</span>
+                    <div class="voice-item-details">
+                        <div class="voice-item-name">
+                            <span>${v.cleanName || v.name}</span>
+                            ${typeBadge}
+                            ${genderBadge}
+                        </div>
+                        <div class="voice-item-sub">
+                            ${v.country || v.lang || ''} • ${v.languageName || v.lang}
+                        </div>
+                    </div>
+                </div>
+                <div class="voice-item-actions">
+                    <button class="btn-item-preview" data-voice="${v.name}" type="button">▶ Preview</button>
+                </div>
+            `;
+
+            itemEl.addEventListener('click', (e) => {
+                if (e.target && e.target.closest('.btn-item-preview')) return;
+                selectVoice(v.name);
+            });
+
+            const prevBtn = itemEl.querySelector('.btn-item-preview');
+            if (prevBtn) {
+                prevBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    previewVoice(v);
+                });
+            }
+
+            fragment.appendChild(itemEl);
+        });
+
+        voiceModalList.appendChild(fragment);
+    }
+
+    function selectVoice(voiceName) {
+        currentVoice = voiceName;
+        chrome.storage.sync.set({ voice: voiceName });
+        updateVoiceCardUI();
+        closeVoiceModal();
+    }
+
+    // Neural previews are synthesized and played by the offscreen document.
+    let pendingPreviewOnEnd = null;
+
+    chrome.runtime.onMessage.addListener((message) => {
+        if (message.type === 'AC_PREVIEW_ENDED' || message.type === 'AC_PREVIEW_ERROR') {
+            if (message.type === 'AC_PREVIEW_ERROR') {
+                console.warn('Voice preview failed:', message.error);
+            }
+            const cb = pendingPreviewOnEnd;
+            pendingPreviewOnEnd = null;
+            if (cb) cb();
+        }
     });
 
-    // ── Load saved settings ────────────────────────────
+    function stopNeuralPreviewAudio() {
+        pendingPreviewOnEnd = null;
+        chrome.runtime.sendMessage({ type: 'STOP_PREVIEW' }, () => void chrome.runtime.lastError);
+    }
 
-    chrome.storage.sync.get(['enabled', 'rate', 'pitch', 'repeat'], (data) => {
+    function stopPreview() {
+        chrome.tts.stop();
+        stopNeuralPreviewAudio();
+        isSpeakingPreview = false;
+        if (testButton) {
+            testButton.classList.remove('speaking');
+            if (testLabel) testLabel.textContent = 'Preview';
+        }
+    }
+
+    function speakPreview(voice, sampleText, onStart, onEnd) {
+        const isNeural = voice.isNeural !== false && /Neural$/.test(voice.name || '');
+
+        if (isNeural) {
+            pendingPreviewOnEnd = onEnd || null;
+            chrome.runtime.sendMessage({
+                type: 'PREVIEW_VOICE',
+                text: sampleText,
+                voice: voice.name,
+                rate: parseFloat(rateRange ? rateRange.value : 1.0) || 1.0,
+                pitch: parseFloat(pitchRange ? pitchRange.value : 1.0) || 1.0
+            }, (resp) => {
+                if (chrome.runtime.lastError || !resp || !resp.ok) {
+                    console.warn('Voice preview failed:', resp && resp.error);
+                    pendingPreviewOnEnd = null;
+                    if (onEnd) onEnd();
+                    return;
+                }
+                if (onStart) onStart();
+            });
+            return;
+        }
+
+        const systemVoiceName = findBestVoiceName(voice, systemVoicesList);
+        let userPitch = parseFloat(pitchRange ? pitchRange.value : 1.0) || 1.0;
+        if (voice.gender === 'Male') userPitch *= 0.88;
+        if (voice.gender === 'Female') userPitch *= 1.06;
+
+        chrome.tts.speak(sampleText, {
+            voiceName: systemVoiceName,
+            rate: parseFloat(rateRange ? rateRange.value : 1.0) || 1.0,
+            pitch: userPitch,
+            onEvent: (event) => {
+                if (event.type === 'start') {
+                    if (onStart) onStart();
+                }
+                if (event.type === 'end' || event.type === 'interrupted' || event.type === 'cancelled' || event.type === 'error') {
+                    if (onEnd) onEnd();
+                }
+            }
+        });
+    }
+
+    function previewVoice(voice) {
+        stopPreview();
+        const sampleText = `Hi! I am ${voice.cleanName || voice.name}, ready to read any webpage for you.`;
+        speakPreview(voice, sampleText, null, null);
+    }
+
+    // Modal Triggers & Event Listeners
+    if (voiceCardTrigger) {
+        voiceCardTrigger.addEventListener('click', openVoiceModal);
+    }
+    if (btnCloseVoiceModal) {
+        btnCloseVoiceModal.addEventListener('click', closeVoiceModal);
+    }
+    if (voiceModal) {
+        voiceModal.addEventListener('click', (e) => {
+            if (e.target === voiceModal) closeVoiceModal();
+        });
+    }
+
+    if (voiceSearchInput) {
+        voiceSearchInput.addEventListener('input', () => {
+            voiceSearchQuery = voiceSearchInput.value.trim();
+            renderVoiceModalList();
+        });
+    }
+
+    function closeAllDropdowns() {
+        document.querySelectorAll('.custom-dropdown').forEach(dd => dd.classList.remove('open'));
+    }
+
+    function setupCustomDropdown(dropdownId, onSelect) {
+        const dd = document.getElementById(dropdownId);
+        if (!dd) return;
+        const btn = dd.querySelector('.custom-dropdown-btn');
+        const valSpan = dd.querySelector('.custom-dropdown-val');
+        const items = dd.querySelectorAll('.custom-dropdown-item');
+
+        if (btn) {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const wasOpen = dd.classList.contains('open');
+                closeAllDropdowns();
+                if (!wasOpen) dd.classList.add('open');
+            });
+        }
+
+        items.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                items.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                if (valSpan) valSpan.textContent = item.textContent.trim();
+                dd.classList.remove('open');
+                if (onSelect) onSelect(item.dataset.val);
+            });
+        });
+    }
+
+    setupCustomDropdown('dropdown-lang', (val) => {
+        activeLangFilter = val || 'all';
+        renderVoiceModalList();
+    });
+
+    setupCustomDropdown('dropdown-gender', (val) => {
+        activeGenderFilter = val || 'all';
+        renderVoiceModalList();
+    });
+
+    setupCustomDropdown('dropdown-type', (val) => {
+        activeTypeFilter = val || 'all';
+        renderVoiceModalList();
+    });
+
+    document.addEventListener('click', () => {
+        closeAllDropdowns();
+    });
+
+    // ── Preview Button ─────────────────────────────────
+
+    if (testButton) {
+        testButton.addEventListener('click', () => {
+            if (isSpeakingPreview) {
+                stopPreview();
+                return;
+            }
+
+            isSpeakingPreview = true;
+            testButton.classList.add('speaking');
+            if (testLabel) testLabel.textContent = 'Stop preview';
+
+            const v = getVoiceInfo(currentVoice);
+            const previewText = `Hello! I am ${v.cleanName || v.name}. Select any text on a webpage and I will read it aloud for you.`;
+
+            speakPreview(v, previewText, null, () => {
+                isSpeakingPreview = false;
+                testButton.classList.remove('speaking');
+                if (testLabel) testLabel.textContent = 'Preview';
+            });
+        });
+    }
+
+    // ── Read Clipboard ─────────────────────────────────
+
+    if (readClipboardBtn) {
+        readClipboardBtn.addEventListener('click', async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text && text.trim()) {
+                    chrome.runtime.sendMessage({
+                        type: 'START_SPEECH',
+                        text: text.trim(),
+                        from: 0
+                    });
+                }
+            } catch (err) {
+                console.warn('Clipboard read error:', err);
+            }
+        });
+    }
+
+    // ── Shortcuts Display ──────────────────────────────
+
+    const DEFAULT_KEYBINDS = [
+        { label: 'Play Selection', key: 'Alt+P' },
+        { label: 'Place Cursor / Move', key: 'Click / Arrows' },
+        { label: 'Select Word / Range', key: 'Shift+Arrows' }
+    ];
+
+    function renderKeybinds() {
+        if (!keybindList) return;
+        keybindList.innerHTML = '';
+        DEFAULT_KEYBINDS.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'keybind-row';
+            row.innerHTML = `
+                <span>${item.label}</span>
+                <span class="keybind-key">${item.key}</span>
+            `;
+            keybindList.appendChild(row);
+        });
+    }
+
+    renderKeybinds();
+
+    // ── Load Saved Settings ────────────────────
+
+    chrome.storage.sync.get(['enabled', 'rate', 'pitch', 'repeat', 'voice'], (data) => {
         const enabled = data.enabled !== undefined ? data.enabled : true;
-        enabledToggle.checked = enabled;
+        if (enabledToggle) enabledToggle.checked = enabled;
         updateStatusUI(enabled);
 
         if (repeatToggle) {
@@ -78,338 +631,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (data.rate) {
-            rateRange.value = data.rate;
-            rateValue.textContent = `${parseFloat(data.rate).toFixed(1)}×`;
+            const r = parseFloat(data.rate) || 1.0;
+            if (rateRange) rateRange.value = r;
+            if (rateValue) rateValue.textContent = `${r.toFixed(1)}×`;
+            document.querySelectorAll('.speed-pill').forEach(p => {
+                p.classList.toggle('active', parseFloat(p.dataset.speed) === r);
+            });
+            paintRange(rateRange);
         }
         if (data.pitch) {
-            pitchRange.value = data.pitch;
-            pitchValue.textContent = parseFloat(data.pitch).toFixed(1);
+            if (pitchRange) pitchRange.value = data.pitch;
+            if (pitchValue) pitchValue.textContent = parseFloat(data.pitch).toFixed(1);
+            paintRange(pitchRange);
         }
-        paintRange(rateRange);
-        paintRange(pitchRange);
-    });
-
-    // ── Voice picker ───────────────────────────────────
-
-    function selectVoice(value, label) {
-        selectedVoiceLabel.textContent = label;
-        voiceSelect.value = value;
-        chrome.storage.sync.set({ voice: value });
-
-        Array.from(voiceOptionsContainer.children).forEach((child) => {
-            child.classList.toggle('selected', child.dataset.value === value);
-        });
-    }
-
-    let voiceRetryDone = false;
-
-    function populateVoices() {
-        chrome.tts.getVoices((voices) => {
-            if ((!voices || voices.length === 0) && !voiceRetryDone) {
-                voiceRetryDone = true;
-                setTimeout(populateVoices, 300);
-            }
-            voices = voices || [];
-            voiceOptionsContainer.innerHTML = '';
-            voiceSelect.innerHTML = '';
-
-            const allVoices = [
-                { voiceName: 'default', label: 'System default', lang: '' },
-                ...voices
-                    .filter((v) => v.voiceName)
-                    .map((v) => ({ voiceName: v.voiceName, label: v.voiceName, lang: v.lang || '' }))
-            ];
-
-            allVoices.forEach((v) => {
-                const option = document.createElement('option');
-                option.value = v.voiceName;
-                option.textContent = v.label;
-                voiceSelect.appendChild(option);
-
-                const div = document.createElement('div');
-                div.className = 'voice-option';
-                div.dataset.value = v.voiceName;
-
-                const name = document.createElement('span');
-                name.className = 'voice-name';
-                name.textContent = v.label;
-                div.appendChild(name);
-
-                if (v.lang) {
-                    const lang = document.createElement('span');
-                    lang.className = 'voice-lang';
-                    lang.textContent = v.lang;
-                    div.appendChild(lang);
-                }
-
-                div.addEventListener('click', () => {
-                    selectVoice(v.voiceName, v.label);
-                    customVoiceSelect.classList.remove('open');
-                });
-
-                voiceOptionsContainer.appendChild(div);
-            });
-
-            chrome.storage.sync.get(['voice'], (data) => {
-                const currentVoice = data.voice || 'default';
-                const current =
-                    allVoices.find((v) => v.voiceName === currentVoice) || allVoices[0];
-                selectedVoiceLabel.textContent = current.label;
-                voiceSelect.value = current.voiceName;
-
-                Array.from(voiceOptionsContainer.children).forEach((child) => {
-                    child.classList.toggle('selected', child.dataset.value === current.voiceName);
-                });
-            });
-        });
-    }
-
-    populateVoices();
-
-    voiceTrigger.addEventListener('click', (e) => {
-        e.stopPropagation();
-        customVoiceSelect.classList.toggle('open');
-    });
-
-    document.addEventListener('click', () => {
-        customVoiceSelect.classList.remove('open');
-    });
-
-    // ── Preview ────────────────────────────────────────
-
-    let previewing = false;
-
-    testButton.addEventListener('click', () => {
-        if (previewing) {
-            chrome.tts.stop();
-            return;
+        if (data.voice) {
+            currentVoice = data.voice;
         }
 
-        chrome.tts.speak(PREVIEW_TEXT, {
-            voiceName: voiceSelect.value === 'default' ? undefined : voiceSelect.value,
-            rate: parseFloat(rateRange.value) || 1.0,
-            pitch: parseFloat(pitchRange.value) || 1.0,
-            onEvent: (event) => {
-                if (event.type === 'start') {
-                    previewing = true;
-                    testButton.classList.add('speaking');
-                    testLabel.textContent = 'Stop preview';
-                }
-                if (event.type === 'end' || event.type === 'interrupted' || event.type === 'cancelled' || event.type === 'error') {
-                    previewing = false;
-                    testButton.classList.remove('speaking');
-                    testLabel.textContent = event.type === 'error' ? 'Voice unavailable' : 'Preview';
-                }
-            }
-        });
-    });
-
-    if (readClipboardBtn) {
-        let readingClipboard = false;
-        readClipboardBtn.addEventListener('click', async () => {
-            if (readingClipboard) {
-                chrome.tts.stop();
-                readingClipboard = false;
-                readClipboardBtn.classList.remove('speaking');
-                if (readClipboardLabel) readClipboardLabel.textContent = 'Read clipboard';
-                return;
-            }
-
-            try {
-                const text = await navigator.clipboard.readText();
-                if (!text || !text.trim()) {
-                    if (readClipboardLabel) {
-                        const prev = readClipboardLabel.textContent;
-                        readClipboardLabel.textContent = 'Clipboard empty';
-                        setTimeout(() => { readClipboardLabel.textContent = prev; }, 1500);
-                    }
-                    return;
-                }
-
-                chrome.tts.speak(text.trim(), {
-                    voiceName: voiceSelect.value === 'default' ? undefined : voiceSelect.value,
-                    rate: parseFloat(rateRange.value) || 1.0,
-                    pitch: parseFloat(pitchRange.value) || 1.0,
-                    onEvent: (event) => {
-                        if (event.type === 'start') {
-                            readingClipboard = true;
-                            readClipboardBtn.classList.add('speaking');
-                            if (readClipboardLabel) readClipboardLabel.textContent = 'Stop reading';
-                        }
-                        if (event.type === 'end' || event.type === 'interrupted' || event.type === 'cancelled' || event.type === 'error') {
-                            readingClipboard = false;
-                            readClipboardBtn.classList.remove('speaking');
-                            if (readClipboardLabel) readClipboardLabel.textContent = 'Read clipboard';
-                        }
-                    }
-                });
-            } catch (err) {
-                if (readClipboardLabel) {
-                    readClipboardLabel.textContent = 'Copy text first';
-                    setTimeout(() => { readClipboardLabel.textContent = 'Read clipboard'; }, 1500);
-                }
-            }
-        });
-    }
-
-    // ── Keyboard shortcuts (recordable, in-extension) ──
-
-    const DEFAULT_KEYBINDS = {
-        togglePlayback: 'Alt+P',
-        keyboardSelect: 'Alt+S',
-        autoPlaySelect: 'Ctrl+Alt'
-    };
-    const KEYBIND_ACTIONS = [
-        { id: 'togglePlayback', label: 'Play / pause' },
-        { id: 'keyboardSelect', label: 'Text cursor' },
-        { id: 'autoPlaySelect', label: 'Auto-play selection' }
-    ];
-
-    let keybindSettings = { ...DEFAULT_KEYBINDS };
-    let isRecordingKeybind = false;
-    const keybindDisplays = {};
-
-    function buildKeybindRows() {
-        keybindList.innerHTML = '';
-        KEYBIND_ACTIONS.forEach((action) => {
-            const row = document.createElement('div');
-            row.className = 'keybind-row';
-
-            const label = document.createElement('span');
-            label.className = 'hint-text';
-            label.textContent = action.label;
-
-            const display = document.createElement('div');
-            display.className = 'keybind-display';
-            display.title = 'Click to remap';
-            display.addEventListener('click', () => recordKeybind(action.id, display));
-
-            row.appendChild(label);
-            row.appendChild(display);
-            keybindList.appendChild(row);
-
-            keybindDisplays[action.id] = display;
-        });
-    }
-
-    function renderKeybinds() {
-        KEYBIND_ACTIONS.forEach((action) => {
-            keybindDisplays[action.id].textContent = keybindSettings[action.id] || 'None';
-        });
-    }
-
-    buildKeybindRows();
-    renderKeybinds();
-
-    chrome.storage.sync.get(['keybinds'], (data) => {
-        if (data.keybinds) keybindSettings = { ...DEFAULT_KEYBINDS, ...data.keybinds };
-        renderKeybinds();
-    });
-
-    function getReadableKeyName(e) {
-        const modifiers = {
-            ShiftLeft: 'Shift', ShiftRight: 'Shift',
-            ControlLeft: 'Ctrl', ControlRight: 'Ctrl',
-            AltLeft: 'Alt', AltRight: 'Alt',
-            MetaLeft: 'Meta', MetaRight: 'Meta'
-        };
-        if (modifiers[e.code]) return modifiers[e.code];
-        if (e.key === ' ') return 'Space';
-        // Alt composes characters on some layouts — name the physical key
-        if (/^(Key|Digit)/.test(e.code)) return e.code.replace(/^(Key|Digit)/, '');
-        if (e.key.length === 1) return e.key.toUpperCase();
-        return e.key;
-    }
-
-    function normalizeKeybind(keys) {
-        const order = { Ctrl: 1, Alt: 2, Shift: 3, Meta: 4 };
-        const modifiers = [];
-        const regularKeys = [];
-        for (const k of keys) {
-            if (order[k]) {
-                if (!modifiers.includes(k)) modifiers.push(k);
-            } else {
-                if (!regularKeys.includes(k)) regularKeys.push(k);
-            }
-        }
-        modifiers.sort((a, b) => order[a] - order[b]);
-        return [...modifiers, ...regularKeys].join('+');
-    }
-
-    function recordKeybind(actionId, keybindDisplay) {
-        if (isRecordingKeybind) return;
-        isRecordingKeybind = true;
-
-        const originalText = keybindDisplay.textContent;
-        keybindDisplay.classList.add('recording');
-        keybindDisplay.textContent = 'Press keys...';
-
-        let activeKeys = [];
-        const pressedCodes = new Set();
-
-        const handleKeyDown = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            if (e.key === 'Escape') {
-                cancelRecording();
-                return;
-            }
-
-            const keyName = getReadableKeyName(e);
-            if (!pressedCodes.has(e.code)) {
-                pressedCodes.add(e.code);
-                if (!activeKeys.includes(keyName)) activeKeys.push(keyName);
-                keybindDisplay.textContent = normalizeKeybind(activeKeys);
-            }
-        };
-
-        const handleKeyUp = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            pressedCodes.delete(e.code);
-            if (pressedCodes.size === 0 && activeKeys.length > 0) {
-                finalizeRecording();
-            }
-        };
-
-        const finalizeRecording = () => {
-            const combination = normalizeKeybind(activeKeys);
-
-            // A combo can only drive one action — free it from any other row
-            KEYBIND_ACTIONS.forEach((other) => {
-                if (other.id !== actionId && keybindSettings[other.id] === combination) {
-                    keybindSettings[other.id] = '';
-                }
-            });
-
-            keybindSettings[actionId] = combination;
-            chrome.storage.sync.set({ keybinds: keybindSettings });
-            renderKeybinds();
-            cleanup();
-        };
-
-        const cancelRecording = () => {
-            keybindDisplay.textContent = originalText;
-            cleanup();
-        };
-
-        const cleanup = () => {
-            isRecordingKeybind = false;
-            keybindDisplay.classList.remove('recording');
-            window.removeEventListener('keydown', handleKeyDown, true);
-            window.removeEventListener('keyup', handleKeyUp, true);
-            window.removeEventListener('blur', cancelRecording);
-        };
-
-        window.addEventListener('keydown', handleKeyDown, true);
-        window.addEventListener('keyup', handleKeyUp, true);
-        window.addEventListener('blur', cancelRecording);
-    }
-
-    keybindResetBtn.addEventListener('click', () => {
-        keybindSettings = { ...DEFAULT_KEYBINDS };
-        chrome.storage.sync.set({ keybinds: keybindSettings });
-        renderKeybinds();
+        loadAllVoices();
     });
 });

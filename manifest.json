@@ -7,7 +7,13 @@
     "storage",
     "tts",
     "contextMenus",
-    "clipboardRead"
+    "clipboardRead",
+    "offscreen",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "*://speech.platform.bing.com/*",
+    "wss://speech.platform.bing.com/*"
   ],
   "commands": {
     "play-selection": {
@@ -18,12 +24,27 @@
       "description": "Read selected text with Audio Cursor"
     }
   },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset_1",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
   "action": {
     "default_popup": "src/popup/popup.html"
   },
   "background": {
     "service_worker": "dist/background.js"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["src/shared/voices.json", "dist/voices.json", "dist/offscreen.html", "dist/offscreen.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "content_scripts": [
     {
       "matches": ["*://docs.google.com/*"],
