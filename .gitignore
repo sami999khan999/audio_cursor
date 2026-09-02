@@ -1,0 +1,65 @@
+# Dependencies
+node_modules/
+jspm_packages/
+web_modules/
+
+# Logs & Debugging
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+logs/
+
+# VS Code Extension Packaging & Testing
+*.vsix
+.vscode-test/
+
+# Scratch & Spike Experiments
+scratch/
+spike/
+
+# Audio / Generated Media Test Artifacts
+*.mp3
+*.wav
+*.ogg
+*.aac
+*.m4a
+
+# Browser Extension Packaging & Metadata
+*.pem
+*.crx
+*.zip
+_metadata/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE & Editor Files
+.idea/
+*.sublime-workspace
+*.sublime-project
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Temporary & Cache Files
+.tmp/
+tmp/
+temp/
+.cache/

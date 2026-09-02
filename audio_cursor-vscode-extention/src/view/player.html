@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src #{cspSource} 'unsafe-inline'; script-src 'nonce-#{nonce}'; img-src #{cspSource} https:; media-src data: blob: #{cspSource};">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audio Cursor</title>
+  <link rel="stylesheet" href="#{styleUri}">
+</head>
+<body>
+
+  <!-- Section 1: Now Playing -->
+  <section class="section" id="section-playback">
+    <div class="section-header">
+      <div class="section-title">
+        <svg class="section-chevron" viewBox="0 0 16 16"><path d="M4.5 12.5l5-4.5-5-4.5.7-.7 5.8 5.2-5.8 5.2z"/></svg>
+        <span>Player</span>
+      </div>
+      <div class="status-badge" id="status-badge">
+        <span class="status-dot"></span>
+        <span id="status-text">Ready</span>
+      </div>
+    </div>
+    <div class="section-content">
+      <!-- Empty State -->
+      <div class="empty-state" id="empty-state">
+        <svg class="empty-state-icon" viewBox="0 0 16 16">
+          <path d="M11.5 2H4.5A1.5 1.5 0 0 0 3 3.5v9A1.5 1.5 0 0 0 4.5 14h7a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 11.5 2zm.5 10.5a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v9zM5 5h6v1H5V5zm0 2h6v1H5V7zm0 2h4v1H5V9z"/>
+        </svg>
+        <div class="empty-state-title">Nothing queued</div>
+        <div class="empty-state-text">
+          Select text in any editor or terminal, then press <kbd>Alt+P</kbd>.<br>
+          With no selection, <kbd>Alt+P</kbd> reads from the cursor to the end of the file.
+        </div>
+      </div>
+
+      <!-- Active Controls -->
+      <div class="controls-container" id="player-content" style="display: none;">
+        <!-- User Gesture Activation Banner -->
+        <div class="gesture-banner" id="gesture-banner" style="display: none;">
+          <div class="gesture-info">
+            <div class="gesture-title">🔊 Click to start playback</div>
+            <div class="gesture-subtitle">Click here once to allow audio in editor</div>
+          </div>
+          <button class="btn btn-primary-play" id="btn-gesture-activate" style="padding: 4px 10px; font-size: 11px;">Play ▶</button>
+        </div>
+
+        <!-- Why playback stopped / what will be read next -->
+        <div class="notice" id="player-notice" style="display: none;">
+          <svg class="notice-icon" viewBox="0 0 16 16"><path d="M8 1.5A6.5 6.5 0 1 0 14.5 8 6.51 6.51 0 0 0 8 1.5zm0 12A5.5 5.5 0 1 1 13.5 8 5.51 5.51 0 0 1 8 13.5zM7.5 4h1v5h-1V4zm0 6h1v1.5h-1V10z"/></svg>
+          <span id="player-notice-text"></span>
+        </div>
+
+        <!-- What is queued -->
+        <div class="source-card">
+          <span class="source-icon" id="source-icon"></span>
+          <div class="source-details">
+            <div class="source-name" id="source-name">Selection</div>
+            <div class="source-sub" id="source-sub">0 words</div>
+          </div>
+          <span class="tag" id="source-kind">Editor</span>
+        </div>
+
+        <div class="button-bar">
+          <button class="btn btn-secondary btn-icon" id="btn-prev" title="Previous Sentence">
+            <svg viewBox="0 0 16 16"><path d="M11 3.5v9l-6-4.5 6-4.5zM4 3h1.5v10H4V3z"/></svg>
+          </button>
+          <button class="btn btn-primary-play" id="btn-play-pause" title="Play / Pause (Alt+P)">
+            <span class="btn-icon" id="icon-play-pause" style="width: 16px; height: 16px; padding: 0;">
+              <svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5-9-5.5z"/></svg>
+            </span>
+            <span id="text-play-pause">Play</span>
+          </button>
+          <button class="btn btn-secondary btn-icon" id="btn-stop" title="Stop Playback" disabled>
+            <svg viewBox="0 0 16 16"><path d="M3.5 3.5h9v9h-9v-9z"/></svg>
+          </button>
+          <button class="btn btn-secondary btn-icon" id="btn-next" title="Next Sentence">
+            <svg viewBox="0 0 16 16"><path d="M5 3.5v9l6-4.5-6-4.5zM10.5 3H12v10h-1.5V3z"/></svg>
+          </button>
+        </div>
+
+        <div class="scrub-container">
+          <div class="scrub-bar-track" id="scrub-track" title="Click or drag to seek">
+            <div class="scrub-bar-fill" id="scrub-fill"></div>
+            <div class="scrub-bar-thumb" id="scrub-thumb"></div>
+          </div>
+          <div class="scrub-time-row">
+            <span id="time-elapsed">0:00</span>
+            <span id="time-remaining">-0:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Terminal capture: VS Code fires no event for terminal selections,
+           so reading them is always an explicit action. -->
+      <button class="btn btn-secondary btn-wide" id="btn-read-terminal" style="display: none;"
+              title="Read the text selected in the active terminal (Alt+P while the terminal is focused)">
+        <svg viewBox="0 0 16 16"><path d="M1.5 2h13a.5.5 0 0 1 .5.5v11a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5zM2 13h12V3H2v10zm1.35-7.85l.7-.7L7.2 7.6a.5.5 0 0 1 0 .7l-3.15 3.16-.7-.71L6.15 8 3.35 5.15zM8 10.5h4v1H8v-1z"/></svg>
+          <span>Read terminal selection</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Section 2: Text Preview -->
+  <section class="section" id="section-text">
+    <div class="section-header">
+      <div class="section-title">
+        <svg class="section-chevron" viewBox="0 0 16 16"><path d="M4.5 12.5l5-4.5-5-4.5.7-.7 5.8 5.2-5.8 5.2z"/></svg>
+        <span>Text Preview</span>
+      </div>
+    </div>
+    <div class="section-content">
+      <div class="text-meta">
+        <span class="text-meta-file">
+          <svg style="width: 13px; height: 13px; fill: currentColor;" viewBox="0 0 16 16"><path d="M9 1H3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6l-5-5zm0 1.5L12.5 6H9V2.5zM3 14V2h5v5h5v7H3z"/></svg>
+          <span id="text-filename">Selection</span>
+        </span>
+        <span id="text-stats">0 words</span>
+      </div>
+      <div class="text-container" id="text-container">
+        Select text in any editor or terminal to preview it here. Click any word to start reading from there.
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: Settings -->
+  <section class="section collapsed" id="section-settings">
+    <div class="section-header">
+      <div class="section-title">
+        <svg class="section-chevron" viewBox="0 0 16 16"><path d="M4.5 12.5l5-4.5-5-4.5.7-.7 5.8 5.2-5.8 5.2z"/></svg>
+        <span>Settings & Voice</span>
+      </div>
+    </div>
+    <div class="section-content">
+      <div class="settings-form">
+        
+        <!-- Voice Selector Card -->
+        <div class="setting-item">
+          <div class="setting-label-row">
+            <label class="setting-label">Voice</label>
+            <span class="setting-val" id="voice-count-summary">325 voices</span>
+          </div>
+          <div class="voice-card" id="btn-open-voice-modal">
+            <div class="voice-info">
+              <div class="voice-name-row">
+                <span id="current-voice-flag">✨</span>
+                <span id="current-voice-name">Jenny (US)</span>
+                <span class="tag tag-neural" id="current-voice-badge">Natural AI</span>
+              </div>
+              <div class="voice-meta-row">
+                <span id="current-voice-country">🇺🇸 United States</span>
+                <span>•</span>
+                <span id="current-voice-gender">Female</span>
+              </div>
+            </div>
+            <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;">Change</button>
+          </div>
+        </div>
+
+        <!-- Speed Slider & Pills -->
+        <div class="setting-item">
+          <div class="setting-label-row">
+            <label class="setting-label" for="setting-rate">Speed</label>
+            <span class="setting-val" id="rate-val">1.0x</span>
+          </div>
+          <input type="range" class="setting-range" id="setting-rate" min="0.5" max="2.0" step="0.1" value="1.0">
+          <div class="speed-pills-row">
+            <button class="speed-pill" data-speed="0.8">0.8x</button>
+            <button class="speed-pill active" data-speed="1.0">1.0x</button>
+            <button class="speed-pill" data-speed="1.2">1.2x</button>
+            <button class="speed-pill" data-speed="1.5">1.5x</button>
+            <button class="speed-pill" data-speed="2.0">2.0x</button>
+          </div>
+        </div>
+
+        <!-- Pitch Slider -->
+        <div class="setting-item">
+          <div class="setting-label-row">
+            <label class="setting-label" for="setting-pitch">Pitch</label>
+            <span class="setting-val" id="pitch-val">1.0</span>
+          </div>
+          <input type="range" class="setting-range" id="setting-pitch" min="0.0" max="2.0" step="0.1" value="1.0">
+        </div>
+
+        <!-- Checkboxes -->
+        <div class="setting-item">
+          <label class="setting-checkbox-label">
+            <input type="checkbox" class="setting-checkbox" id="setting-highlight-word" checked>
+            <span>Highlight spoken word in editor</span>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <label class="setting-checkbox-label">
+            <input type="checkbox" class="setting-checkbox" id="setting-follow-cursor" checked>
+            <span>Auto-scroll editor to spoken word</span>
+          </label>
+        </div>
+
+        <div class="settings-footer">
+          <a href="#" class="settings-link" id="link-more-settings">More settings in VS Code...</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Voice Browser Modal -->
+  <div class="voice-browser-modal" id="voice-modal" style="display: none;">
+    <div class="voice-browser-container">
+      <div class="voice-browser-header">
+        <div class="voice-browser-title">
+          <span>Choose Voice</span>
+          <span class="tag tag-neural" id="modal-voice-count">325</span>
+        </div>
+        <button class="voice-browser-close" id="btn-close-voice-modal">
+          <svg style="width: 14px; height: 14px; fill: currentColor;" viewBox="0 0 16 16"><path d="M8 7.293l4.146-4.147a.5.5 0 0 1 .708.708L8.707 8l4.147 4.146a.5.5 0 0 1-.708.708L8 8.707l-4.146 4.147a.5.5 0 0 1-.708-.708L7.293 8 3.146 3.854a.5.5 0 1 1 .708-.708L8 7.293z"/></svg>
+        </button>
+      </div>
+
+      <!-- Search Input -->
+      <div class="voice-search-box">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
+          <input type="text" class="voice-search-input" id="voice-search-input" placeholder="Search by name, country, or language...">
+        </div>
+      </div>
+
+      <!-- Filter Chips -->
+      <div class="filter-chips-row" id="filter-chips-lang">
+        <button class="filter-chip active" data-filter-lang="all">All Languages</button>
+        <button class="filter-chip" data-filter-lang="en-US">🇺🇸 US English</button>
+        <button class="filter-chip" data-filter-lang="en-GB">🇬🇧 UK English</button>
+        <button class="filter-chip" data-filter-lang="en-AU">🇦🇺 Australia</button>
+        <button class="filter-chip" data-filter-lang="en-CA">🇨🇦 Canada</button>
+        <button class="filter-chip" data-filter-lang="en-IN">🇮🇳 India</button>
+        <button class="filter-chip" data-filter-lang="es">🇪🇸 Spanish</button>
+        <button class="filter-chip" data-filter-lang="fr">🇫🇷 French</button>
+        <button class="filter-chip" data-filter-lang="de">🇩🇪 German</button>
+        <button class="filter-chip" data-filter-lang="ja">🇯🇵 Japanese</button>
+      </div>
+
+      <div class="filter-chips-row" id="filter-chips-gender" style="border-top: none; padding-top: 0;">
+        <button class="filter-chip active" data-filter-gender="all">All Genders</button>
+        <button class="filter-chip" data-filter-gender="Female">♀ Female</button>
+        <button class="filter-chip" data-filter-gender="Male">♂ Male</button>
+        <button class="filter-chip" data-filter-type="neural">✨ Natural AI</button>
+        <button class="filter-chip" data-filter-type="local">💻 Offline</button>
+      </div>
+
+      <!-- Voice List -->
+      <div class="voice-list-container" id="voice-modal-list">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <script nonce="#{nonce}" src="#{scriptUri}"></script>
+</body>
+</html>

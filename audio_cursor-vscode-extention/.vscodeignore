@@ -1,0 +1,7 @@
+.vscode/**
+spike/**
+scratch/**
+jsconfig.json
+*.md
+!README.md
+!CHANGELOG.md

@@ -1,0 +1,279 @@
+{
+  "name": "audio-cursor",
+  "displayName": "Audio Cursor",
+  "description": "Text-to-speech reading with word highlighting directly in your editor",
+  "version": "0.3.1",
+  "publisher": "audio-cursor",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other",
+    "Accessibility"
+  ],
+  "keywords": [
+    "tts",
+    "speech",
+    "read aloud",
+    "accessibility",
+    "voice",
+    "cursor"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./src/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "audioCursor",
+          "title": "Audio Cursor",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "audioCursor": [
+        {
+          "type": "webview",
+          "id": "audioCursor.player",
+          "name": "Player"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "audioCursor.togglePlayback",
+        "title": "Audio Cursor: Play/Pause",
+        "category": "Audio Cursor",
+        "icon": "$(play)"
+      },
+      {
+        "command": "audioCursor.play",
+        "title": "Audio Cursor: Play",
+        "category": "Audio Cursor",
+        "icon": "$(play)"
+      },
+      {
+        "command": "audioCursor.pause",
+        "title": "Audio Cursor: Pause",
+        "category": "Audio Cursor",
+        "icon": "$(debug-pause)"
+      },
+      {
+        "command": "audioCursor.stop",
+        "title": "Audio Cursor: Stop",
+        "category": "Audio Cursor",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "audioCursor.readSelection",
+        "title": "Audio Cursor: Read Selection",
+        "category": "Audio Cursor"
+      },
+      {
+        "command": "audioCursor.readFromCursor",
+        "title": "Audio Cursor: Read From Cursor",
+        "category": "Audio Cursor"
+      },
+      {
+        "command": "audioCursor.readTerminalSelection",
+        "title": "Audio Cursor: Read Terminal Selection",
+        "category": "Audio Cursor"
+      },
+      {
+        "command": "audioCursor.nextSentence",
+        "title": "Audio Cursor: Next Sentence",
+        "category": "Audio Cursor"
+      },
+      {
+        "command": "audioCursor.previousSentence",
+        "title": "Audio Cursor: Previous Sentence",
+        "category": "Audio Cursor"
+      },
+      {
+        "command": "audioCursor.selectVoice",
+        "title": "Audio Cursor: Select Voice",
+        "category": "Audio Cursor"
+      },
+      {
+        "command": "audioCursor.increaseRate",
+        "title": "Audio Cursor: Speed Up",
+        "category": "Audio Cursor"
+      },
+      {
+        "command": "audioCursor.decreaseRate",
+        "title": "Audio Cursor: Slow Down",
+        "category": "Audio Cursor"
+      },
+      {
+        "command": "audioCursor.openPanel",
+        "title": "Audio Cursor: Open Player",
+        "category": "Audio Cursor"
+      },
+      {
+        "command": "audioCursor.showLogs",
+        "title": "Audio Cursor: Show Logs",
+        "category": "Audio Cursor"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "audioCursor.togglePlayback",
+        "key": "alt+p",
+        "mac": "alt+p",
+        "when": "editorTextFocus || audioCursor.playing || audioCursor.paused"
+      },
+      {
+        "command": "audioCursor.readTerminalSelection",
+        "key": "alt+p",
+        "mac": "alt+p",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "audioCursor.stop",
+        "key": "alt+shift+p",
+        "mac": "alt+shift+p",
+        "when": "audioCursor.playing || audioCursor.paused"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "audioCursor.readSelection",
+          "when": "editorHasSelection",
+          "group": "navigation@99"
+        },
+        {
+          "command": "audioCursor.readFromCursor",
+          "when": "!editorHasSelection && editorTextFocus",
+          "group": "navigation@100"
+        }
+      ],
+      "terminal/context": [
+        {
+          "command": "audioCursor.readTerminalSelection",
+          "group": "navigation@99"
+        }
+      ],
+      "terminal/title/context": [
+        {
+          "command": "audioCursor.readTerminalSelection",
+          "group": "navigation@99"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "audioCursor.stop",
+          "when": "view == audioCursor.player && audioCursor.playing",
+          "group": "navigation@1"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "audioCursor.pause",
+          "when": "audioCursor.playing"
+        },
+        {
+          "command": "audioCursor.stop",
+          "when": "audioCursor.playing || audioCursor.paused"
+        },
+        {
+          "command": "audioCursor.readTerminalSelection",
+          "when": "terminalIsOpen"
+        }
+      ]
+    },
+    "configurationDefaults": {
+      "terminal.integrated.commandsToSkipShell": [
+        "audioCursor.readTerminalSelection"
+      ]
+    },
+    "configuration": {
+      "title": "Audio Cursor",
+      "properties": {
+        "audioCursor.voice": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Preferred TTS voice name or URI (leave empty for system default)."
+        },
+        "audioCursor.rate": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0.5,
+          "maximum": 2,
+          "markdownDescription": "Speech rate multiplier (0.5 to 2.0)."
+        },
+        "audioCursor.pitch": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0,
+          "maximum": 2,
+          "markdownDescription": "Speech pitch multiplier (0.0 to 2.0)."
+        },
+        "audioCursor.highlightWord": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Highlight the currently spoken word in the active editor."
+        },
+        "audioCursor.followCursor": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Automatically scroll the editor to keep the spoken word visible."
+        },
+        "audioCursor.readFromCursorWhenNoSelection": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "When no text is selected, read from current cursor position to end of document."
+        },
+        "audioCursor.statusBar": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "always",
+            "never"
+          ],
+          "default": "auto",
+          "markdownDescription": "Status bar item visibility mode (`auto`, `always`, or `never`)."
+        },
+        "audioCursor.autoRevealPanel": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Automatically reveal the Audio Cursor sidebar panel when playback starts if not already initialized."
+        },
+        "audioCursor.stopOnDocumentChange": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Stop playback if the document text is edited during speech. If false, audio continues but editor highlighting is disabled."
+        },
+        "audioCursor.chunkSize": {
+          "type": "integer",
+          "default": 300,
+          "minimum": 100,
+          "maximum": 1000,
+          "markdownDescription": "Maximum target character length for each speech chunk."
+        },
+        "audioCursor.queueAhead": {
+          "type": "integer",
+          "default": 12,
+          "minimum": 1,
+          "maximum": 50,
+          "markdownDescription": "Number of upcoming chunks to queue ahead in speech synthesis."
+        },
+        "audioCursor.sanitizeCode": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Simplify code symbols and punctuation before speaking."
+        }
+      }
+    }
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@vscode/vsce": "^2.24.0"
+  },
+  "dependencies": {
+    "msedge-tts": "^2.0.7"
+  }
+}
