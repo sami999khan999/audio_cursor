@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+  </defs>
+
+  <!-- Clean Dark Background -->
+  <rect width="128" height="128" rx="32" fill="#141724" />
+
+  <!-- Clean Minimal Cursor Pointer -->
+  <path d="M 34 28 
+           L 72 66 
+           L 54 70 
+           L 66 94 
+           L 56 99 
+           L 44 75 
+           L 34 85 
+           Z" 
+        fill="url(#iconGrad)" />
+
+  <!-- Simple Sound Waves -->
+  <path d="M 76 48 A 20 20 0 0 1 76 80" 
+        fill="none" 
+        stroke="url(#iconGrad)" 
+        stroke-width="7" 
+        stroke-linecap="round" />
+
+  <path d="M 92 37 A 36 36 0 0 1 92 91" 
+        fill="none" 
+        stroke="url(#iconGrad)" 
+        stroke-width="7" 
+        stroke-linecap="round" 
+        opacity="0.8" />
+</svg>

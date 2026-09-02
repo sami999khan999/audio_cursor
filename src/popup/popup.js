@@ -261,7 +261,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateVoiceCardUI() {
         const v = getVoiceInfo(currentVoice);
-        if (currentVoiceFlag) currentVoiceFlag.textContent = (v.flag && v.flag.length > 2) ? v.flag : (v.isNeural ? '✨' : '🎙️');
+        if (currentVoiceFlag) {
+            currentVoiceFlag.textContent = v.flag || (v.isNeural ? '✨' : '🎙️');
+        }
         if (currentVoiceName) currentVoiceName.textContent = v.cleanName || v.name;
         if (currentVoiceCountry) currentVoiceCountry.textContent = v.country || v.lang || '';
         if (currentVoiceGender) currentVoiceGender.textContent = v.gender || (v.isNeural ? 'Natural' : 'Local');
@@ -664,6 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const screenSettings = document.getElementById('screen-settings');
     const screenShortcuts = document.getElementById('screen-shortcuts');
     const footerHintText = document.getElementById('footer-hint-text');
+    const keybindResetBtn = document.getElementById('keybind-reset');
 
     document.querySelectorAll('.popup-tab').forEach(tab => {
         tab.addEventListener('click', () => {
@@ -673,11 +676,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (target === 'shortcuts') {
                 if (screenSettings) screenSettings.style.display = 'none';
                 if (screenShortcuts) screenShortcuts.style.display = '';
-                if (footerHintText) footerHintText.textContent = 'Use chrome://extensions/shortcuts to remap';
+                if (footerHintText) footerHintText.textContent = 'Configure in chrome://extensions/shortcuts';
             } else {
                 if (screenSettings) screenSettings.style.display = '';
                 if (screenShortcuts) screenShortcuts.style.display = 'none';
-                if (footerHintText) footerHintText.textContent = 'Click a shortcut to configure';
+                if (footerHintText) footerHintText.textContent = 'Press Alt+P to read selected text';
             }
         });
     });
@@ -686,6 +689,36 @@ document.addEventListener('DOMContentLoaded', () => {
     if (openChromeShortcuts) {
         openChromeShortcuts.addEventListener('click', () => {
             chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
+        });
+    }
+
+    if (keybindResetBtn) {
+        keybindResetBtn.addEventListener('click', () => {
+            setRate(1.0);
+            if (pitchRange) pitchRange.value = 1.0;
+            if (pitchValue) pitchValue.textContent = '1.0';
+            paintRange(pitchRange);
+            if (repeatToggle) repeatToggle.checked = false;
+            
+            // Set default voice
+            const defaultVoice = allVoices.find(v => v.name === 'en-US-JennyNeural') || allVoices[0];
+            if (defaultVoice) {
+                currentVoice = defaultVoice.name;
+                updateVoiceCardUI();
+            }
+
+            chrome.storage.sync.set({
+                rate: '1.0',
+                pitch: '1.0',
+                repeat: false,
+                voice: currentVoice
+            });
+
+            const originalText = keybindResetBtn.textContent;
+            keybindResetBtn.textContent = 'Reset!';
+            setTimeout(() => {
+                keybindResetBtn.textContent = originalText;
+            }, 1200);
         });
     }
 

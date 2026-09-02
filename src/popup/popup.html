@@ -12,11 +12,19 @@
         <!-- Header -->
         <header class="app-header">
             <div class="brand">
-                <div class="brand-icon-wrap">
-                    <svg class="brand-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 3V21M12 3L6 8H3C2.44772 8 2 8.44772 2 9V15C2 15.5523 2.44772 16 3 16H6L12 21M12 3V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M16 8C17.3333 9.33333 18 10.6667 18 12C18 13.3333 17.3333 14.6667 16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        <path d="M19.5 5.5C21.5 7.5 22.5 9.5 22.5 12C22.5 14.5 21.5 16.5 19.5 18.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <div class="brand-icon-wrap" title="Audio Cursor">
+                    <svg class="brand-icon" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#818cf8" />
+                                <stop offset="100%" stop-color="#38bdf8" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Simple Minimal Cursor Pointer -->
+                        <path d="M 34 28 L 72 66 L 54 70 L 66 94 L 56 99 L 44 75 L 34 85 Z" fill="url(#brandGrad)" />
+                        <!-- Simple Sound Waves -->
+                        <path d="M 76 48 A 20 20 0 0 1 76 80" stroke="url(#brandGrad)" stroke-width="7" stroke-linecap="round" />
+                        <path d="M 92 37 A 36 36 0 0 1 92 91" stroke="url(#brandGrad)" stroke-width="7" stroke-linecap="round" opacity="0.8" />
                     </svg>
                 </div>
                 <div class="brand-info">
@@ -163,8 +171,8 @@
         </main>
 
         <footer class="app-footer">
-            <span class="footer-hint" id="footer-hint-text">Click a shortcut to configure</span>
-            <button class="footer-reset-btn" id="keybind-reset" type="button">Reset</button>
+            <span class="footer-hint" id="footer-hint-text">Press Alt+P to read selected text</span>
+            <button class="footer-reset-btn" id="keybind-reset" type="button" title="Reset settings to default">Reset</button>
         </footer>
     </div>
 

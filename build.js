@@ -57,9 +57,19 @@ bundle(['shared/chunk.js', 'shared/cloudTts.js', 'shared/edgeTts.js', 'offscreen
 copyFile('offscreen/offscreen.html', 'offscreen.html');
 copyFile('shared/voices.json', 'voices.json');
 
+// Copy Icons and Assets
+const distIconsDir = path.join(DIST_DIR, 'icons');
+if (!fs.existsSync(distIconsDir)) {
+    fs.mkdirSync(distIconsDir, { recursive: true });
+}
+['icon16.png', 'icon32.png', 'icon48.png', 'icon128.png', 'icon.svg', 'logo.svg'].forEach(iconFile => {
+    copyFile(`icons/${iconFile}`, `icons/${iconFile}`);
+});
+
 const rootRules = path.join(__dirname, 'rules.json');
 const distRules = path.join(DIST_DIR, 'rules.json');
 if (fs.existsSync(rootRules)) {
     fs.copyFileSync(rootRules, distRules);
     console.log('✅ Copied: dist/rules.json');
 }
+
