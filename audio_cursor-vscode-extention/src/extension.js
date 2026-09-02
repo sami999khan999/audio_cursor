@@ -49,12 +49,14 @@ function activate(context) {
     vscode.commands.registerCommand('audioCursor.readSelection', () => controller.readSelection()),
     vscode.commands.registerCommand('audioCursor.readFromCursor', () => controller.readFromCursor()),
     vscode.commands.registerCommand('audioCursor.readTerminalSelection', () => controller.readTerminalSelection()),
+    vscode.commands.registerCommand('audioCursor.togglePlaybackTerminal', () => controller.togglePlaybackTerminal()),
     vscode.commands.registerCommand('audioCursor.nextSentence', () => controller.nextSentence()),
     vscode.commands.registerCommand('audioCursor.previousSentence', () => controller.previousSentence()),
     vscode.commands.registerCommand('audioCursor.selectVoice', () => controller.selectVoice()),
     vscode.commands.registerCommand('audioCursor.increaseRate', () => controller.increaseRate()),
     vscode.commands.registerCommand('audioCursor.decreaseRate', () => controller.decreaseRate()),
     vscode.commands.registerCommand('audioCursor.openPanel', () => controller.openPanel()),
+    vscode.commands.registerCommand('audioCursor.openKeybindings', () => controller.openKeybindings()),
     vscode.commands.registerCommand('audioCursor.showLogs', () => controller.showLogs())
   );
 

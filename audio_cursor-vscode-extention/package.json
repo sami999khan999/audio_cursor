@@ -2,7 +2,7 @@
   "name": "audio-cursor",
   "displayName": "Audio Cursor",
   "description": "Text-to-speech reading with word highlighting directly in your editor",
-  "version": "0.3.1",
+  "version": "0.7.0",
   "publisher": "audio-cursor",
   "engines": {
     "vscode": "^1.80.0"
@@ -83,6 +83,11 @@
         "category": "Audio Cursor"
       },
       {
+        "command": "audioCursor.togglePlaybackTerminal",
+        "title": "Audio Cursor: Play/Pause (Terminal)",
+        "category": "Audio Cursor"
+      },
+      {
         "command": "audioCursor.nextSentence",
         "title": "Audio Cursor: Next Sentence",
         "category": "Audio Cursor"
@@ -113,6 +118,11 @@
         "category": "Audio Cursor"
       },
       {
+        "command": "audioCursor.openKeybindings",
+        "title": "Audio Cursor: Configure Keyboard Shortcuts",
+        "category": "Audio Cursor"
+      },
+      {
         "command": "audioCursor.showLogs",
         "title": "Audio Cursor: Show Logs",
         "category": "Audio Cursor"
@@ -126,10 +136,16 @@
         "when": "editorTextFocus || audioCursor.playing || audioCursor.paused"
       },
       {
-        "command": "audioCursor.readTerminalSelection",
+        "command": "audioCursor.togglePlaybackTerminal",
         "key": "alt+p",
         "mac": "alt+p",
         "when": "terminalFocus"
+      },
+      {
+        "command": "audioCursor.togglePlayback",
+        "key": "alt+p",
+        "mac": "alt+p",
+        "when": "activeCustomEditorId =~ /markdown/ || activeWebviewPanelId =~ /markdown/"
       },
       {
         "command": "audioCursor.stop",
@@ -182,11 +198,16 @@
         {
           "command": "audioCursor.readTerminalSelection",
           "when": "terminalIsOpen"
+        },
+        {
+          "command": "audioCursor.togglePlaybackTerminal",
+          "when": "false"
         }
       ]
     },
     "configurationDefaults": {
       "terminal.integrated.commandsToSkipShell": [
+        "audioCursor.togglePlaybackTerminal",
         "audioCursor.readTerminalSelection"
       ]
     },
@@ -260,6 +281,21 @@
           "minimum": 1,
           "maximum": 50,
           "markdownDescription": "Number of upcoming chunks to queue ahead in speech synthesis."
+        },
+        "audioCursor.watchTerminalSelection": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Show terminal selections in the player preview automatically, the same way editor selections appear. Requires `#terminal.integrated.copyOnSelection#` (Audio Cursor offers to turn it on), because VS Code exposes no terminal-selection API — the clipboard is only ever read, never written, and only while a terminal is the focused surface."
+        },
+        "audioCursor.watchPreviewSelection": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Pick up text selected inside a document preview. A preview is a webview, so its selection is invisible to extensions — copy it (`Ctrl+C`) and it lands in the player, ready to read. The clipboard is only ever read, never written, and only while a preview tab is active."
+        },
+        "audioCursor.readMarkdownAsProse": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Speak Markdown as prose: headings, emphasis, list bullets, link syntax and code fences are not read out literally. Applies to Markdown documents and to Markdown previews."
         },
         "audioCursor.sanitizeCode": {
           "type": "boolean",

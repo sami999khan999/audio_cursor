@@ -2,6 +2,65 @@
 
 All notable changes to the "audio-cursor" extension will be documented in this file.
 
+## [0.7.0]
+
+### Added
+- **Remap the shortcuts.** The sidebar's Settings section now lists every Audio Cursor binding and has a **Remap…** button that opens VS Code's keyboard-shortcuts editor filtered to this extension; the same thing is available as *Audio Cursor: Configure Keyboard Shortcuts*. VS Code owns the keymap, so this points at its editor rather than storing a second one — bindings you set there survive updates and sync with your settings.
+
+## [0.6.3]
+
+### Changed
+- Reading a preview now tries to lift the **live selection** first: pressing Play or `Alt+P` with text selected in a preview reads just that, with no `Ctrl+C` needed, falling back to the last copied selection and then to the whole document. A webview's selection is exposed by no API and this VS Code build registers no webview copy command (only find), so the generic copy action is attempted and whatever it returns is verified — a copy that actually came from the editor is rejected instead of being read out. The clipboard is saved and restored around the attempt.
+- The player now says how to read part of a preview when it falls back to the whole document.
+
+## [0.6.2]
+
+### Added
+- **Selecting inside a preview now feeds the player**, like selecting in an editor or terminal. A preview is a webview, so its selection is invisible to extensions and no preview offers a copy-selection command — copy the selection (`Ctrl+C`) and it lands in the player, stops anything playing, and waits for Play. It then outranks the whole document until you re-activate the tab, which restores the full read. Switch off with `audioCursor.watchPreviewSelection`.
+
+### Changed
+- Markdown clean-up now also removes YAML front matter, HTML comments, setext heading underlines (`===`), trailing `###`, footnote markers, link reference definitions and backslash escapes, plus any `#`, `*`, backtick or `~` still attached to a word. A lone `*` between spaces survives, because that is arithmetic rather than markup.
+- Text copied out of a preview is already rendered prose, so it skips Markdown clean-up entirely.
+- `terminalWatcher.js` is now `clipboardWatcher.js`: it serves both surfaces that lack a selection API.
+
+## [0.6.1]
+
+### Fixed
+- **`Alt+P` did nothing in a Markdown preview.** The keybinding required `editorTextFocus`, which is false in a preview — it is a webview, not a text editor. There is now a binding for `activeCustomEditorId =~ /markdown/ || activeWebviewPanelId =~ /markdown/`, which covers VS Code's built-in preview (`vscode.markdown.preview.editor`) and third-party ones such as Markdown Preview Enhanced.
+- A focused preview tab now outranks a remembered terminal selection when choosing what to read; previously, once you had read terminal text, `Alt+P` in a preview replayed that instead of the document.
+
+## [0.6.0]
+
+### Added
+- **Markdown previews are readable.** With a preview tab focused (VS Code's built-in preview or a custom one such as Markdown Preview Enhanced), the player fills with the document behind it and `Alt+P` reads it. A preview is a webview, so its contents and selection are unreachable — Audio Cursor resolves the tab to its source file instead: via the tab's uri for custom editors, via the tab label for plain webview previews. The active *tab* decides this, because `activeTextEditor` keeps pointing at the last editor you used.
+- **`audioCursor.readMarkdownAsProse`** (default on): Markdown is spoken as prose — headings, emphasis, bullets, task boxes, link and image syntax, tables and code fences are no longer read out literally ("hash hash Features", "star star bold star star"). Chunk offsets still track the original text, so editor highlighting is unaffected.
+- The player's source card now has a **Preview** state alongside Editor and Terminal.
+
+## [0.5.3]
+
+### Fixed
+- **`Alt+P` in a terminal read the previously selected text.** It played the watcher's cached snapshot, which could be a selection behind; it now captures the live terminal selection first — the same path as the sidebar's capture button, which is why that button worked. With nothing selected it falls back to whatever the preview is showing.
+- **Terminal selections were almost never reaching the preview.** The watcher only emitted when no editor was active, but `window.activeTextEditor` keeps pointing at the most recently used editor while a terminal has focus, so the check was nearly always true. Clipboard changes are now attributed by value instead: a change equal to the editor's own selection is treated as an editor copy, anything else while a terminal is open is a terminal selection.
+
+## [0.4.0]
+
+### Added
+- **Terminal selections now appear in the preview automatically**, exactly like editor selections: select text in a terminal and it fills the player, stops anything playing, and waits for you to press Play. VS Code exposes no terminal-selection API, so this rides on `terminal.integrated.copyOnSelection` — Audio Cursor offers to enable it once, then reads (never writes) the clipboard, and only while a terminal is the focused surface, so copying inside an editor is never mistaken for a terminal selection. Switch it off with `audioCursor.watchTerminalSelection`.
+- `audioCursor.togglePlaybackTerminal`, bound to `Alt+P` in a focused terminal.
+
+### Changed
+- **`Alt+P` in the terminal now toggles play/pause instead of restarting.** It only captures a new selection when nothing is playing — the same contract `Alt+P` has in an editor.
+- The player follows whichever surface you selected on last, so Play, the status bar and the sidebar button all act on the text actually shown in the preview.
+
+## [0.3.2]
+
+### Fixed
+- `Alt+P` still did nothing in the terminal for anyone with their own `terminal.integrated.commandsToSkipShell` setting: a user value **replaces** the extension-contributed default rather than adding to it. Audio Cursor now detects that at startup, writes an explanatory warning to its log, and offers once to add itself to the list.
+
+### Added
+- Logging on every step of the terminal capture (requested / no terminal / empty selection / captured N chars), so `Audio Cursor: Show Logs` shows exactly where a terminal read stopped.
+- The capture falls back to the first open terminal when no terminal is currently marked active.
+
 ## [0.3.1]
 
 ### Fixed

@@ -8,14 +8,16 @@ class Session {
    * @param {Object} [options]
    * @param {number} [options.chunkSize=300]
    * @param {boolean} [options.sanitizeCode=false]
+   * @param {boolean} [options.markdownProse=false] Speak markdown as prose
    */
   constructor(snapshot, options = {}) {
     this.id = String(Date.now()) + '-' + String(nextSessionSeq++);
     this.snapshot = snapshot;
     this.chunkSize = options.chunkSize || 300;
     this.sanitizeCode = options.sanitizeCode || false;
+    this.markdownProse = options.markdownProse || false;
 
-    this.chunks = chunkText(snapshot.text, this.chunkSize, this.sanitizeCode);
+    this.chunks = chunkText(snapshot.text, this.chunkSize, this.sanitizeCode, this.markdownProse);
     this.queueHead = 0;
     this.cursorChunk = 0;
     this.cursorChar = 0;

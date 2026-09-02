@@ -48,22 +48,45 @@ class NeuralSpeechEngine {
     this._voicesPromise = (async () => {
       try {
         const rawVoices = await this._tts.getVoices();
+        const languageNames = new Intl.DisplayNames(['en'], { type: 'language' });
+        const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+
         const formatted = rawVoices.map(v => {
-          const isFemale = v.Gender === 'Female';
           const locale = v.Locale || 'en-US';
-          const displayName = v.FriendlyName || v.ShortName;
           const shortName = v.ShortName;
+          const langParts = locale.split('-');
+          const langCode = langParts[0];
+          const regionCode = langParts[1] || langParts[0];
+
+          let langName = langCode.toUpperCase();
+          try {
+            langName = languageNames.of(langCode) || langName;
+          } catch (_) {}
+
+          let countryName = regionCode.toUpperCase();
+          try {
+            countryName = regionNames.of(regionCode) || countryName;
+          } catch (_) {}
+
+          const cleanName = shortName
+            .replace(/^[a-z]{2,3}-[A-Z]{2,4}-/, '')
+            .replace(/Neural$/, '')
+            .replace(/Multilingual$/, ' (Multi)');
 
           return {
             name: shortName,
-            displayName: `${shortName} (${v.Gender})`,
-            friendlyName: displayName,
+            displayName: `${cleanName} · ${countryName} (${v.Gender || 'AI'})`,
+            friendlyName: v.FriendlyName || shortName,
             lang: locale,
             gender: v.Gender,
             isNeural: true,
             default: shortName === 'en-US-JennyNeural',
             localService: false,
-            voiceURI: shortName
+            voiceURI: shortName,
+            cleanName,
+            languageName: langName,
+            country: countryName,
+            countryCode: regionCode.toUpperCase()
           };
         });
 

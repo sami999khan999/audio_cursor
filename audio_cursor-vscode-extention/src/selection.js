@@ -158,6 +158,97 @@ function getSnapshot(editor, options = {}) {
   return null;
 }
 
+// A markdown/docs preview is a webview or custom editor, so its contents and
+// selection are unreachable. What is reachable is the document behind it.
+const PREVIEW_VIEW_TYPE = /markdown|preview/i;
+const READABLE_PREVIEW_EXT = /\.(md|markdown|mdx|txt|rst|adoc|html?)$/i;
+
+function basenameOf(uriOrPath) {
+  const path = typeof uriOrPath === 'string' ? uriOrPath : (uriOrPath && uriOrPath.path) || '';
+  return path.split(/[\\/]/).pop() || '';
+}
+
+/**
+ * The document preview shown by the active tab, if the active tab is one.
+ * Returns null for ordinary editors, terminals, notebooks and image previews.
+ * @returns {{ uri: vscode.Uri | null, label: string } | null}
+ */
+function getActivePreviewTarget() {
+  const groups = vscode.window.tabGroups;
+  const tab = groups && groups.activeTabGroup && groups.activeTabGroup.activeTab;
+  if (!tab) return null;
+
+  const input = tab.input;
+
+  // Custom editors (e.g. Markdown Preview Enhanced) expose the source uri.
+  if (vscode.TabInputCustom && input instanceof vscode.TabInputCustom) {
+    if (!READABLE_PREVIEW_EXT.test(input.uri.path)) return null;
+    if (!PREVIEW_VIEW_TYPE.test(input.viewType) && !/\.(md|markdown|mdx)$/i.test(input.uri.path)) return null;
+    return { uri: input.uri, label: tab.label };
+  }
+
+  // Plain webview panels (VS Code's built-in preview) expose only a view type,
+  // so the source document has to be found from the tab label.
+  if (vscode.TabInputWebview && input instanceof vscode.TabInputWebview) {
+    if (!PREVIEW_VIEW_TYPE.test(input.viewType)) return null;
+    const name = tab.label.replace(/^preview\s+/i, '').trim();
+    if (!READABLE_PREVIEW_EXT.test(name)) return null;
+    return { uri: null, label: name };
+  }
+
+  return null;
+}
+
+/**
+ * Resolve a preview tab to a snapshot of the document behind it.
+ * @param {{ uri: vscode.Uri | null, label: string }} target
+ * @returns {Promise<Snapshot | null>}
+ */
+async function resolvePreviewSnapshot(target) {
+  if (!target) return null;
+
+  let uri = target.uri;
+  if (!uri) {
+    const name = basenameOf(target.label) || target.label;
+    const open = vscode.workspace.textDocuments.find(doc => basenameOf(doc.uri) === name);
+    if (open) {
+      uri = open.uri;
+    } else {
+      try {
+        const found = await vscode.workspace.findFiles(`**/${name}`, '**/node_modules/**', 2);
+        if (found.length > 0) uri = found[0];
+      } catch (_) {
+        return null;
+      }
+    }
+  }
+  if (!uri) return null;
+
+  let doc;
+  try {
+    doc = await vscode.workspace.openTextDocument(uri);
+  } catch (_) {
+    return null;
+  }
+
+  const text = doc.getText();
+  if (!text || !text.trim()) return null;
+
+  return {
+    text,
+    uri: doc.uri,
+    version: doc.version,
+    startOffset: 0,
+    endOffset: text.length,
+    languageId: doc.languageId,
+    fileName: basenameOf(doc.uri),
+    wordCount: countWords(text),
+    charCount: text.length,
+    fromCursor: false,
+    source: 'preview'
+  };
+}
+
 /**
  * Build a snapshot from text that did not come from a text document
  * (terminal selection, clipboard, etc). It has no `uri`, so editor
@@ -198,10 +289,21 @@ class SelectionTracker {
     this._debounceTimer = null;
     this._disposables = [];
 
+    /** @type {Snapshot | null} */
+    this._previewSnapshot = null;
+
     this._disposables.push(
       vscode.window.onDidChangeActiveTextEditor(() => this._triggerUpdate('editor')),
       vscode.window.onDidChangeTextEditorSelection(() => this._triggerUpdate('selection'))
     );
+
+    // Switching to (or away from) a preview tab changes what is readable.
+    if (vscode.window.tabGroups) {
+      this._disposables.push(
+        vscode.window.tabGroups.onDidChangeTabs(() => this._triggerUpdate('editor')),
+        vscode.window.tabGroups.onDidChangeTabGroups(() => this._triggerUpdate('editor'))
+      );
+    }
 
     this._triggerUpdate('init', true);
   }
@@ -212,6 +314,17 @@ class SelectionTracker {
    * @returns {Snapshot | null}
    */
   getSnapshot(requireFresh = false) {
+    // A focused preview tab wins: `activeTextEditor` still points at the last
+    // editor used, which is not what the user is looking at.
+    const previewTarget = getActivePreviewTarget();
+    if (previewTarget && this._previewSnapshot) {
+      const wanted = previewTarget.uri ? previewTarget.uri.toString() : null;
+      const have = this._previewSnapshot.uri ? this._previewSnapshot.uri.toString() : null;
+      if (!wanted || wanted === have) {
+        return this._previewSnapshot;
+      }
+    }
+
     const editor = vscode.window.activeTextEditor;
     const fresh = getSnapshot(editor, {
       readFromCursorWhenNoSelection: this._config.get('readFromCursorWhenNoSelection')
@@ -223,6 +336,25 @@ class SelectionTracker {
     }
 
     return requireFresh ? null : this._lastSnapshot;
+  }
+
+  /**
+   * Snapshot for playback. Resolves the active preview tab if there is one,
+   * because that lookup needs to open the underlying document.
+   * @returns {Promise<Snapshot | null>}
+   */
+  async getSnapshotAsync() {
+    const previewTarget = getActivePreviewTarget();
+    if (previewTarget) {
+      const snapshot = await resolvePreviewSnapshot(previewTarget);
+      if (snapshot) {
+        this._previewSnapshot = snapshot;
+        return snapshot;
+      }
+    } else {
+      this._previewSnapshot = null;
+    }
+    return this.getSnapshot(false);
   }
 
   /**
@@ -245,10 +377,17 @@ class SelectionTracker {
       this._debounceTimer = null;
     }
 
-    const run = () => {
+    const run = async () => {
       const editor = vscode.window.activeTextEditor;
       const hasSelection = Boolean(editor && !editor.selection.isEmpty);
       vscode.commands.executeCommand('setContext', 'audioCursor.hasSelection', hasSelection);
+
+      const previewTarget = getActivePreviewTarget();
+      if (previewTarget) {
+        this._previewSnapshot = await resolvePreviewSnapshot(previewTarget);
+      } else {
+        this._previewSnapshot = null;
+      }
 
       const snapshot = this.getSnapshot(false);
       for (const listener of this._listeners) {
@@ -281,6 +420,8 @@ class SelectionTracker {
 
 module.exports = {
   getSnapshot,
+  getActivePreviewTarget,
+  resolvePreviewSnapshot,
   createTextSnapshot,
   countWords,
   formatEstimatedDuration,

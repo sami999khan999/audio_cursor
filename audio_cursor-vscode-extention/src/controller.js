@@ -2,7 +2,8 @@ const vscode = require('vscode');
 const log = require('./log');
 const { Session } = require('./session');
 const { ProgressTracker } = require('./progress');
-const { getSnapshot, createTextSnapshot } = require('./selection');
+const { getSnapshot, createTextSnapshot, getActivePreviewTarget, resolvePreviewSnapshot } = require('./selection');
+const { ClipboardSelectionWatcher } = require('./clipboardWatcher');
 const { neuralEngine } = require('./neuralEngine');
 
 class AudioCursorController {
@@ -26,6 +27,15 @@ class AudioCursorController {
     /** @type {Session | null} */
     this._session = null;
     this._gesturePromptedSession = null;
+
+    // Which surface the player is currently pointed at, and the last snapshot
+    // captured from a terminal (terminals have no snapshot provider).
+    this._lastSource = 'editor';
+    /** @type {Object | null} */
+    this._lastTerminalSnapshot = null;
+    /** @type {{ key: string, snapshot: Object } | null} */
+    this._lastPreviewSelection = null;
+    this._clipboardWatcher = new ClipboardSelectionWatcher(config);
     this._status = 'idle'; // 'idle' | 'starting' | 'playing' | 'paused' | 'stopped'
     this._progressTracker = new ProgressTracker();
     this._neuralVoices = neuralEngine.getVoicesSync();
@@ -34,6 +44,7 @@ class AudioCursorController {
     this._disposables = [];
 
     this._initNeuralVoices();
+    this._checkTerminalKeybinding();
     this._setupListeners();
     this._updateContextKeys();
   }
@@ -71,11 +82,25 @@ class AudioCursorController {
           if (cause === 'selection' && this._isDifferentSelection(snapshot)) {
             log.info('Selection changed during playback; stopping playback.');
             this.stop();
+            this._lastSource = 'editor';
             this._statusBar.update({ snapshot });
             this._publishSnapshot(snapshot, 'selectionChanged');
           }
           // Otherwise (tab switch, edit) keep the player pinned to the text
           // that is actually being read, so highlighting stays in sync.
+          return;
+        }
+
+        if (cause === 'selection' || (snapshot && snapshot.source === 'preview')) {
+          this._lastSource = 'editor';
+        }
+        // Activating a preview tab drops any selection copied out of it, and
+        // says how to read part of the document rather than all of it — a
+        // preview's own selection is invisible to extensions.
+        if (snapshot && snapshot.source === 'preview' && !snapshot.rendered) {
+          this._lastPreviewSelection = null;
+          this._statusBar.update({ snapshot });
+          this._publishSnapshot(snapshot, 'previewDocument');
           return;
         }
 
@@ -108,7 +133,34 @@ class AudioCursorController {
       vscode.window.onDidChangeActiveTerminal(() => this._publishTerminalState())
     );
 
-    // 5. Webview ready listener
+    // 5. Terminal selection listener — same contract as the editor one:
+    //    update the preview, stop anything playing, never start playback.
+    this._disposables.push(
+      this._clipboardWatcher.onDidChange((snapshot) => {
+        const isActive = this._status === 'playing' || this._status === 'paused' || this._status === 'starting';
+        if (isActive && !this._isDifferentSelection(snapshot)) return;
+
+        if (isActive) {
+          log.info(`${snapshot.source === 'preview' ? 'Preview' : 'Terminal'} selection changed during playback; stopping playback.`);
+          this.stop();
+        }
+
+        if (snapshot.source === 'preview') {
+          // A selection inside a preview replaces the whole-document snapshot
+          // for that preview until the tab is re-activated.
+          this._lastSource = 'editor';
+          this._lastPreviewSelection = { key: snapshot.previewKey, snapshot };
+        } else {
+          this._lastSource = 'terminal';
+          this._lastTerminalSnapshot = snapshot;
+        }
+
+        this._statusBar.update({ snapshot });
+        this._publishSnapshot(snapshot, isActive ? 'selectionChanged' : undefined);
+      })
+    );
+
+    // 6. Webview ready listener
     this._disposables.push(
       this._viewProvider.onReady(() => {
         const snapshot = this._selectionTracker.getSnapshot(false);
@@ -282,7 +334,9 @@ class AudioCursorController {
         // The player is showing terminal output: re-read the live terminal
         // selection rather than whatever the editor is pointed at.
         if (payload.source === 'terminal' && vscode.window.activeTerminal) {
-          this.readTerminalSelection();
+          // Play exactly what the preview is showing; only re-capture if the
+          // watcher never saw a selection.
+          this.togglePlaybackTerminal();
         } else {
           this.play();
         }
@@ -309,6 +363,9 @@ class AudioCursorController {
         break;
       case 'readTerminal':
         this.readTerminalSelection();
+        break;
+      case 'openKeybindings':
+        this.openKeybindings();
         break;
       case 'openSettings':
         vscode.commands.executeCommand('workbench.action.openSettings', 'audioCursor');
@@ -353,6 +410,19 @@ class AudioCursorController {
       ...(snapshot || {}),
       uri: snapshot && snapshot.uri ? snapshot.uri.toString() : null
     });
+  }
+
+  _checkTerminalKeybinding() {
+    const COMMAND = 'audioCursor.readTerminalSelection';
+    const info = vscode.workspace.getConfiguration('terminal.integrated').inspect('commandsToSkipShell');
+    const userValue = (info && (info.workspaceValue || info.globalValue)) || null;
+    if (Array.isArray(userValue) && !userValue.includes(COMMAND) && !userValue.includes(`-${COMMAND}`)) {
+      log.warn(
+        'Alt+P inside a terminal is being sent to the shell: your own ' +
+        `terminal.integrated.commandsToSkipShell setting replaces the extension default. Add "${COMMAND}" to it, ` +
+        'or use the "Read terminal selection" button in the Audio Cursor sidebar.'
+      );
+    }
   }
 
   _publishTerminalState() {
@@ -411,6 +481,28 @@ class AudioCursorController {
 
   // --- Public Command Methods ---
 
+  /**
+   * Alt+P while a terminal is focused. Mirrors the editor behaviour: toggle
+   * what is already playing, and only capture a new selection when idle.
+   */
+  async togglePlaybackTerminal() {
+    this._offerCopyOnSelection();
+
+    if (this._status === 'playing') {
+      this.pause();
+      return;
+    }
+    if (this._status === 'paused') {
+      this.resume();
+      return;
+    }
+
+    // Idle: read what is selected in the terminal *right now*. This is the
+    // same path as the sidebar's capture button — the watcher's snapshot can
+    // be a selection behind, which used to replay the previous text.
+    await this.readTerminalSelection();
+  }
+
   async togglePlayback() {
     if (this._status === 'playing') {
       this.pause();
@@ -422,8 +514,43 @@ class AudioCursorController {
   }
 
   async play(customSnapshot = null) {
-    let snapshot = customSnapshot || this._selectionTracker.getSnapshot(false);
+    let snapshot = customSnapshot;
 
+    // A focused preview tab is an explicit, current surface, so it outranks
+    // the remembered one (`activeTextEditor` cannot be trusted here — it still
+    // points at the last text editor used).
+    if (!snapshot) {
+      const previewTarget = getActivePreviewTarget();
+      if (previewTarget) {
+        const key = previewTarget.uri ? previewTarget.uri.toString() : previewTarget.label;
+
+        // 1. Whatever is selected in the preview right now, if it can be had.
+        snapshot = await this._capturePreviewSelection(previewTarget);
+        if (snapshot) {
+          this._lastPreviewSelection = { key, snapshot };
+          log.info(`Reading the live preview selection (${snapshot.wordCount} words).`);
+        }
+
+        if (!snapshot && this._lastPreviewSelection && this._lastPreviewSelection.key === key) {
+          snapshot = this._lastPreviewSelection.snapshot;
+          log.info(`Reading the selection copied from the preview (${snapshot.wordCount} words).`);
+        } else if (!snapshot) {
+          snapshot = await resolvePreviewSnapshot(previewTarget);
+          if (snapshot) {
+            log.info(`Reading the document behind the preview tab: ${snapshot.fileName}.`);
+          }
+        }
+        if (snapshot) this._lastSource = 'editor';
+      }
+    }
+
+    // Otherwise the player follows whichever surface was selected on last.
+    if (!snapshot && this._lastSource === 'terminal' && this._lastTerminalSnapshot) {
+      snapshot = this._lastTerminalSnapshot;
+    }
+    if (!snapshot) {
+      snapshot = await this._selectionTracker.getSnapshotAsync();
+    }
     // Nothing in any editor: fall back to whatever is selected in the terminal.
     if (!snapshot && !customSnapshot && vscode.window.activeTerminal) {
       snapshot = await this._captureTerminalSelection();
@@ -456,7 +583,11 @@ class AudioCursorController {
     const queueAhead = this._config.get('queueAhead');
     const sanitizeCode = this._config.get('sanitizeCode');
 
-    this._session = new Session(snapshot, { chunkSize, sanitizeCode });
+    const markdownProse = this._config.get('readMarkdownAsProse') &&
+      !snapshot.rendered &&
+      (snapshot.languageId === 'markdown' || snapshot.source === 'preview');
+
+    this._session = new Session(snapshot, { chunkSize, sanitizeCode, markdownProse });
     this._progressTracker.reset();
     this._setStatus('starting');
 
@@ -541,13 +672,17 @@ class AudioCursorController {
    * @returns {Promise<Object | null>}
    */
   async _captureTerminalSelection() {
-    const terminal = vscode.window.activeTerminal;
-    if (!terminal) return null;
+    const terminal = vscode.window.activeTerminal || vscode.window.terminals[0];
+    if (!terminal) {
+      log.warn('Terminal capture skipped: no terminal is open.');
+      return null;
+    }
 
     const previousClipboard = await vscode.env.clipboard.readText();
     const sentinel = `__audioCursor__${Date.now()}__`;
     let copied = '';
 
+    this._clipboardWatcher.suspend();
     try {
       await vscode.env.clipboard.writeText(sentinel);
       await vscode.commands.executeCommand('workbench.action.terminal.copySelection');
@@ -563,11 +698,15 @@ class AudioCursorController {
       copied = sentinel;
     } finally {
       await vscode.env.clipboard.writeText(previousClipboard);
+      this._clipboardWatcher.resume(previousClipboard);
     }
 
     if (!copied || copied === sentinel || !copied.trim()) {
+      log.info('Terminal capture returned nothing — the terminal has no selection.');
       return null;
     }
+
+    log.info(`Terminal capture succeeded (${copied.length} chars from "${terminal.name}").`);
 
     return createTextSnapshot(copied, {
       label: terminal.name ? `Terminal: ${terminal.name}` : 'Terminal',
@@ -575,27 +714,113 @@ class AudioCursorController {
     });
   }
 
+  /**
+   * Try to lift the selection out of the active preview.
+   *
+   * A webview's selection is not exposed by any API, and this VS Code build
+   * registers no webview copy command, so the only lever left is the generic
+   * copy action — which may or may not reach the focused webview. Anything it
+   * returns is verified against the editor's own selection before use, so a
+   * copy that came from the editor instead is rejected rather than read out.
+   *
+   * @param {{ uri: vscode.Uri | null, label: string }} previewTarget
+   * @returns {Promise<Object | null>}
+   */
+  async _capturePreviewSelection(previewTarget) {
+    const previousClipboard = await vscode.env.clipboard.readText();
+    const sentinel = `__audioCursor__${Date.now()}__`;
+    let copied = sentinel;
+
+    this._clipboardWatcher.suspend();
+    try {
+      await vscode.env.clipboard.writeText(sentinel);
+      await vscode.commands.executeCommand('editor.action.clipboardCopyAction');
+      for (let i = 0; i < 8; i++) {
+        copied = await vscode.env.clipboard.readText();
+        if (copied !== sentinel) break;
+        await new Promise(resolve => setTimeout(resolve, 40));
+      }
+    } catch (err) {
+      log.warn('Preview selection capture failed:', err);
+      copied = sentinel;
+    } finally {
+      await vscode.env.clipboard.writeText(previousClipboard);
+      this._clipboardWatcher.resume(previousClipboard);
+    }
+
+    if (!copied || copied === sentinel || !copied.trim()) return null;
+    if (copied === previousClipboard) return null;
+    if (this._clipboardWatcher.matchesEditorSelection(copied)) {
+      log.info('Ignoring preview capture: the copy came from the editor, not the preview.');
+      return null;
+    }
+
+    const label = previewTarget.uri
+      ? (previewTarget.uri.path.split(/[\/]/).pop() || previewTarget.label)
+      : previewTarget.label;
+    const snapshot = createTextSnapshot(copied, { label, source: 'preview' });
+    if (snapshot) snapshot.rendered = true;
+    return snapshot;
+  }
+
   async readTerminalSelection() {
-    if (!vscode.window.activeTerminal) {
-      const hint = vscode.window.terminals.length > 0
-        ? 'Audio Cursor: Click into a terminal first, then select the text to read.'
-        : 'Audio Cursor: No terminal is open.';
-      vscode.window.showInformationMessage(hint);
+    log.info('Read terminal selection requested.');
+    this._offerTerminalKeybinding();
+    this._offerCopyOnSelection();
+
+    if (vscode.window.terminals.length === 0) {
+      log.warn('Read terminal selection: no terminal is open.');
+      vscode.window.showInformationMessage('Audio Cursor: No terminal is open.');
       return;
     }
 
     const snapshot = await this._captureTerminalSelection();
     if (!snapshot) {
-      log.info('Terminal read requested but the terminal had no selection.');
+      // Nothing selected right now: read whatever the preview is showing.
+      if (this._lastTerminalSnapshot) {
+        log.info('No live terminal selection; replaying the previewed terminal text.');
+        this._lastSource = 'terminal';
+        await this.play(this._lastTerminalSnapshot);
+        return;
+      }
       vscode.window.showInformationMessage(
         'Audio Cursor: Select some text in the terminal first, then read it again.'
       );
       return;
     }
 
-    log.info(`Read terminal selection (${snapshot.wordCount} words) from "${snapshot.fileName}".`);
+    log.info(`Reading terminal selection (${snapshot.wordCount} words) from "${snapshot.fileName}".`);
+    this._lastSource = 'terminal';
+    this._lastTerminalSnapshot = snapshot;
     await this.play(snapshot);
-    this._offerTerminalKeybinding();
+  }
+
+  /**
+   * Live terminal-selection preview needs `terminal.integrated.copyOnSelection`,
+   * because that is what puts a terminal selection somewhere an extension can
+   * read it. Ask once, since it changes how the user's terminal behaves.
+   */
+  async _offerCopyOnSelection() {
+    if (!this._config.get('watchTerminalSelection')) return;
+    if (!this._memento || this._memento.get('copyOnSelectionPrompted')) return;
+
+    const cfg = vscode.workspace.getConfiguration('terminal.integrated');
+    if (cfg.get('copyOnSelection')) return;
+
+    await this._memento.update('copyOnSelectionPrompted', true);
+    const choice = await vscode.window.showInformationMessage(
+      'Audio Cursor: show terminal selections in the player automatically? This turns on ' +
+      '`terminal.integrated.copyOnSelection`, so selecting text in a terminal also copies it to your clipboard.',
+      'Enable',
+      'Not now'
+    );
+
+    if (choice === 'Enable') {
+      await cfg.update('copyOnSelection', true, vscode.ConfigurationTarget.Global);
+      log.info('Enabled terminal.integrated.copyOnSelection for live terminal previews.');
+    } else {
+      log.info('Live terminal preview declined; terminal text is read on demand only.');
+    }
   }
 
   /**
@@ -606,14 +831,19 @@ class AudioCursorController {
    */
   async _offerTerminalKeybinding() {
     const COMMAND = 'audioCursor.readTerminalSelection';
-    if (!this._memento || this._memento.get('skipShellPrompted')) return;
-
     const cfg = vscode.workspace.getConfiguration('terminal.integrated');
     const info = cfg.inspect('commandsToSkipShell');
     const userValue = (info && (info.workspaceValue || info.globalValue)) || null;
     if (!Array.isArray(userValue)) return;
     if (userValue.includes(COMMAND) || userValue.includes(`-${COMMAND}`)) return;
 
+    log.warn(
+      'Alt+P will not reach Audio Cursor from a focused terminal: your ' +
+      'terminal.integrated.commandsToSkipShell setting overrides the extension default. ' +
+      `Add "${COMMAND}" to that list to fix it.`
+    );
+
+    if (!this._memento || this._memento.get('skipShellPrompted')) return;
     await this._memento.update('skipShellPrompted', true);
     const choice = await vscode.window.showInformationMessage(
       'Audio Cursor: enable Alt+P inside the terminal? Your own `terminal.integrated.commandsToSkipShell` setting currently sends that key to the shell instead.',
@@ -764,6 +994,14 @@ class AudioCursorController {
     vscode.window.setStatusBarMessage(`Audio Cursor Speed: ${updated.toFixed(1)}x`, 2500);
   }
 
+  /**
+   * VS Code owns the keymap, so remapping means opening its keybindings
+   * editor filtered to this extension's commands.
+   */
+  openKeybindings() {
+    vscode.commands.executeCommand('workbench.action.openGlobalKeybindings', 'audioCursor');
+  }
+
   openPanel() {
     vscode.commands.executeCommand('audioCursor.player.focus');
   }
@@ -773,6 +1011,7 @@ class AudioCursorController {
   }
 
   dispose() {
+    this._clipboardWatcher.dispose();
     this.stop();
     for (const d of this._disposables) {
       d.dispose();

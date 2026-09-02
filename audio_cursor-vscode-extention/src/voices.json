@@ -1,7 +1,7 @@
 [
   {
     "name": "en-AU-NatashaNeural",
-    "displayName": "Natasha · 🇦🇺 Australia (Female)",
+    "displayName": "Natasha · Australia (Female)",
     "friendlyName": "Microsoft Natasha Online (Natural) - English (Australia)",
     "lang": "en-AU",
     "gender": "Female",
@@ -12,11 +12,12 @@
     "cleanName": "Natasha",
     "languageName": "English",
     "country": "Australia",
-    "flag": "🇦🇺"
+    "flag": "🇦🇺",
+    "countryCode": "AU"
   },
   {
     "name": "en-AU-WilliamMultilingualNeural",
-    "displayName": "William (Multi) · 🇦🇺 Australia (Male)",
+    "displayName": "William (Multi) · Australia (Male)",
     "friendlyName": "Microsoft WilliamMultilingual Online (Natural) - English (Australia)",
     "lang": "en-AU",
     "gender": "Male",
@@ -27,11 +28,12 @@
     "cleanName": "William (Multi)",
     "languageName": "English",
     "country": "Australia",
-    "flag": "🇦🇺"
+    "flag": "🇦🇺",
+    "countryCode": "AU"
   },
   {
     "name": "en-CA-ClaraNeural",
-    "displayName": "Clara · 🇨🇦 Canada (Female)",
+    "displayName": "Clara · Canada (Female)",
     "friendlyName": "Microsoft Clara Online (Natural) - English (Canada)",
     "lang": "en-CA",
     "gender": "Female",
@@ -42,11 +44,12 @@
     "cleanName": "Clara",
     "languageName": "English",
     "country": "Canada",
-    "flag": "🇨🇦"
+    "flag": "🇨🇦",
+    "countryCode": "CA"
   },
   {
     "name": "en-CA-LiamNeural",
-    "displayName": "Liam · 🇨🇦 Canada (Male)",
+    "displayName": "Liam · Canada (Male)",
     "friendlyName": "Microsoft Liam Online (Natural) - English (Canada)",
     "lang": "en-CA",
     "gender": "Male",
@@ -57,11 +60,12 @@
     "cleanName": "Liam",
     "languageName": "English",
     "country": "Canada",
-    "flag": "🇨🇦"
+    "flag": "🇨🇦",
+    "countryCode": "CA"
   },
   {
     "name": "en-GB-LibbyNeural",
-    "displayName": "Libby · 🇬🇧 United Kingdom (Female)",
+    "displayName": "Libby · United Kingdom (Female)",
     "friendlyName": "Microsoft Libby Online (Natural) - English (United Kingdom)",
     "lang": "en-GB",
     "gender": "Female",
@@ -72,11 +76,12 @@
     "cleanName": "Libby",
     "languageName": "English",
     "country": "United Kingdom",
-    "flag": "🇬🇧"
+    "flag": "🇬🇧",
+    "countryCode": "GB"
   },
   {
     "name": "en-GB-MaisieNeural",
-    "displayName": "Maisie · 🇬🇧 United Kingdom (Female)",
+    "displayName": "Maisie · United Kingdom (Female)",
     "friendlyName": "Microsoft Maisie Online (Natural) - English (United Kingdom)",
     "lang": "en-GB",
     "gender": "Female",
@@ -87,11 +92,12 @@
     "cleanName": "Maisie",
     "languageName": "English",
     "country": "United Kingdom",
-    "flag": "🇬🇧"
+    "flag": "🇬🇧",
+    "countryCode": "GB"
   },
   {
     "name": "en-GB-RyanNeural",
-    "displayName": "Ryan · 🇬🇧 United Kingdom (Male)",
+    "displayName": "Ryan · United Kingdom (Male)",
     "friendlyName": "Microsoft Ryan Online (Natural) - English (United Kingdom)",
     "lang": "en-GB",
     "gender": "Male",
@@ -102,11 +108,12 @@
     "cleanName": "Ryan",
     "languageName": "English",
     "country": "United Kingdom",
-    "flag": "🇬🇧"
+    "flag": "🇬🇧",
+    "countryCode": "GB"
   },
   {
     "name": "en-GB-SoniaNeural",
-    "displayName": "Sonia · 🇬🇧 United Kingdom (Female)",
+    "displayName": "Sonia · United Kingdom (Female)",
     "friendlyName": "Microsoft Sonia Online (Natural) - English (United Kingdom)",
     "lang": "en-GB",
     "gender": "Female",
@@ -117,11 +124,12 @@
     "cleanName": "Sonia",
     "languageName": "English",
     "country": "United Kingdom",
-    "flag": "🇬🇧"
+    "flag": "🇬🇧",
+    "countryCode": "GB"
   },
   {
     "name": "en-GB-ThomasNeural",
-    "displayName": "Thomas · 🇬🇧 United Kingdom (Male)",
+    "displayName": "Thomas · United Kingdom (Male)",
     "friendlyName": "Microsoft Thomas Online (Natural) - English (United Kingdom)",
     "lang": "en-GB",
     "gender": "Male",
@@ -132,11 +140,12 @@
     "cleanName": "Thomas",
     "languageName": "English",
     "country": "United Kingdom",
-    "flag": "🇬🇧"
+    "flag": "🇬🇧",
+    "countryCode": "GB"
   },
   {
     "name": "en-HK-SamNeural",
-    "displayName": "Sam · 🇭🇰 Hong Kong (Male)",
+    "displayName": "Sam · Hong Kong SAR China (Male)",
     "friendlyName": "Microsoft Sam Online (Natural) - English (Hongkong)",
     "lang": "en-HK",
     "gender": "Male",
@@ -146,12 +155,13 @@
     "voiceURI": "en-HK-SamNeural",
     "cleanName": "Sam",
     "languageName": "English",
-    "country": "Hong Kong",
-    "flag": "🇭🇰"
+    "country": "Hong Kong SAR China",
+    "flag": "🇭🇰",
+    "countryCode": "HK"
   },
   {
     "name": "en-HK-YanNeural",
-    "displayName": "Yan · 🇭🇰 Hong Kong (Female)",
+    "displayName": "Yan · Hong Kong SAR China (Female)",
     "friendlyName": "Microsoft Yan Online (Natural) - English (Hong Kong SAR)",
     "lang": "en-HK",
     "gender": "Female",
@@ -161,12 +171,13 @@
     "voiceURI": "en-HK-YanNeural",
     "cleanName": "Yan",
     "languageName": "English",
-    "country": "Hong Kong",
-    "flag": "🇭🇰"
+    "country": "Hong Kong SAR China",
+    "flag": "🇭🇰",
+    "countryCode": "HK"
   },
   {
     "name": "en-IE-ConnorNeural",
-    "displayName": "Connor · 🇮🇪 Ireland (Male)",
+    "displayName": "Connor · Ireland (Male)",
     "friendlyName": "Microsoft Connor Online (Natural) - English (Ireland)",
     "lang": "en-IE",
     "gender": "Male",
@@ -177,11 +188,12 @@
     "cleanName": "Connor",
     "languageName": "English",
     "country": "Ireland",
-    "flag": "🇮🇪"
+    "flag": "🇮🇪",
+    "countryCode": "IE"
   },
   {
     "name": "en-IE-EmilyNeural",
-    "displayName": "Emily · 🇮🇪 Ireland (Female)",
+    "displayName": "Emily · Ireland (Female)",
     "friendlyName": "Microsoft Emily Online (Natural) - English (Ireland)",
     "lang": "en-IE",
     "gender": "Female",
@@ -192,11 +204,12 @@
     "cleanName": "Emily",
     "languageName": "English",
     "country": "Ireland",
-    "flag": "🇮🇪"
+    "flag": "🇮🇪",
+    "countryCode": "IE"
   },
   {
     "name": "en-IN-NeerjaExpressiveNeural",
-    "displayName": "NeerjaExpressive · 🇮🇳 India (Female)",
+    "displayName": "NeerjaExpressive · India (Female)",
     "friendlyName": "Microsoft Neerja Online (Natural) - English (India) (Preview)",
     "lang": "en-IN",
     "gender": "Female",
@@ -207,11 +220,12 @@
     "cleanName": "NeerjaExpressive",
     "languageName": "English",
     "country": "India",
-    "flag": "🇮🇳"
+    "flag": "🇮🇳",
+    "countryCode": "IN"
   },
   {
     "name": "en-IN-NeerjaNeural",
-    "displayName": "Neerja · 🇮🇳 India (Female)",
+    "displayName": "Neerja · India (Female)",
     "friendlyName": "Microsoft Neerja Online (Natural) - English (India)",
     "lang": "en-IN",
     "gender": "Female",
@@ -222,11 +236,12 @@
     "cleanName": "Neerja",
     "languageName": "English",
     "country": "India",
-    "flag": "🇮🇳"
+    "flag": "🇮🇳",
+    "countryCode": "IN"
   },
   {
     "name": "en-IN-PrabhatNeural",
-    "displayName": "Prabhat · 🇮🇳 India (Male)",
+    "displayName": "Prabhat · India (Male)",
     "friendlyName": "Microsoft Prabhat Online (Natural) - English (India)",
     "lang": "en-IN",
     "gender": "Male",
@@ -237,11 +252,12 @@
     "cleanName": "Prabhat",
     "languageName": "English",
     "country": "India",
-    "flag": "🇮🇳"
+    "flag": "🇮🇳",
+    "countryCode": "IN"
   },
   {
     "name": "en-KE-AsiliaNeural",
-    "displayName": "Asilia · 🇰🇪 Kenya (Female)",
+    "displayName": "Asilia · Kenya (Female)",
     "friendlyName": "Microsoft Asilia Online (Natural) - English (Kenya)",
     "lang": "en-KE",
     "gender": "Female",
@@ -252,11 +268,12 @@
     "cleanName": "Asilia",
     "languageName": "English",
     "country": "Kenya",
-    "flag": "🇰🇪"
+    "flag": "🇰🇪",
+    "countryCode": "KE"
   },
   {
     "name": "en-KE-ChilembaNeural",
-    "displayName": "Chilemba · 🇰🇪 Kenya (Male)",
+    "displayName": "Chilemba · Kenya (Male)",
     "friendlyName": "Microsoft Chilemba Online (Natural) - English (Kenya)",
     "lang": "en-KE",
     "gender": "Male",
@@ -267,11 +284,12 @@
     "cleanName": "Chilemba",
     "languageName": "English",
     "country": "Kenya",
-    "flag": "🇰🇪"
+    "flag": "🇰🇪",
+    "countryCode": "KE"
   },
   {
     "name": "en-NG-AbeoNeural",
-    "displayName": "Abeo · 🇳🇬 Nigeria (Male)",
+    "displayName": "Abeo · Nigeria (Male)",
     "friendlyName": "Microsoft Abeo Online (Natural) - English (Nigeria)",
     "lang": "en-NG",
     "gender": "Male",
@@ -282,11 +300,12 @@
     "cleanName": "Abeo",
     "languageName": "English",
     "country": "Nigeria",
-    "flag": "🇳🇬"
+    "flag": "🇳🇬",
+    "countryCode": "NG"
   },
   {
     "name": "en-NG-EzinneNeural",
-    "displayName": "Ezinne · 🇳🇬 Nigeria (Female)",
+    "displayName": "Ezinne · Nigeria (Female)",
     "friendlyName": "Microsoft Ezinne Online (Natural) - English (Nigeria)",
     "lang": "en-NG",
     "gender": "Female",
@@ -297,11 +316,12 @@
     "cleanName": "Ezinne",
     "languageName": "English",
     "country": "Nigeria",
-    "flag": "🇳🇬"
+    "flag": "🇳🇬",
+    "countryCode": "NG"
   },
   {
     "name": "en-NZ-MitchellNeural",
-    "displayName": "Mitchell · 🇳🇿 New Zealand (Male)",
+    "displayName": "Mitchell · New Zealand (Male)",
     "friendlyName": "Microsoft Mitchell Online (Natural) - English (New Zealand)",
     "lang": "en-NZ",
     "gender": "Male",
@@ -312,11 +332,12 @@
     "cleanName": "Mitchell",
     "languageName": "English",
     "country": "New Zealand",
-    "flag": "🇳🇿"
+    "flag": "🇳🇿",
+    "countryCode": "NZ"
   },
   {
     "name": "en-NZ-MollyNeural",
-    "displayName": "Molly · 🇳🇿 New Zealand (Female)",
+    "displayName": "Molly · New Zealand (Female)",
     "friendlyName": "Microsoft Molly Online (Natural) - English (New Zealand)",
     "lang": "en-NZ",
     "gender": "Female",
@@ -327,11 +348,12 @@
     "cleanName": "Molly",
     "languageName": "English",
     "country": "New Zealand",
-    "flag": "🇳🇿"
+    "flag": "🇳🇿",
+    "countryCode": "NZ"
   },
   {
     "name": "en-PH-JamesNeural",
-    "displayName": "James · 🇵🇭 Philippines (Male)",
+    "displayName": "James · Philippines (Male)",
     "friendlyName": "Microsoft James Online (Natural) - English (Philippines)",
     "lang": "en-PH",
     "gender": "Male",
@@ -342,11 +364,12 @@
     "cleanName": "James",
     "languageName": "English",
     "country": "Philippines",
-    "flag": "🇵🇭"
+    "flag": "🇵🇭",
+    "countryCode": "PH"
   },
   {
     "name": "en-PH-RosaNeural",
-    "displayName": "Rosa · 🇵🇭 Philippines (Female)",
+    "displayName": "Rosa · Philippines (Female)",
     "friendlyName": "Microsoft Rosa Online (Natural) - English (Philippines)",
     "lang": "en-PH",
     "gender": "Female",
@@ -357,11 +380,12 @@
     "cleanName": "Rosa",
     "languageName": "English",
     "country": "Philippines",
-    "flag": "🇵🇭"
+    "flag": "🇵🇭",
+    "countryCode": "PH"
   },
   {
     "name": "en-SG-LunaNeural",
-    "displayName": "Luna · 🇸🇬 Singapore (Female)",
+    "displayName": "Luna · Singapore (Female)",
     "friendlyName": "Microsoft Luna Online (Natural) - English (Singapore)",
     "lang": "en-SG",
     "gender": "Female",
@@ -372,11 +396,12 @@
     "cleanName": "Luna",
     "languageName": "English",
     "country": "Singapore",
-    "flag": "🇸🇬"
+    "flag": "🇸🇬",
+    "countryCode": "SG"
   },
   {
     "name": "en-SG-WayneNeural",
-    "displayName": "Wayne · 🇸🇬 Singapore (Male)",
+    "displayName": "Wayne · Singapore (Male)",
     "friendlyName": "Microsoft Wayne Online (Natural) - English (Singapore)",
     "lang": "en-SG",
     "gender": "Male",
@@ -387,11 +412,12 @@
     "cleanName": "Wayne",
     "languageName": "English",
     "country": "Singapore",
-    "flag": "🇸🇬"
+    "flag": "🇸🇬",
+    "countryCode": "SG"
   },
   {
     "name": "en-TZ-ElimuNeural",
-    "displayName": "Elimu · 🇹🇿 Tanzania (Male)",
+    "displayName": "Elimu · Tanzania (Male)",
     "friendlyName": "Microsoft Elimu Online (Natural) - English (Tanzania)",
     "lang": "en-TZ",
     "gender": "Male",
@@ -402,11 +428,12 @@
     "cleanName": "Elimu",
     "languageName": "English",
     "country": "Tanzania",
-    "flag": "🇹🇿"
+    "flag": "🇹🇿",
+    "countryCode": "TZ"
   },
   {
     "name": "en-TZ-ImaniNeural",
-    "displayName": "Imani · 🇹🇿 Tanzania (Female)",
+    "displayName": "Imani · Tanzania (Female)",
     "friendlyName": "Microsoft Imani Online (Natural) - English (Tanzania)",
     "lang": "en-TZ",
     "gender": "Female",
@@ -417,11 +444,12 @@
     "cleanName": "Imani",
     "languageName": "English",
     "country": "Tanzania",
-    "flag": "🇹🇿"
+    "flag": "🇹🇿",
+    "countryCode": "TZ"
   },
   {
     "name": "en-US-AnaNeural",
-    "displayName": "Ana · 🇺🇸 United States (Female)",
+    "displayName": "Ana · United States (Female)",
     "friendlyName": "Microsoft Ana Online (Natural) - English (United States)",
     "lang": "en-US",
     "gender": "Female",
@@ -432,11 +460,12 @@
     "cleanName": "Ana",
     "languageName": "English",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "en-US-AndrewMultilingualNeural",
-    "displayName": "Andrew (Multi) · 🇺🇸 United States (Male)",
+    "displayName": "Andrew (Multi) · United States (Male)",
     "friendlyName": "Microsoft AndrewMultilingual Online (Natural) - English (United States)",
     "lang": "en-US",
     "gender": "Male",
@@ -447,11 +476,12 @@
     "cleanName": "Andrew (Multi)",
     "languageName": "English",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "en-US-AndrewNeural",
-    "displayName": "Andrew · 🇺🇸 United States (Male)",
+    "displayName": "Andrew · United States (Male)",
     "friendlyName": "Microsoft Andrew Online (Natural) - English (United States)",
     "lang": "en-US",
     "gender": "Male",
@@ -462,11 +492,12 @@
     "cleanName": "Andrew",
     "languageName": "English",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "en-US-AriaNeural",
-    "displayName": "Aria · 🇺🇸 United States (Female)",
+    "displayName": "Aria · United States (Female)",
     "friendlyName": "Microsoft Aria Online (Natural) - English (United States)",
     "lang": "en-US",
     "gender": "Female",
@@ -477,11 +508,12 @@
     "cleanName": "Aria",
     "languageName": "English",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "en-US-AvaMultilingualNeural",
-    "displayName": "Ava (Multi) · 🇺🇸 United States (Female)",
+    "displayName": "Ava (Multi) · United States (Female)",
     "friendlyName": "Microsoft AvaMultilingual Online (Natural) - English (United States)",
     "lang": "en-US",
     "gender": "Female",
@@ -492,11 +524,12 @@
     "cleanName": "Ava (Multi)",
     "languageName": "English",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "en-US-AvaNeural",
-    "displayName": "Ava · 🇺🇸 United States (Female)",
+    "displayName": "Ava · United States (Female)",
     "friendlyName": "Microsoft Ava Online (Natural) - English (United States)",
     "lang": "en-US",
     "gender": "Female",
@@ -507,11 +540,12 @@
     "cleanName": "Ava",
     "languageName": "English",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "en-US-BrianMultilingualNeural",
-    "displayName": "Brian (Multi) · 🇺🇸 United States (Male)",
+    "displayName": "Brian (Multi) · United States (Male)",
     "friendlyName": "Microsoft BrianMultilingual Online (Natural) - English (United States)",
     "lang": "en-US",
     "gender": "Male",
@@ -522,11 +556,12 @@
     "cleanName": "Brian (Multi)",
     "languageName": "English",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "en-US-BrianNeural",
-    "displayName": "Brian · 🇺🇸 United States (Male)",
+    "displayName": "Brian · United States (Male)",
     "friendlyName": "Microsoft Brian Online (Natural) - English (United States)",
     "lang": "en-US",
     "gender": "Male",
@@ -537,11 +572,12 @@
     "cleanName": "Brian",
     "languageName": "English",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "en-US-ChristopherNeural",
-    "displayName": "Christopher · 🇺🇸 United States (Male)",
+    "displayName": "Christopher · United States (Male)",
     "friendlyName": "Microsoft Christopher Online (Natural) - English (United States)",
     "lang": "en-US",
     "gender": "Male",
@@ -552,11 +588,12 @@
     "cleanName": "Christopher",
     "languageName": "English",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "en-US-EmmaMultilingualNeural",
-    "displayName": "Emma (Multi) · 🇺🇸 United States (Female)",
+    "displayName": "Emma (Multi) · United States (Female)",
     "friendlyName": "Microsoft EmmaMultilingual Online (Natural) - English (United States)",
     "lang": "en-US",
     "gender": "Female",
@@ -567,11 +604,12 @@
     "cleanName": "Emma (Multi)",
     "languageName": "English",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "en-US-EmmaNeural",
-    "displayName": "Emma · 🇺🇸 United States (Female)",
+    "displayName": "Emma · United States (Female)",
     "friendlyName": "Microsoft Emma Online (Natural) - English (United States)",
     "lang": "en-US",
     "gender": "Female",
@@ -582,11 +620,12 @@
     "cleanName": "Emma",
     "languageName": "English",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "en-US-EricNeural",
-    "displayName": "Eric · 🇺🇸 United States (Male)",
+    "displayName": "Eric · United States (Male)",
     "friendlyName": "Microsoft Eric Online (Natural) - English (United States)",
     "lang": "en-US",
     "gender": "Male",
@@ -597,11 +636,12 @@
     "cleanName": "Eric",
     "languageName": "English",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "en-US-GuyNeural",
-    "displayName": "Guy · 🇺🇸 United States (Male)",
+    "displayName": "Guy · United States (Male)",
     "friendlyName": "Microsoft Guy Online (Natural) - English (United States)",
     "lang": "en-US",
     "gender": "Male",
@@ -612,11 +652,12 @@
     "cleanName": "Guy",
     "languageName": "English",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "en-US-JennyNeural",
-    "displayName": "Jenny · 🇺🇸 United States (Female)",
+    "displayName": "Jenny · United States (Female)",
     "friendlyName": "Microsoft Jenny Online (Natural) - English (United States)",
     "lang": "en-US",
     "gender": "Female",
@@ -627,11 +668,12 @@
     "cleanName": "Jenny",
     "languageName": "English",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "en-US-MichelleNeural",
-    "displayName": "Michelle · 🇺🇸 United States (Female)",
+    "displayName": "Michelle · United States (Female)",
     "friendlyName": "Microsoft Michelle Online (Natural) - English (United States)",
     "lang": "en-US",
     "gender": "Female",
@@ -642,11 +684,12 @@
     "cleanName": "Michelle",
     "languageName": "English",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "en-US-RogerNeural",
-    "displayName": "Roger · 🇺🇸 United States (Male)",
+    "displayName": "Roger · United States (Male)",
     "friendlyName": "Microsoft Roger Online (Natural) - English (United States)",
     "lang": "en-US",
     "gender": "Male",
@@ -657,11 +700,12 @@
     "cleanName": "Roger",
     "languageName": "English",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "en-US-SteffanNeural",
-    "displayName": "Steffan · 🇺🇸 United States (Male)",
+    "displayName": "Steffan · United States (Male)",
     "friendlyName": "Microsoft Steffan Online (Natural) - English (United States)",
     "lang": "en-US",
     "gender": "Male",
@@ -672,11 +716,12 @@
     "cleanName": "Steffan",
     "languageName": "English",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "en-ZA-LeahNeural",
-    "displayName": "Leah · 🇿🇦 South Africa (Female)",
+    "displayName": "Leah · South Africa (Female)",
     "friendlyName": "Microsoft Leah Online (Natural) - English (South Africa)",
     "lang": "en-ZA",
     "gender": "Female",
@@ -687,11 +732,12 @@
     "cleanName": "Leah",
     "languageName": "English",
     "country": "South Africa",
-    "flag": "🇿🇦"
+    "flag": "🇿🇦",
+    "countryCode": "ZA"
   },
   {
     "name": "en-ZA-LukeNeural",
-    "displayName": "Luke · 🇿🇦 South Africa (Male)",
+    "displayName": "Luke · South Africa (Male)",
     "friendlyName": "Microsoft Luke Online (Natural) - English (South Africa)",
     "lang": "en-ZA",
     "gender": "Male",
@@ -702,11 +748,12 @@
     "cleanName": "Luke",
     "languageName": "English",
     "country": "South Africa",
-    "flag": "🇿🇦"
+    "flag": "🇿🇦",
+    "countryCode": "ZA"
   },
   {
     "name": "af-ZA-AdriNeural",
-    "displayName": "Adri · 🌐 af-ZA (Female)",
+    "displayName": "Adri · South Africa (Female)",
     "friendlyName": "Microsoft Adri Online (Natural) - Afrikaans (South Africa)",
     "lang": "af-ZA",
     "gender": "Female",
@@ -715,13 +762,14 @@
     "localService": false,
     "voiceURI": "af-ZA-AdriNeural",
     "cleanName": "Adri",
-    "languageName": "AF",
-    "country": "af-ZA",
-    "flag": "🌐"
+    "languageName": "Afrikaans",
+    "country": "South Africa",
+    "flag": "🌐",
+    "countryCode": "ZA"
   },
   {
     "name": "af-ZA-WillemNeural",
-    "displayName": "Willem · 🌐 af-ZA (Male)",
+    "displayName": "Willem · South Africa (Male)",
     "friendlyName": "Microsoft Willem Online (Natural) - Afrikaans (South Africa)",
     "lang": "af-ZA",
     "gender": "Male",
@@ -730,13 +778,14 @@
     "localService": false,
     "voiceURI": "af-ZA-WillemNeural",
     "cleanName": "Willem",
-    "languageName": "AF",
-    "country": "af-ZA",
-    "flag": "🌐"
+    "languageName": "Afrikaans",
+    "country": "South Africa",
+    "flag": "🌐",
+    "countryCode": "ZA"
   },
   {
     "name": "am-ET-AmehaNeural",
-    "displayName": "Ameha · 🌐 am-ET (Male)",
+    "displayName": "Ameha · Ethiopia (Male)",
     "friendlyName": "Microsoft Ameha Online (Natural) - Amharic (Ethiopia)",
     "lang": "am-ET",
     "gender": "Male",
@@ -745,13 +794,14 @@
     "localService": false,
     "voiceURI": "am-ET-AmehaNeural",
     "cleanName": "Ameha",
-    "languageName": "AM",
-    "country": "am-ET",
-    "flag": "🌐"
+    "languageName": "Amharic",
+    "country": "Ethiopia",
+    "flag": "🌐",
+    "countryCode": "ET"
   },
   {
     "name": "am-ET-MekdesNeural",
-    "displayName": "Mekdes · 🌐 am-ET (Female)",
+    "displayName": "Mekdes · Ethiopia (Female)",
     "friendlyName": "Microsoft Mekdes Online (Natural) - Amharic (Ethiopia)",
     "lang": "am-ET",
     "gender": "Female",
@@ -760,13 +810,14 @@
     "localService": false,
     "voiceURI": "am-ET-MekdesNeural",
     "cleanName": "Mekdes",
-    "languageName": "AM",
-    "country": "am-ET",
-    "flag": "🌐"
+    "languageName": "Amharic",
+    "country": "Ethiopia",
+    "flag": "🌐",
+    "countryCode": "ET"
   },
   {
     "name": "ar-AE-FatimaNeural",
-    "displayName": "Fatima · 🌐 ar-AE (Female)",
+    "displayName": "Fatima · United Arab Emirates (Female)",
     "friendlyName": "Microsoft Fatima Online (Natural) - Arabic (United Arab Emirates)",
     "lang": "ar-AE",
     "gender": "Female",
@@ -775,13 +826,14 @@
     "localService": false,
     "voiceURI": "ar-AE-FatimaNeural",
     "cleanName": "Fatima",
-    "languageName": "AR",
-    "country": "ar-AE",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "United Arab Emirates",
+    "flag": "🌐",
+    "countryCode": "AE"
   },
   {
     "name": "ar-AE-HamdanNeural",
-    "displayName": "Hamdan · 🌐 ar-AE (Male)",
+    "displayName": "Hamdan · United Arab Emirates (Male)",
     "friendlyName": "Microsoft Hamdan Online (Natural) - Arabic (United Arab Emirates)",
     "lang": "ar-AE",
     "gender": "Male",
@@ -790,13 +842,14 @@
     "localService": false,
     "voiceURI": "ar-AE-HamdanNeural",
     "cleanName": "Hamdan",
-    "languageName": "AR",
-    "country": "ar-AE",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "United Arab Emirates",
+    "flag": "🌐",
+    "countryCode": "AE"
   },
   {
     "name": "ar-BH-AliNeural",
-    "displayName": "Ali · 🌐 ar-BH (Male)",
+    "displayName": "Ali · Bahrain (Male)",
     "friendlyName": "Microsoft Ali Online (Natural) - Arabic (Bahrain)",
     "lang": "ar-BH",
     "gender": "Male",
@@ -805,13 +858,14 @@
     "localService": false,
     "voiceURI": "ar-BH-AliNeural",
     "cleanName": "Ali",
-    "languageName": "AR",
-    "country": "ar-BH",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Bahrain",
+    "flag": "🌐",
+    "countryCode": "BH"
   },
   {
     "name": "ar-BH-LailaNeural",
-    "displayName": "Laila · 🌐 ar-BH (Female)",
+    "displayName": "Laila · Bahrain (Female)",
     "friendlyName": "Microsoft Laila Online (Natural) - Arabic (Bahrain)",
     "lang": "ar-BH",
     "gender": "Female",
@@ -820,13 +874,14 @@
     "localService": false,
     "voiceURI": "ar-BH-LailaNeural",
     "cleanName": "Laila",
-    "languageName": "AR",
-    "country": "ar-BH",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Bahrain",
+    "flag": "🌐",
+    "countryCode": "BH"
   },
   {
     "name": "ar-DZ-AminaNeural",
-    "displayName": "Amina · 🌐 ar-DZ (Female)",
+    "displayName": "Amina · Algeria (Female)",
     "friendlyName": "Microsoft Amina Online (Natural) - Arabic (Algeria)",
     "lang": "ar-DZ",
     "gender": "Female",
@@ -835,13 +890,14 @@
     "localService": false,
     "voiceURI": "ar-DZ-AminaNeural",
     "cleanName": "Amina",
-    "languageName": "AR",
-    "country": "ar-DZ",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Algeria",
+    "flag": "🌐",
+    "countryCode": "DZ"
   },
   {
     "name": "ar-DZ-IsmaelNeural",
-    "displayName": "Ismael · 🌐 ar-DZ (Male)",
+    "displayName": "Ismael · Algeria (Male)",
     "friendlyName": "Microsoft Ismael Online (Natural) - Arabic (Algeria)",
     "lang": "ar-DZ",
     "gender": "Male",
@@ -850,13 +906,14 @@
     "localService": false,
     "voiceURI": "ar-DZ-IsmaelNeural",
     "cleanName": "Ismael",
-    "languageName": "AR",
-    "country": "ar-DZ",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Algeria",
+    "flag": "🌐",
+    "countryCode": "DZ"
   },
   {
     "name": "ar-EG-SalmaNeural",
-    "displayName": "Salma · 🇪🇬 Egypt (Female)",
+    "displayName": "Salma · Egypt (Female)",
     "friendlyName": "Microsoft Salma Online (Natural) - Arabic (Egypt)",
     "lang": "ar-EG",
     "gender": "Female",
@@ -867,11 +924,12 @@
     "cleanName": "Salma",
     "languageName": "Arabic",
     "country": "Egypt",
-    "flag": "🇪🇬"
+    "flag": "🇪🇬",
+    "countryCode": "EG"
   },
   {
     "name": "ar-EG-ShakirNeural",
-    "displayName": "Shakir · 🇪🇬 Egypt (Male)",
+    "displayName": "Shakir · Egypt (Male)",
     "friendlyName": "Microsoft Shakir Online (Natural) - Arabic (Egypt)",
     "lang": "ar-EG",
     "gender": "Male",
@@ -882,11 +940,12 @@
     "cleanName": "Shakir",
     "languageName": "Arabic",
     "country": "Egypt",
-    "flag": "🇪🇬"
+    "flag": "🇪🇬",
+    "countryCode": "EG"
   },
   {
     "name": "ar-IQ-BasselNeural",
-    "displayName": "Bassel · 🌐 ar-IQ (Male)",
+    "displayName": "Bassel · Iraq (Male)",
     "friendlyName": "Microsoft Bassel Online (Natural) - Arabic (Iraq)",
     "lang": "ar-IQ",
     "gender": "Male",
@@ -895,13 +954,14 @@
     "localService": false,
     "voiceURI": "ar-IQ-BasselNeural",
     "cleanName": "Bassel",
-    "languageName": "AR",
-    "country": "ar-IQ",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Iraq",
+    "flag": "🌐",
+    "countryCode": "IQ"
   },
   {
     "name": "ar-IQ-RanaNeural",
-    "displayName": "Rana · 🌐 ar-IQ (Female)",
+    "displayName": "Rana · Iraq (Female)",
     "friendlyName": "Microsoft Rana Online (Natural) - Arabic (Iraq)",
     "lang": "ar-IQ",
     "gender": "Female",
@@ -910,13 +970,14 @@
     "localService": false,
     "voiceURI": "ar-IQ-RanaNeural",
     "cleanName": "Rana",
-    "languageName": "AR",
-    "country": "ar-IQ",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Iraq",
+    "flag": "🌐",
+    "countryCode": "IQ"
   },
   {
     "name": "ar-JO-SanaNeural",
-    "displayName": "Sana · 🌐 ar-JO (Female)",
+    "displayName": "Sana · Jordan (Female)",
     "friendlyName": "Microsoft Sana Online (Natural) - Arabic (Jordan)",
     "lang": "ar-JO",
     "gender": "Female",
@@ -925,13 +986,14 @@
     "localService": false,
     "voiceURI": "ar-JO-SanaNeural",
     "cleanName": "Sana",
-    "languageName": "AR",
-    "country": "ar-JO",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Jordan",
+    "flag": "🌐",
+    "countryCode": "JO"
   },
   {
     "name": "ar-JO-TaimNeural",
-    "displayName": "Taim · 🌐 ar-JO (Male)",
+    "displayName": "Taim · Jordan (Male)",
     "friendlyName": "Microsoft Taim Online (Natural) - Arabic (Jordan)",
     "lang": "ar-JO",
     "gender": "Male",
@@ -940,13 +1002,14 @@
     "localService": false,
     "voiceURI": "ar-JO-TaimNeural",
     "cleanName": "Taim",
-    "languageName": "AR",
-    "country": "ar-JO",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Jordan",
+    "flag": "🌐",
+    "countryCode": "JO"
   },
   {
     "name": "ar-KW-FahedNeural",
-    "displayName": "Fahed · 🌐 ar-KW (Male)",
+    "displayName": "Fahed · Kuwait (Male)",
     "friendlyName": "Microsoft Fahed Online (Natural) - Arabic (Kuwait)",
     "lang": "ar-KW",
     "gender": "Male",
@@ -955,13 +1018,14 @@
     "localService": false,
     "voiceURI": "ar-KW-FahedNeural",
     "cleanName": "Fahed",
-    "languageName": "AR",
-    "country": "ar-KW",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Kuwait",
+    "flag": "🌐",
+    "countryCode": "KW"
   },
   {
     "name": "ar-KW-NouraNeural",
-    "displayName": "Noura · 🌐 ar-KW (Female)",
+    "displayName": "Noura · Kuwait (Female)",
     "friendlyName": "Microsoft Noura Online (Natural) - Arabic (Kuwait)",
     "lang": "ar-KW",
     "gender": "Female",
@@ -970,13 +1034,14 @@
     "localService": false,
     "voiceURI": "ar-KW-NouraNeural",
     "cleanName": "Noura",
-    "languageName": "AR",
-    "country": "ar-KW",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Kuwait",
+    "flag": "🌐",
+    "countryCode": "KW"
   },
   {
     "name": "ar-LB-LaylaNeural",
-    "displayName": "Layla · 🌐 ar-LB (Female)",
+    "displayName": "Layla · Lebanon (Female)",
     "friendlyName": "Microsoft Layla Online (Natural) - Arabic (Lebanon)",
     "lang": "ar-LB",
     "gender": "Female",
@@ -985,13 +1050,14 @@
     "localService": false,
     "voiceURI": "ar-LB-LaylaNeural",
     "cleanName": "Layla",
-    "languageName": "AR",
-    "country": "ar-LB",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Lebanon",
+    "flag": "🌐",
+    "countryCode": "LB"
   },
   {
     "name": "ar-LB-RamiNeural",
-    "displayName": "Rami · 🌐 ar-LB (Male)",
+    "displayName": "Rami · Lebanon (Male)",
     "friendlyName": "Microsoft Rami Online (Natural) - Arabic (Lebanon)",
     "lang": "ar-LB",
     "gender": "Male",
@@ -1000,13 +1066,14 @@
     "localService": false,
     "voiceURI": "ar-LB-RamiNeural",
     "cleanName": "Rami",
-    "languageName": "AR",
-    "country": "ar-LB",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Lebanon",
+    "flag": "🌐",
+    "countryCode": "LB"
   },
   {
     "name": "ar-LY-ImanNeural",
-    "displayName": "Iman · 🌐 ar-LY (Female)",
+    "displayName": "Iman · Libya (Female)",
     "friendlyName": "Microsoft Iman Online (Natural) - Arabic (Libya)",
     "lang": "ar-LY",
     "gender": "Female",
@@ -1015,13 +1082,14 @@
     "localService": false,
     "voiceURI": "ar-LY-ImanNeural",
     "cleanName": "Iman",
-    "languageName": "AR",
-    "country": "ar-LY",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Libya",
+    "flag": "🌐",
+    "countryCode": "LY"
   },
   {
     "name": "ar-LY-OmarNeural",
-    "displayName": "Omar · 🌐 ar-LY (Male)",
+    "displayName": "Omar · Libya (Male)",
     "friendlyName": "Microsoft Omar Online (Natural) - Arabic (Libya)",
     "lang": "ar-LY",
     "gender": "Male",
@@ -1030,13 +1098,14 @@
     "localService": false,
     "voiceURI": "ar-LY-OmarNeural",
     "cleanName": "Omar",
-    "languageName": "AR",
-    "country": "ar-LY",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Libya",
+    "flag": "🌐",
+    "countryCode": "LY"
   },
   {
     "name": "ar-MA-JamalNeural",
-    "displayName": "Jamal · 🌐 ar-MA (Male)",
+    "displayName": "Jamal · Morocco (Male)",
     "friendlyName": "Microsoft Jamal Online (Natural) - Arabic (Morocco)",
     "lang": "ar-MA",
     "gender": "Male",
@@ -1045,13 +1114,14 @@
     "localService": false,
     "voiceURI": "ar-MA-JamalNeural",
     "cleanName": "Jamal",
-    "languageName": "AR",
-    "country": "ar-MA",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Morocco",
+    "flag": "🌐",
+    "countryCode": "MA"
   },
   {
     "name": "ar-MA-MounaNeural",
-    "displayName": "Mouna · 🌐 ar-MA (Female)",
+    "displayName": "Mouna · Morocco (Female)",
     "friendlyName": "Microsoft Mouna Online (Natural) - Arabic (Morocco)",
     "lang": "ar-MA",
     "gender": "Female",
@@ -1060,13 +1130,14 @@
     "localService": false,
     "voiceURI": "ar-MA-MounaNeural",
     "cleanName": "Mouna",
-    "languageName": "AR",
-    "country": "ar-MA",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Morocco",
+    "flag": "🌐",
+    "countryCode": "MA"
   },
   {
     "name": "ar-OM-AbdullahNeural",
-    "displayName": "Abdullah · 🌐 ar-OM (Male)",
+    "displayName": "Abdullah · Oman (Male)",
     "friendlyName": "Microsoft Abdullah Online (Natural) - Arabic (Oman)",
     "lang": "ar-OM",
     "gender": "Male",
@@ -1075,13 +1146,14 @@
     "localService": false,
     "voiceURI": "ar-OM-AbdullahNeural",
     "cleanName": "Abdullah",
-    "languageName": "AR",
-    "country": "ar-OM",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Oman",
+    "flag": "🌐",
+    "countryCode": "OM"
   },
   {
     "name": "ar-OM-AyshaNeural",
-    "displayName": "Aysha · 🌐 ar-OM (Female)",
+    "displayName": "Aysha · Oman (Female)",
     "friendlyName": "Microsoft Aysha Online (Natural) - Arabic (Oman)",
     "lang": "ar-OM",
     "gender": "Female",
@@ -1090,13 +1162,14 @@
     "localService": false,
     "voiceURI": "ar-OM-AyshaNeural",
     "cleanName": "Aysha",
-    "languageName": "AR",
-    "country": "ar-OM",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Oman",
+    "flag": "🌐",
+    "countryCode": "OM"
   },
   {
     "name": "ar-QA-AmalNeural",
-    "displayName": "Amal · 🌐 ar-QA (Female)",
+    "displayName": "Amal · Qatar (Female)",
     "friendlyName": "Microsoft Amal Online (Natural) - Arabic (Qatar)",
     "lang": "ar-QA",
     "gender": "Female",
@@ -1105,13 +1178,14 @@
     "localService": false,
     "voiceURI": "ar-QA-AmalNeural",
     "cleanName": "Amal",
-    "languageName": "AR",
-    "country": "ar-QA",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Qatar",
+    "flag": "🌐",
+    "countryCode": "QA"
   },
   {
     "name": "ar-QA-MoazNeural",
-    "displayName": "Moaz · 🌐 ar-QA (Male)",
+    "displayName": "Moaz · Qatar (Male)",
     "friendlyName": "Microsoft Moaz Online (Natural) - Arabic (Qatar)",
     "lang": "ar-QA",
     "gender": "Male",
@@ -1120,13 +1194,14 @@
     "localService": false,
     "voiceURI": "ar-QA-MoazNeural",
     "cleanName": "Moaz",
-    "languageName": "AR",
-    "country": "ar-QA",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Qatar",
+    "flag": "🌐",
+    "countryCode": "QA"
   },
   {
     "name": "ar-SA-HamedNeural",
-    "displayName": "Hamed · 🇸🇦 Saudi Arabia (Male)",
+    "displayName": "Hamed · Saudi Arabia (Male)",
     "friendlyName": "Microsoft Hamed Online (Natural) - Arabic (Saudi Arabia)",
     "lang": "ar-SA",
     "gender": "Male",
@@ -1137,11 +1212,12 @@
     "cleanName": "Hamed",
     "languageName": "Arabic",
     "country": "Saudi Arabia",
-    "flag": "🇸🇦"
+    "flag": "🇸🇦",
+    "countryCode": "SA"
   },
   {
     "name": "ar-SA-ZariyahNeural",
-    "displayName": "Zariyah · 🇸🇦 Saudi Arabia (Female)",
+    "displayName": "Zariyah · Saudi Arabia (Female)",
     "friendlyName": "Microsoft Zariyah Online (Natural) - Arabic (Saudi Arabia)",
     "lang": "ar-SA",
     "gender": "Female",
@@ -1152,11 +1228,12 @@
     "cleanName": "Zariyah",
     "languageName": "Arabic",
     "country": "Saudi Arabia",
-    "flag": "🇸🇦"
+    "flag": "🇸🇦",
+    "countryCode": "SA"
   },
   {
     "name": "ar-SY-AmanyNeural",
-    "displayName": "Amany · 🌐 ar-SY (Female)",
+    "displayName": "Amany · Syria (Female)",
     "friendlyName": "Microsoft Amany Online (Natural) - Arabic (Syria)",
     "lang": "ar-SY",
     "gender": "Female",
@@ -1165,13 +1242,14 @@
     "localService": false,
     "voiceURI": "ar-SY-AmanyNeural",
     "cleanName": "Amany",
-    "languageName": "AR",
-    "country": "ar-SY",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Syria",
+    "flag": "🌐",
+    "countryCode": "SY"
   },
   {
     "name": "ar-SY-LaithNeural",
-    "displayName": "Laith · 🌐 ar-SY (Male)",
+    "displayName": "Laith · Syria (Male)",
     "friendlyName": "Microsoft Laith Online (Natural) - Arabic (Syria)",
     "lang": "ar-SY",
     "gender": "Male",
@@ -1180,13 +1258,14 @@
     "localService": false,
     "voiceURI": "ar-SY-LaithNeural",
     "cleanName": "Laith",
-    "languageName": "AR",
-    "country": "ar-SY",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Syria",
+    "flag": "🌐",
+    "countryCode": "SY"
   },
   {
     "name": "ar-TN-HediNeural",
-    "displayName": "Hedi · 🌐 ar-TN (Male)",
+    "displayName": "Hedi · Tunisia (Male)",
     "friendlyName": "Microsoft Hedi Online (Natural) - Arabic (Tunisia)",
     "lang": "ar-TN",
     "gender": "Male",
@@ -1195,13 +1274,14 @@
     "localService": false,
     "voiceURI": "ar-TN-HediNeural",
     "cleanName": "Hedi",
-    "languageName": "AR",
-    "country": "ar-TN",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Tunisia",
+    "flag": "🌐",
+    "countryCode": "TN"
   },
   {
     "name": "ar-TN-ReemNeural",
-    "displayName": "Reem · 🌐 ar-TN (Female)",
+    "displayName": "Reem · Tunisia (Female)",
     "friendlyName": "Microsoft Reem Online (Natural) - Arabic (Tunisia)",
     "lang": "ar-TN",
     "gender": "Female",
@@ -1210,13 +1290,14 @@
     "localService": false,
     "voiceURI": "ar-TN-ReemNeural",
     "cleanName": "Reem",
-    "languageName": "AR",
-    "country": "ar-TN",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Tunisia",
+    "flag": "🌐",
+    "countryCode": "TN"
   },
   {
     "name": "ar-YE-MaryamNeural",
-    "displayName": "Maryam · 🌐 ar-YE (Female)",
+    "displayName": "Maryam · Yemen (Female)",
     "friendlyName": "Microsoft Maryam Online (Natural) - Arabic (Yemen)",
     "lang": "ar-YE",
     "gender": "Female",
@@ -1225,13 +1306,14 @@
     "localService": false,
     "voiceURI": "ar-YE-MaryamNeural",
     "cleanName": "Maryam",
-    "languageName": "AR",
-    "country": "ar-YE",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Yemen",
+    "flag": "🌐",
+    "countryCode": "YE"
   },
   {
     "name": "ar-YE-SalehNeural",
-    "displayName": "Saleh · 🌐 ar-YE (Male)",
+    "displayName": "Saleh · Yemen (Male)",
     "friendlyName": "Microsoft Saleh Online (Natural) - Arabic (Yemen)",
     "lang": "ar-YE",
     "gender": "Male",
@@ -1240,13 +1322,14 @@
     "localService": false,
     "voiceURI": "ar-YE-SalehNeural",
     "cleanName": "Saleh",
-    "languageName": "AR",
-    "country": "ar-YE",
-    "flag": "🌐"
+    "languageName": "Arabic",
+    "country": "Yemen",
+    "flag": "🌐",
+    "countryCode": "YE"
   },
   {
     "name": "az-AZ-BabekNeural",
-    "displayName": "Babek · 🌐 az-AZ (Male)",
+    "displayName": "Babek · Azerbaijan (Male)",
     "friendlyName": "Microsoft Babek Online (Natural) - Azerbaijani (Azerbaijan)",
     "lang": "az-AZ",
     "gender": "Male",
@@ -1255,13 +1338,14 @@
     "localService": false,
     "voiceURI": "az-AZ-BabekNeural",
     "cleanName": "Babek",
-    "languageName": "AZ",
-    "country": "az-AZ",
-    "flag": "🌐"
+    "languageName": "Azerbaijani",
+    "country": "Azerbaijan",
+    "flag": "🌐",
+    "countryCode": "AZ"
   },
   {
     "name": "az-AZ-BanuNeural",
-    "displayName": "Banu · 🌐 az-AZ (Female)",
+    "displayName": "Banu · Azerbaijan (Female)",
     "friendlyName": "Microsoft Banu Online (Natural) - Azerbaijani (Azerbaijan)",
     "lang": "az-AZ",
     "gender": "Female",
@@ -1270,13 +1354,14 @@
     "localService": false,
     "voiceURI": "az-AZ-BanuNeural",
     "cleanName": "Banu",
-    "languageName": "AZ",
-    "country": "az-AZ",
-    "flag": "🌐"
+    "languageName": "Azerbaijani",
+    "country": "Azerbaijan",
+    "flag": "🌐",
+    "countryCode": "AZ"
   },
   {
     "name": "bg-BG-BorislavNeural",
-    "displayName": "Borislav · 🌐 bg-BG (Male)",
+    "displayName": "Borislav · Bulgaria (Male)",
     "friendlyName": "Microsoft Borislav Online (Natural) - Bulgarian (Bulgaria)",
     "lang": "bg-BG",
     "gender": "Male",
@@ -1285,13 +1370,14 @@
     "localService": false,
     "voiceURI": "bg-BG-BorislavNeural",
     "cleanName": "Borislav",
-    "languageName": "BG",
-    "country": "bg-BG",
-    "flag": "🌐"
+    "languageName": "Bulgarian",
+    "country": "Bulgaria",
+    "flag": "🌐",
+    "countryCode": "BG"
   },
   {
     "name": "bg-BG-KalinaNeural",
-    "displayName": "Kalina · 🌐 bg-BG (Female)",
+    "displayName": "Kalina · Bulgaria (Female)",
     "friendlyName": "Microsoft Kalina Online (Natural) - Bulgarian (Bulgaria)",
     "lang": "bg-BG",
     "gender": "Female",
@@ -1300,13 +1386,14 @@
     "localService": false,
     "voiceURI": "bg-BG-KalinaNeural",
     "cleanName": "Kalina",
-    "languageName": "BG",
-    "country": "bg-BG",
-    "flag": "🌐"
+    "languageName": "Bulgarian",
+    "country": "Bulgaria",
+    "flag": "🌐",
+    "countryCode": "BG"
   },
   {
     "name": "bn-BD-NabanitaNeural",
-    "displayName": "Nabanita · 🌐 bn-BD (Female)",
+    "displayName": "Nabanita · Bangladesh (Female)",
     "friendlyName": "Microsoft Nabanita Online (Natural) - Bangla (Bangladesh)",
     "lang": "bn-BD",
     "gender": "Female",
@@ -1315,13 +1402,14 @@
     "localService": false,
     "voiceURI": "bn-BD-NabanitaNeural",
     "cleanName": "Nabanita",
-    "languageName": "BN",
-    "country": "bn-BD",
-    "flag": "🌐"
+    "languageName": "Bangla",
+    "country": "Bangladesh",
+    "flag": "🌐",
+    "countryCode": "BD"
   },
   {
     "name": "bn-BD-PradeepNeural",
-    "displayName": "Pradeep · 🌐 bn-BD (Male)",
+    "displayName": "Pradeep · Bangladesh (Male)",
     "friendlyName": "Microsoft Pradeep Online (Natural) - Bangla (Bangladesh)",
     "lang": "bn-BD",
     "gender": "Male",
@@ -1330,13 +1418,14 @@
     "localService": false,
     "voiceURI": "bn-BD-PradeepNeural",
     "cleanName": "Pradeep",
-    "languageName": "BN",
-    "country": "bn-BD",
-    "flag": "🌐"
+    "languageName": "Bangla",
+    "country": "Bangladesh",
+    "flag": "🌐",
+    "countryCode": "BD"
   },
   {
     "name": "bn-IN-BashkarNeural",
-    "displayName": "Bashkar · 🌐 bn-IN (Male)",
+    "displayName": "Bashkar · India (Male)",
     "friendlyName": "Microsoft Bashkar Online (Natural) - Bangla (India)",
     "lang": "bn-IN",
     "gender": "Male",
@@ -1345,13 +1434,14 @@
     "localService": false,
     "voiceURI": "bn-IN-BashkarNeural",
     "cleanName": "Bashkar",
-    "languageName": "BN",
-    "country": "bn-IN",
-    "flag": "🌐"
+    "languageName": "Bangla",
+    "country": "India",
+    "flag": "🌐",
+    "countryCode": "IN"
   },
   {
     "name": "bn-IN-TanishaaNeural",
-    "displayName": "Tanishaa · 🌐 bn-IN (Female)",
+    "displayName": "Tanishaa · India (Female)",
     "friendlyName": "Microsoft Tanishaa Online (Natural) - Bengali (India)",
     "lang": "bn-IN",
     "gender": "Female",
@@ -1360,13 +1450,14 @@
     "localService": false,
     "voiceURI": "bn-IN-TanishaaNeural",
     "cleanName": "Tanishaa",
-    "languageName": "BN",
-    "country": "bn-IN",
-    "flag": "🌐"
+    "languageName": "Bangla",
+    "country": "India",
+    "flag": "🌐",
+    "countryCode": "IN"
   },
   {
     "name": "bs-BA-GoranNeural",
-    "displayName": "Goran · 🌐 bs-BA (Male)",
+    "displayName": "Goran · Bosnia & Herzegovina (Male)",
     "friendlyName": "Microsoft Goran Online (Natural) - Bosnian (Bosnia)",
     "lang": "bs-BA",
     "gender": "Male",
@@ -1375,13 +1466,14 @@
     "localService": false,
     "voiceURI": "bs-BA-GoranNeural",
     "cleanName": "Goran",
-    "languageName": "BS",
-    "country": "bs-BA",
-    "flag": "🌐"
+    "languageName": "Bosnian",
+    "country": "Bosnia & Herzegovina",
+    "flag": "🌐",
+    "countryCode": "BA"
   },
   {
     "name": "bs-BA-VesnaNeural",
-    "displayName": "Vesna · 🌐 bs-BA (Female)",
+    "displayName": "Vesna · Bosnia & Herzegovina (Female)",
     "friendlyName": "Microsoft Vesna Online (Natural) - Bosnian (Bosnia and Herzegovina)",
     "lang": "bs-BA",
     "gender": "Female",
@@ -1390,13 +1482,14 @@
     "localService": false,
     "voiceURI": "bs-BA-VesnaNeural",
     "cleanName": "Vesna",
-    "languageName": "BS",
-    "country": "bs-BA",
-    "flag": "🌐"
+    "languageName": "Bosnian",
+    "country": "Bosnia & Herzegovina",
+    "flag": "🌐",
+    "countryCode": "BA"
   },
   {
     "name": "ca-ES-EnricNeural",
-    "displayName": "Enric · 🌐 ca-ES (Male)",
+    "displayName": "Enric · Spain (Male)",
     "friendlyName": "Microsoft Enric Online (Natural) - Catalan",
     "lang": "ca-ES",
     "gender": "Male",
@@ -1405,13 +1498,14 @@
     "localService": false,
     "voiceURI": "ca-ES-EnricNeural",
     "cleanName": "Enric",
-    "languageName": "CA",
-    "country": "ca-ES",
-    "flag": "🌐"
+    "languageName": "Catalan",
+    "country": "Spain",
+    "flag": "🌐",
+    "countryCode": "ES"
   },
   {
     "name": "ca-ES-JoanaNeural",
-    "displayName": "Joana · 🌐 ca-ES (Female)",
+    "displayName": "Joana · Spain (Female)",
     "friendlyName": "Microsoft Joana Online (Natural) - Catalan",
     "lang": "ca-ES",
     "gender": "Female",
@@ -1420,13 +1514,14 @@
     "localService": false,
     "voiceURI": "ca-ES-JoanaNeural",
     "cleanName": "Joana",
-    "languageName": "CA",
-    "country": "ca-ES",
-    "flag": "🌐"
+    "languageName": "Catalan",
+    "country": "Spain",
+    "flag": "🌐",
+    "countryCode": "ES"
   },
   {
     "name": "cs-CZ-AntoninNeural",
-    "displayName": "Antonin · 🌐 cs-CZ (Male)",
+    "displayName": "Antonin · Czechia (Male)",
     "friendlyName": "Microsoft Antonin Online (Natural) - Czech (Czech)",
     "lang": "cs-CZ",
     "gender": "Male",
@@ -1435,13 +1530,14 @@
     "localService": false,
     "voiceURI": "cs-CZ-AntoninNeural",
     "cleanName": "Antonin",
-    "languageName": "CS",
-    "country": "cs-CZ",
-    "flag": "🌐"
+    "languageName": "Czech",
+    "country": "Czechia",
+    "flag": "🌐",
+    "countryCode": "CZ"
   },
   {
     "name": "cs-CZ-VlastaNeural",
-    "displayName": "Vlasta · 🌐 cs-CZ (Female)",
+    "displayName": "Vlasta · Czechia (Female)",
     "friendlyName": "Microsoft Vlasta Online (Natural) - Czech (Czech)",
     "lang": "cs-CZ",
     "gender": "Female",
@@ -1450,13 +1546,14 @@
     "localService": false,
     "voiceURI": "cs-CZ-VlastaNeural",
     "cleanName": "Vlasta",
-    "languageName": "CS",
-    "country": "cs-CZ",
-    "flag": "🌐"
+    "languageName": "Czech",
+    "country": "Czechia",
+    "flag": "🌐",
+    "countryCode": "CZ"
   },
   {
     "name": "cy-GB-AledNeural",
-    "displayName": "Aled · 🌐 cy-GB (Male)",
+    "displayName": "Aled · United Kingdom (Male)",
     "friendlyName": "Microsoft Aled Online (Natural) - Welsh (United Kingdom)",
     "lang": "cy-GB",
     "gender": "Male",
@@ -1465,13 +1562,14 @@
     "localService": false,
     "voiceURI": "cy-GB-AledNeural",
     "cleanName": "Aled",
-    "languageName": "CY",
-    "country": "cy-GB",
-    "flag": "🌐"
+    "languageName": "Welsh",
+    "country": "United Kingdom",
+    "flag": "🌐",
+    "countryCode": "GB"
   },
   {
     "name": "cy-GB-NiaNeural",
-    "displayName": "Nia · 🌐 cy-GB (Female)",
+    "displayName": "Nia · United Kingdom (Female)",
     "friendlyName": "Microsoft Nia Online (Natural) - Welsh (United Kingdom)",
     "lang": "cy-GB",
     "gender": "Female",
@@ -1480,13 +1578,14 @@
     "localService": false,
     "voiceURI": "cy-GB-NiaNeural",
     "cleanName": "Nia",
-    "languageName": "CY",
-    "country": "cy-GB",
-    "flag": "🌐"
+    "languageName": "Welsh",
+    "country": "United Kingdom",
+    "flag": "🌐",
+    "countryCode": "GB"
   },
   {
     "name": "da-DK-ChristelNeural",
-    "displayName": "Christel · 🌐 da-DK (Female)",
+    "displayName": "Christel · Denmark (Female)",
     "friendlyName": "Microsoft Christel Online (Natural) - Danish (Denmark)",
     "lang": "da-DK",
     "gender": "Female",
@@ -1495,13 +1594,14 @@
     "localService": false,
     "voiceURI": "da-DK-ChristelNeural",
     "cleanName": "Christel",
-    "languageName": "DA",
-    "country": "da-DK",
-    "flag": "🌐"
+    "languageName": "Danish",
+    "country": "Denmark",
+    "flag": "🌐",
+    "countryCode": "DK"
   },
   {
     "name": "da-DK-JeppeNeural",
-    "displayName": "Jeppe · 🌐 da-DK (Male)",
+    "displayName": "Jeppe · Denmark (Male)",
     "friendlyName": "Microsoft Jeppe Online (Natural) - Danish (Denmark)",
     "lang": "da-DK",
     "gender": "Male",
@@ -1510,13 +1610,14 @@
     "localService": false,
     "voiceURI": "da-DK-JeppeNeural",
     "cleanName": "Jeppe",
-    "languageName": "DA",
-    "country": "da-DK",
-    "flag": "🌐"
+    "languageName": "Danish",
+    "country": "Denmark",
+    "flag": "🌐",
+    "countryCode": "DK"
   },
   {
     "name": "de-AT-IngridNeural",
-    "displayName": "Ingrid · 🇦🇹 Austria (Female)",
+    "displayName": "Ingrid · Austria (Female)",
     "friendlyName": "Microsoft Ingrid Online (Natural) - German (Austria)",
     "lang": "de-AT",
     "gender": "Female",
@@ -1527,11 +1628,12 @@
     "cleanName": "Ingrid",
     "languageName": "German",
     "country": "Austria",
-    "flag": "🇦🇹"
+    "flag": "🇦🇹",
+    "countryCode": "AT"
   },
   {
     "name": "de-AT-JonasNeural",
-    "displayName": "Jonas · 🇦🇹 Austria (Male)",
+    "displayName": "Jonas · Austria (Male)",
     "friendlyName": "Microsoft Jonas Online (Natural) - German (Austria)",
     "lang": "de-AT",
     "gender": "Male",
@@ -1542,11 +1644,12 @@
     "cleanName": "Jonas",
     "languageName": "German",
     "country": "Austria",
-    "flag": "🇦🇹"
+    "flag": "🇦🇹",
+    "countryCode": "AT"
   },
   {
     "name": "de-CH-JanNeural",
-    "displayName": "Jan · 🇨🇭 Switzerland (Male)",
+    "displayName": "Jan · Switzerland (Male)",
     "friendlyName": "Microsoft Jan Online (Natural) - German (Switzerland)",
     "lang": "de-CH",
     "gender": "Male",
@@ -1557,11 +1660,12 @@
     "cleanName": "Jan",
     "languageName": "German",
     "country": "Switzerland",
-    "flag": "🇨🇭"
+    "flag": "🇨🇭",
+    "countryCode": "CH"
   },
   {
     "name": "de-CH-LeniNeural",
-    "displayName": "Leni · 🇨🇭 Switzerland (Female)",
+    "displayName": "Leni · Switzerland (Female)",
     "friendlyName": "Microsoft Leni Online (Natural) - German (Switzerland)",
     "lang": "de-CH",
     "gender": "Female",
@@ -1572,11 +1676,12 @@
     "cleanName": "Leni",
     "languageName": "German",
     "country": "Switzerland",
-    "flag": "🇨🇭"
+    "flag": "🇨🇭",
+    "countryCode": "CH"
   },
   {
     "name": "de-DE-AmalaNeural",
-    "displayName": "Amala · 🇩🇪 Germany (Female)",
+    "displayName": "Amala · Germany (Female)",
     "friendlyName": "Microsoft Amala Online (Natural) - German (Germany)",
     "lang": "de-DE",
     "gender": "Female",
@@ -1587,11 +1692,12 @@
     "cleanName": "Amala",
     "languageName": "German",
     "country": "Germany",
-    "flag": "🇩🇪"
+    "flag": "🇩🇪",
+    "countryCode": "DE"
   },
   {
     "name": "de-DE-ConradNeural",
-    "displayName": "Conrad · 🇩🇪 Germany (Male)",
+    "displayName": "Conrad · Germany (Male)",
     "friendlyName": "Microsoft Conrad Online (Natural) - German (Germany)",
     "lang": "de-DE",
     "gender": "Male",
@@ -1602,11 +1708,12 @@
     "cleanName": "Conrad",
     "languageName": "German",
     "country": "Germany",
-    "flag": "🇩🇪"
+    "flag": "🇩🇪",
+    "countryCode": "DE"
   },
   {
     "name": "de-DE-FlorianMultilingualNeural",
-    "displayName": "Florian (Multi) · 🇩🇪 Germany (Male)",
+    "displayName": "Florian (Multi) · Germany (Male)",
     "friendlyName": "Microsoft FlorianMultilingual Online (Natural) - German (Germany)",
     "lang": "de-DE",
     "gender": "Male",
@@ -1617,11 +1724,12 @@
     "cleanName": "Florian (Multi)",
     "languageName": "German",
     "country": "Germany",
-    "flag": "🇩🇪"
+    "flag": "🇩🇪",
+    "countryCode": "DE"
   },
   {
     "name": "de-DE-KatjaNeural",
-    "displayName": "Katja · 🇩🇪 Germany (Female)",
+    "displayName": "Katja · Germany (Female)",
     "friendlyName": "Microsoft Katja Online (Natural) - German (Germany)",
     "lang": "de-DE",
     "gender": "Female",
@@ -1632,11 +1740,12 @@
     "cleanName": "Katja",
     "languageName": "German",
     "country": "Germany",
-    "flag": "🇩🇪"
+    "flag": "🇩🇪",
+    "countryCode": "DE"
   },
   {
     "name": "de-DE-KillianNeural",
-    "displayName": "Killian · 🇩🇪 Germany (Male)",
+    "displayName": "Killian · Germany (Male)",
     "friendlyName": "Microsoft Killian Online (Natural) - German (Germany)",
     "lang": "de-DE",
     "gender": "Male",
@@ -1647,11 +1756,12 @@
     "cleanName": "Killian",
     "languageName": "German",
     "country": "Germany",
-    "flag": "🇩🇪"
+    "flag": "🇩🇪",
+    "countryCode": "DE"
   },
   {
     "name": "de-DE-SeraphinaMultilingualNeural",
-    "displayName": "Seraphina (Multi) · 🇩🇪 Germany (Female)",
+    "displayName": "Seraphina (Multi) · Germany (Female)",
     "friendlyName": "Microsoft SeraphinaMultilingual Online (Natural) - German (Germany)",
     "lang": "de-DE",
     "gender": "Female",
@@ -1662,11 +1772,12 @@
     "cleanName": "Seraphina (Multi)",
     "languageName": "German",
     "country": "Germany",
-    "flag": "🇩🇪"
+    "flag": "🇩🇪",
+    "countryCode": "DE"
   },
   {
     "name": "el-GR-AthinaNeural",
-    "displayName": "Athina · 🌐 el-GR (Female)",
+    "displayName": "Athina · Greece (Female)",
     "friendlyName": "Microsoft Athina Online (Natural) - Greek (Greece)",
     "lang": "el-GR",
     "gender": "Female",
@@ -1675,13 +1786,14 @@
     "localService": false,
     "voiceURI": "el-GR-AthinaNeural",
     "cleanName": "Athina",
-    "languageName": "EL",
-    "country": "el-GR",
-    "flag": "🌐"
+    "languageName": "Greek",
+    "country": "Greece",
+    "flag": "🌐",
+    "countryCode": "GR"
   },
   {
     "name": "el-GR-NestorasNeural",
-    "displayName": "Nestoras · 🌐 el-GR (Male)",
+    "displayName": "Nestoras · Greece (Male)",
     "friendlyName": "Microsoft Nestoras Online (Natural) - Greek (Greece)",
     "lang": "el-GR",
     "gender": "Male",
@@ -1690,13 +1802,14 @@
     "localService": false,
     "voiceURI": "el-GR-NestorasNeural",
     "cleanName": "Nestoras",
-    "languageName": "EL",
-    "country": "el-GR",
-    "flag": "🌐"
+    "languageName": "Greek",
+    "country": "Greece",
+    "flag": "🌐",
+    "countryCode": "GR"
   },
   {
     "name": "es-AR-ElenaNeural",
-    "displayName": "Elena · 🌐 es-AR (Female)",
+    "displayName": "Elena · Argentina (Female)",
     "friendlyName": "Microsoft Elena Online (Natural) - Spanish (Argentina)",
     "lang": "es-AR",
     "gender": "Female",
@@ -1705,13 +1818,14 @@
     "localService": false,
     "voiceURI": "es-AR-ElenaNeural",
     "cleanName": "Elena",
-    "languageName": "ES",
-    "country": "es-AR",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Argentina",
+    "flag": "🌐",
+    "countryCode": "AR"
   },
   {
     "name": "es-AR-TomasNeural",
-    "displayName": "Tomas · 🌐 es-AR (Male)",
+    "displayName": "Tomas · Argentina (Male)",
     "friendlyName": "Microsoft Tomas Online (Natural) - Spanish (Argentina)",
     "lang": "es-AR",
     "gender": "Male",
@@ -1720,13 +1834,14 @@
     "localService": false,
     "voiceURI": "es-AR-TomasNeural",
     "cleanName": "Tomas",
-    "languageName": "ES",
-    "country": "es-AR",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Argentina",
+    "flag": "🌐",
+    "countryCode": "AR"
   },
   {
     "name": "es-BO-MarceloNeural",
-    "displayName": "Marcelo · 🌐 es-BO (Male)",
+    "displayName": "Marcelo · Bolivia (Male)",
     "friendlyName": "Microsoft Marcelo Online (Natural) - Spanish (Bolivia)",
     "lang": "es-BO",
     "gender": "Male",
@@ -1735,13 +1850,14 @@
     "localService": false,
     "voiceURI": "es-BO-MarceloNeural",
     "cleanName": "Marcelo",
-    "languageName": "ES",
-    "country": "es-BO",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Bolivia",
+    "flag": "🌐",
+    "countryCode": "BO"
   },
   {
     "name": "es-BO-SofiaNeural",
-    "displayName": "Sofia · 🌐 es-BO (Female)",
+    "displayName": "Sofia · Bolivia (Female)",
     "friendlyName": "Microsoft Sofia Online (Natural) - Spanish (Bolivia)",
     "lang": "es-BO",
     "gender": "Female",
@@ -1750,13 +1866,14 @@
     "localService": false,
     "voiceURI": "es-BO-SofiaNeural",
     "cleanName": "Sofia",
-    "languageName": "ES",
-    "country": "es-BO",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Bolivia",
+    "flag": "🌐",
+    "countryCode": "BO"
   },
   {
     "name": "es-CL-CatalinaNeural",
-    "displayName": "Catalina · 🌐 es-CL (Female)",
+    "displayName": "Catalina · Chile (Female)",
     "friendlyName": "Microsoft Catalina Online (Natural) - Spanish (Chile)",
     "lang": "es-CL",
     "gender": "Female",
@@ -1765,13 +1882,14 @@
     "localService": false,
     "voiceURI": "es-CL-CatalinaNeural",
     "cleanName": "Catalina",
-    "languageName": "ES",
-    "country": "es-CL",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Chile",
+    "flag": "🌐",
+    "countryCode": "CL"
   },
   {
     "name": "es-CL-LorenzoNeural",
-    "displayName": "Lorenzo · 🌐 es-CL (Male)",
+    "displayName": "Lorenzo · Chile (Male)",
     "friendlyName": "Microsoft Lorenzo Online (Natural) - Spanish (Chile)",
     "lang": "es-CL",
     "gender": "Male",
@@ -1780,13 +1898,14 @@
     "localService": false,
     "voiceURI": "es-CL-LorenzoNeural",
     "cleanName": "Lorenzo",
-    "languageName": "ES",
-    "country": "es-CL",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Chile",
+    "flag": "🌐",
+    "countryCode": "CL"
   },
   {
     "name": "es-CO-GonzaloNeural",
-    "displayName": "Gonzalo · 🌐 es-CO (Male)",
+    "displayName": "Gonzalo · Colombia (Male)",
     "friendlyName": "Microsoft Gonzalo Online (Natural) - Spanish (Colombia)",
     "lang": "es-CO",
     "gender": "Male",
@@ -1795,13 +1914,14 @@
     "localService": false,
     "voiceURI": "es-CO-GonzaloNeural",
     "cleanName": "Gonzalo",
-    "languageName": "ES",
-    "country": "es-CO",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Colombia",
+    "flag": "🌐",
+    "countryCode": "CO"
   },
   {
     "name": "es-CO-SalomeNeural",
-    "displayName": "Salome · 🌐 es-CO (Female)",
+    "displayName": "Salome · Colombia (Female)",
     "friendlyName": "Microsoft Salome Online (Natural) - Spanish (Colombia)",
     "lang": "es-CO",
     "gender": "Female",
@@ -1810,13 +1930,14 @@
     "localService": false,
     "voiceURI": "es-CO-SalomeNeural",
     "cleanName": "Salome",
-    "languageName": "ES",
-    "country": "es-CO",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Colombia",
+    "flag": "🌐",
+    "countryCode": "CO"
   },
   {
     "name": "es-CR-JuanNeural",
-    "displayName": "Juan · 🌐 es-CR (Male)",
+    "displayName": "Juan · Costa Rica (Male)",
     "friendlyName": "Microsoft Juan Online (Natural) - Spanish (Costa Rica)",
     "lang": "es-CR",
     "gender": "Male",
@@ -1825,13 +1946,14 @@
     "localService": false,
     "voiceURI": "es-CR-JuanNeural",
     "cleanName": "Juan",
-    "languageName": "ES",
-    "country": "es-CR",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Costa Rica",
+    "flag": "🌐",
+    "countryCode": "CR"
   },
   {
     "name": "es-CR-MariaNeural",
-    "displayName": "Maria · 🌐 es-CR (Female)",
+    "displayName": "Maria · Costa Rica (Female)",
     "friendlyName": "Microsoft Maria Online (Natural) - Spanish (Costa Rica)",
     "lang": "es-CR",
     "gender": "Female",
@@ -1840,13 +1962,14 @@
     "localService": false,
     "voiceURI": "es-CR-MariaNeural",
     "cleanName": "Maria",
-    "languageName": "ES",
-    "country": "es-CR",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Costa Rica",
+    "flag": "🌐",
+    "countryCode": "CR"
   },
   {
     "name": "es-CU-BelkysNeural",
-    "displayName": "Belkys · 🌐 es-CU (Female)",
+    "displayName": "Belkys · Cuba (Female)",
     "friendlyName": "Microsoft Belkys Online (Natural) - Spanish (Cuba)",
     "lang": "es-CU",
     "gender": "Female",
@@ -1855,13 +1978,14 @@
     "localService": false,
     "voiceURI": "es-CU-BelkysNeural",
     "cleanName": "Belkys",
-    "languageName": "ES",
-    "country": "es-CU",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Cuba",
+    "flag": "🌐",
+    "countryCode": "CU"
   },
   {
     "name": "es-CU-ManuelNeural",
-    "displayName": "Manuel · 🌐 es-CU (Male)",
+    "displayName": "Manuel · Cuba (Male)",
     "friendlyName": "Microsoft Manuel Online (Natural) - Spanish (Cuba)",
     "lang": "es-CU",
     "gender": "Male",
@@ -1870,13 +1994,14 @@
     "localService": false,
     "voiceURI": "es-CU-ManuelNeural",
     "cleanName": "Manuel",
-    "languageName": "ES",
-    "country": "es-CU",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Cuba",
+    "flag": "🌐",
+    "countryCode": "CU"
   },
   {
     "name": "es-DO-EmilioNeural",
-    "displayName": "Emilio · 🌐 es-DO (Male)",
+    "displayName": "Emilio · Dominican Republic (Male)",
     "friendlyName": "Microsoft Emilio Online (Natural) - Spanish (Dominican Republic)",
     "lang": "es-DO",
     "gender": "Male",
@@ -1885,13 +2010,14 @@
     "localService": false,
     "voiceURI": "es-DO-EmilioNeural",
     "cleanName": "Emilio",
-    "languageName": "ES",
-    "country": "es-DO",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Dominican Republic",
+    "flag": "🌐",
+    "countryCode": "DO"
   },
   {
     "name": "es-DO-RamonaNeural",
-    "displayName": "Ramona · 🌐 es-DO (Female)",
+    "displayName": "Ramona · Dominican Republic (Female)",
     "friendlyName": "Microsoft Ramona Online (Natural) - Spanish (Dominican Republic)",
     "lang": "es-DO",
     "gender": "Female",
@@ -1900,13 +2026,14 @@
     "localService": false,
     "voiceURI": "es-DO-RamonaNeural",
     "cleanName": "Ramona",
-    "languageName": "ES",
-    "country": "es-DO",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Dominican Republic",
+    "flag": "🌐",
+    "countryCode": "DO"
   },
   {
     "name": "es-EC-AndreaNeural",
-    "displayName": "Andrea · 🌐 es-EC (Female)",
+    "displayName": "Andrea · Ecuador (Female)",
     "friendlyName": "Microsoft Andrea Online (Natural) - Spanish (Ecuador)",
     "lang": "es-EC",
     "gender": "Female",
@@ -1915,13 +2042,14 @@
     "localService": false,
     "voiceURI": "es-EC-AndreaNeural",
     "cleanName": "Andrea",
-    "languageName": "ES",
-    "country": "es-EC",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Ecuador",
+    "flag": "🌐",
+    "countryCode": "EC"
   },
   {
     "name": "es-EC-LuisNeural",
-    "displayName": "Luis · 🌐 es-EC (Male)",
+    "displayName": "Luis · Ecuador (Male)",
     "friendlyName": "Microsoft Luis Online (Natural) - Spanish (Ecuador)",
     "lang": "es-EC",
     "gender": "Male",
@@ -1930,13 +2058,14 @@
     "localService": false,
     "voiceURI": "es-EC-LuisNeural",
     "cleanName": "Luis",
-    "languageName": "ES",
-    "country": "es-EC",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Ecuador",
+    "flag": "🌐",
+    "countryCode": "EC"
   },
   {
     "name": "es-ES-AlvaroNeural",
-    "displayName": "Alvaro · 🇪🇸 Spain (Male)",
+    "displayName": "Alvaro · Spain (Male)",
     "friendlyName": "Microsoft Alvaro Online (Natural) - Spanish (Spain)",
     "lang": "es-ES",
     "gender": "Male",
@@ -1947,11 +2076,12 @@
     "cleanName": "Alvaro",
     "languageName": "Spanish",
     "country": "Spain",
-    "flag": "🇪🇸"
+    "flag": "🇪🇸",
+    "countryCode": "ES"
   },
   {
     "name": "es-ES-ElviraNeural",
-    "displayName": "Elvira · 🇪🇸 Spain (Female)",
+    "displayName": "Elvira · Spain (Female)",
     "friendlyName": "Microsoft Elvira Online (Natural) - Spanish (Spain)",
     "lang": "es-ES",
     "gender": "Female",
@@ -1962,11 +2092,12 @@
     "cleanName": "Elvira",
     "languageName": "Spanish",
     "country": "Spain",
-    "flag": "🇪🇸"
+    "flag": "🇪🇸",
+    "countryCode": "ES"
   },
   {
     "name": "es-ES-XimenaNeural",
-    "displayName": "Ximena · 🇪🇸 Spain (Female)",
+    "displayName": "Ximena · Spain (Female)",
     "friendlyName": "Microsoft Ximena Online (Natural) - Spanish (Colombia)",
     "lang": "es-ES",
     "gender": "Female",
@@ -1977,11 +2108,12 @@
     "cleanName": "Ximena",
     "languageName": "Spanish",
     "country": "Spain",
-    "flag": "🇪🇸"
+    "flag": "🇪🇸",
+    "countryCode": "ES"
   },
   {
     "name": "es-GQ-JavierNeural",
-    "displayName": "Javier · 🌐 es-GQ (Male)",
+    "displayName": "Javier · Equatorial Guinea (Male)",
     "friendlyName": "Microsoft Javier Online (Natural) - Spanish (Equatorial Guinea)",
     "lang": "es-GQ",
     "gender": "Male",
@@ -1990,13 +2122,14 @@
     "localService": false,
     "voiceURI": "es-GQ-JavierNeural",
     "cleanName": "Javier",
-    "languageName": "ES",
-    "country": "es-GQ",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Equatorial Guinea",
+    "flag": "🌐",
+    "countryCode": "GQ"
   },
   {
     "name": "es-GQ-TeresaNeural",
-    "displayName": "Teresa · 🌐 es-GQ (Female)",
+    "displayName": "Teresa · Equatorial Guinea (Female)",
     "friendlyName": "Microsoft Teresa Online (Natural) - Spanish (Equatorial Guinea)",
     "lang": "es-GQ",
     "gender": "Female",
@@ -2005,13 +2138,14 @@
     "localService": false,
     "voiceURI": "es-GQ-TeresaNeural",
     "cleanName": "Teresa",
-    "languageName": "ES",
-    "country": "es-GQ",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Equatorial Guinea",
+    "flag": "🌐",
+    "countryCode": "GQ"
   },
   {
     "name": "es-GT-AndresNeural",
-    "displayName": "Andres · 🌐 es-GT (Male)",
+    "displayName": "Andres · Guatemala (Male)",
     "friendlyName": "Microsoft Andres Online (Natural) - Spanish (Guatemala)",
     "lang": "es-GT",
     "gender": "Male",
@@ -2020,13 +2154,14 @@
     "localService": false,
     "voiceURI": "es-GT-AndresNeural",
     "cleanName": "Andres",
-    "languageName": "ES",
-    "country": "es-GT",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Guatemala",
+    "flag": "🌐",
+    "countryCode": "GT"
   },
   {
     "name": "es-GT-MartaNeural",
-    "displayName": "Marta · 🌐 es-GT (Female)",
+    "displayName": "Marta · Guatemala (Female)",
     "friendlyName": "Microsoft Marta Online (Natural) - Spanish (Guatemala)",
     "lang": "es-GT",
     "gender": "Female",
@@ -2035,13 +2170,14 @@
     "localService": false,
     "voiceURI": "es-GT-MartaNeural",
     "cleanName": "Marta",
-    "languageName": "ES",
-    "country": "es-GT",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Guatemala",
+    "flag": "🌐",
+    "countryCode": "GT"
   },
   {
     "name": "es-HN-CarlosNeural",
-    "displayName": "Carlos · 🌐 es-HN (Male)",
+    "displayName": "Carlos · Honduras (Male)",
     "friendlyName": "Microsoft Carlos Online (Natural) - Spanish (Honduras)",
     "lang": "es-HN",
     "gender": "Male",
@@ -2050,13 +2186,14 @@
     "localService": false,
     "voiceURI": "es-HN-CarlosNeural",
     "cleanName": "Carlos",
-    "languageName": "ES",
-    "country": "es-HN",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Honduras",
+    "flag": "🌐",
+    "countryCode": "HN"
   },
   {
     "name": "es-HN-KarlaNeural",
-    "displayName": "Karla · 🌐 es-HN (Female)",
+    "displayName": "Karla · Honduras (Female)",
     "friendlyName": "Microsoft Karla Online (Natural) - Spanish (Honduras)",
     "lang": "es-HN",
     "gender": "Female",
@@ -2065,13 +2202,14 @@
     "localService": false,
     "voiceURI": "es-HN-KarlaNeural",
     "cleanName": "Karla",
-    "languageName": "ES",
-    "country": "es-HN",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Honduras",
+    "flag": "🌐",
+    "countryCode": "HN"
   },
   {
     "name": "es-MX-DaliaNeural",
-    "displayName": "Dalia · 🇲🇽 Mexico (Female)",
+    "displayName": "Dalia · Mexico (Female)",
     "friendlyName": "Microsoft Dalia Online (Natural) - Spanish (Mexico)",
     "lang": "es-MX",
     "gender": "Female",
@@ -2082,11 +2220,12 @@
     "cleanName": "Dalia",
     "languageName": "Spanish",
     "country": "Mexico",
-    "flag": "🇲🇽"
+    "flag": "🇲🇽",
+    "countryCode": "MX"
   },
   {
     "name": "es-MX-JorgeNeural",
-    "displayName": "Jorge · 🇲🇽 Mexico (Male)",
+    "displayName": "Jorge · Mexico (Male)",
     "friendlyName": "Microsoft Jorge Online (Natural) - Spanish (Mexico)",
     "lang": "es-MX",
     "gender": "Male",
@@ -2097,11 +2236,12 @@
     "cleanName": "Jorge",
     "languageName": "Spanish",
     "country": "Mexico",
-    "flag": "🇲🇽"
+    "flag": "🇲🇽",
+    "countryCode": "MX"
   },
   {
     "name": "es-NI-FedericoNeural",
-    "displayName": "Federico · 🌐 es-NI (Male)",
+    "displayName": "Federico · Nicaragua (Male)",
     "friendlyName": "Microsoft Federico Online (Natural) - Spanish (Nicaragua)",
     "lang": "es-NI",
     "gender": "Male",
@@ -2110,13 +2250,14 @@
     "localService": false,
     "voiceURI": "es-NI-FedericoNeural",
     "cleanName": "Federico",
-    "languageName": "ES",
-    "country": "es-NI",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Nicaragua",
+    "flag": "🌐",
+    "countryCode": "NI"
   },
   {
     "name": "es-NI-YolandaNeural",
-    "displayName": "Yolanda · 🌐 es-NI (Female)",
+    "displayName": "Yolanda · Nicaragua (Female)",
     "friendlyName": "Microsoft Yolanda Online (Natural) - Spanish (Nicaragua)",
     "lang": "es-NI",
     "gender": "Female",
@@ -2125,13 +2266,14 @@
     "localService": false,
     "voiceURI": "es-NI-YolandaNeural",
     "cleanName": "Yolanda",
-    "languageName": "ES",
-    "country": "es-NI",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Nicaragua",
+    "flag": "🌐",
+    "countryCode": "NI"
   },
   {
     "name": "es-PA-MargaritaNeural",
-    "displayName": "Margarita · 🌐 es-PA (Female)",
+    "displayName": "Margarita · Panama (Female)",
     "friendlyName": "Microsoft Margarita Online (Natural) - Spanish (Panama)",
     "lang": "es-PA",
     "gender": "Female",
@@ -2140,13 +2282,14 @@
     "localService": false,
     "voiceURI": "es-PA-MargaritaNeural",
     "cleanName": "Margarita",
-    "languageName": "ES",
-    "country": "es-PA",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Panama",
+    "flag": "🌐",
+    "countryCode": "PA"
   },
   {
     "name": "es-PA-RobertoNeural",
-    "displayName": "Roberto · 🌐 es-PA (Male)",
+    "displayName": "Roberto · Panama (Male)",
     "friendlyName": "Microsoft Roberto Online (Natural) - Spanish (Panama)",
     "lang": "es-PA",
     "gender": "Male",
@@ -2155,13 +2298,14 @@
     "localService": false,
     "voiceURI": "es-PA-RobertoNeural",
     "cleanName": "Roberto",
-    "languageName": "ES",
-    "country": "es-PA",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Panama",
+    "flag": "🌐",
+    "countryCode": "PA"
   },
   {
     "name": "es-PE-AlexNeural",
-    "displayName": "Alex · 🌐 es-PE (Male)",
+    "displayName": "Alex · Peru (Male)",
     "friendlyName": "Microsoft Alex Online (Natural) - Spanish (Peru)",
     "lang": "es-PE",
     "gender": "Male",
@@ -2170,13 +2314,14 @@
     "localService": false,
     "voiceURI": "es-PE-AlexNeural",
     "cleanName": "Alex",
-    "languageName": "ES",
-    "country": "es-PE",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Peru",
+    "flag": "🌐",
+    "countryCode": "PE"
   },
   {
     "name": "es-PE-CamilaNeural",
-    "displayName": "Camila · 🌐 es-PE (Female)",
+    "displayName": "Camila · Peru (Female)",
     "friendlyName": "Microsoft Camila Online (Natural) - Spanish (Peru)",
     "lang": "es-PE",
     "gender": "Female",
@@ -2185,13 +2330,14 @@
     "localService": false,
     "voiceURI": "es-PE-CamilaNeural",
     "cleanName": "Camila",
-    "languageName": "ES",
-    "country": "es-PE",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Peru",
+    "flag": "🌐",
+    "countryCode": "PE"
   },
   {
     "name": "es-PR-KarinaNeural",
-    "displayName": "Karina · 🌐 es-PR (Female)",
+    "displayName": "Karina · Puerto Rico (Female)",
     "friendlyName": "Microsoft Karina Online (Natural) - Spanish (Puerto Rico)",
     "lang": "es-PR",
     "gender": "Female",
@@ -2200,13 +2346,14 @@
     "localService": false,
     "voiceURI": "es-PR-KarinaNeural",
     "cleanName": "Karina",
-    "languageName": "ES",
-    "country": "es-PR",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Puerto Rico",
+    "flag": "🌐",
+    "countryCode": "PR"
   },
   {
     "name": "es-PR-VictorNeural",
-    "displayName": "Victor · 🌐 es-PR (Male)",
+    "displayName": "Victor · Puerto Rico (Male)",
     "friendlyName": "Microsoft Victor Online (Natural) - Spanish (Puerto Rico)",
     "lang": "es-PR",
     "gender": "Male",
@@ -2215,13 +2362,14 @@
     "localService": false,
     "voiceURI": "es-PR-VictorNeural",
     "cleanName": "Victor",
-    "languageName": "ES",
-    "country": "es-PR",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Puerto Rico",
+    "flag": "🌐",
+    "countryCode": "PR"
   },
   {
     "name": "es-PY-MarioNeural",
-    "displayName": "Mario · 🌐 es-PY (Male)",
+    "displayName": "Mario · Paraguay (Male)",
     "friendlyName": "Microsoft Mario Online (Natural) - Spanish (Paraguay)",
     "lang": "es-PY",
     "gender": "Male",
@@ -2230,13 +2378,14 @@
     "localService": false,
     "voiceURI": "es-PY-MarioNeural",
     "cleanName": "Mario",
-    "languageName": "ES",
-    "country": "es-PY",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Paraguay",
+    "flag": "🌐",
+    "countryCode": "PY"
   },
   {
     "name": "es-PY-TaniaNeural",
-    "displayName": "Tania · 🌐 es-PY (Female)",
+    "displayName": "Tania · Paraguay (Female)",
     "friendlyName": "Microsoft Tania Online (Natural) - Spanish (Paraguay)",
     "lang": "es-PY",
     "gender": "Female",
@@ -2245,13 +2394,14 @@
     "localService": false,
     "voiceURI": "es-PY-TaniaNeural",
     "cleanName": "Tania",
-    "languageName": "ES",
-    "country": "es-PY",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Paraguay",
+    "flag": "🌐",
+    "countryCode": "PY"
   },
   {
     "name": "es-SV-LorenaNeural",
-    "displayName": "Lorena · 🌐 es-SV (Female)",
+    "displayName": "Lorena · El Salvador (Female)",
     "friendlyName": "Microsoft Lorena Online (Natural) - Spanish (El Salvador)",
     "lang": "es-SV",
     "gender": "Female",
@@ -2260,13 +2410,14 @@
     "localService": false,
     "voiceURI": "es-SV-LorenaNeural",
     "cleanName": "Lorena",
-    "languageName": "ES",
-    "country": "es-SV",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "El Salvador",
+    "flag": "🌐",
+    "countryCode": "SV"
   },
   {
     "name": "es-SV-RodrigoNeural",
-    "displayName": "Rodrigo · 🌐 es-SV (Male)",
+    "displayName": "Rodrigo · El Salvador (Male)",
     "friendlyName": "Microsoft Rodrigo Online (Natural) - Spanish (El Salvador)",
     "lang": "es-SV",
     "gender": "Male",
@@ -2275,13 +2426,14 @@
     "localService": false,
     "voiceURI": "es-SV-RodrigoNeural",
     "cleanName": "Rodrigo",
-    "languageName": "ES",
-    "country": "es-SV",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "El Salvador",
+    "flag": "🌐",
+    "countryCode": "SV"
   },
   {
     "name": "es-US-AlonsoNeural",
-    "displayName": "Alonso · 🇺🇸 United States (Male)",
+    "displayName": "Alonso · United States (Male)",
     "friendlyName": "Microsoft Alonso Online (Natural) - Spanish (United States)",
     "lang": "es-US",
     "gender": "Male",
@@ -2292,11 +2444,12 @@
     "cleanName": "Alonso",
     "languageName": "Spanish",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "es-US-PalomaNeural",
-    "displayName": "Paloma · 🇺🇸 United States (Female)",
+    "displayName": "Paloma · United States (Female)",
     "friendlyName": "Microsoft Paloma Online (Natural) - Spanish (United States)",
     "lang": "es-US",
     "gender": "Female",
@@ -2307,11 +2460,12 @@
     "cleanName": "Paloma",
     "languageName": "Spanish",
     "country": "United States",
-    "flag": "🇺🇸"
+    "flag": "🇺🇸",
+    "countryCode": "US"
   },
   {
     "name": "es-UY-MateoNeural",
-    "displayName": "Mateo · 🌐 es-UY (Male)",
+    "displayName": "Mateo · Uruguay (Male)",
     "friendlyName": "Microsoft Mateo Online (Natural) - Spanish (Uruguay)",
     "lang": "es-UY",
     "gender": "Male",
@@ -2320,13 +2474,14 @@
     "localService": false,
     "voiceURI": "es-UY-MateoNeural",
     "cleanName": "Mateo",
-    "languageName": "ES",
-    "country": "es-UY",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Uruguay",
+    "flag": "🌐",
+    "countryCode": "UY"
   },
   {
     "name": "es-UY-ValentinaNeural",
-    "displayName": "Valentina · 🌐 es-UY (Female)",
+    "displayName": "Valentina · Uruguay (Female)",
     "friendlyName": "Microsoft Valentina Online (Natural) - Spanish (Uruguay)",
     "lang": "es-UY",
     "gender": "Female",
@@ -2335,13 +2490,14 @@
     "localService": false,
     "voiceURI": "es-UY-ValentinaNeural",
     "cleanName": "Valentina",
-    "languageName": "ES",
-    "country": "es-UY",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Uruguay",
+    "flag": "🌐",
+    "countryCode": "UY"
   },
   {
     "name": "es-VE-PaolaNeural",
-    "displayName": "Paola · 🌐 es-VE (Female)",
+    "displayName": "Paola · Venezuela (Female)",
     "friendlyName": "Microsoft Paola Online (Natural) - Spanish (Venezuela)",
     "lang": "es-VE",
     "gender": "Female",
@@ -2350,13 +2506,14 @@
     "localService": false,
     "voiceURI": "es-VE-PaolaNeural",
     "cleanName": "Paola",
-    "languageName": "ES",
-    "country": "es-VE",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Venezuela",
+    "flag": "🌐",
+    "countryCode": "VE"
   },
   {
     "name": "es-VE-SebastianNeural",
-    "displayName": "Sebastian · 🌐 es-VE (Male)",
+    "displayName": "Sebastian · Venezuela (Male)",
     "friendlyName": "Microsoft Sebastian Online (Natural) - Spanish (Venezuela)",
     "lang": "es-VE",
     "gender": "Male",
@@ -2365,13 +2522,14 @@
     "localService": false,
     "voiceURI": "es-VE-SebastianNeural",
     "cleanName": "Sebastian",
-    "languageName": "ES",
-    "country": "es-VE",
-    "flag": "🌐"
+    "languageName": "Spanish",
+    "country": "Venezuela",
+    "flag": "🌐",
+    "countryCode": "VE"
   },
   {
     "name": "et-EE-AnuNeural",
-    "displayName": "Anu · 🌐 et-EE (Female)",
+    "displayName": "Anu · Estonia (Female)",
     "friendlyName": "Microsoft Anu Online (Natural) - Estonian (Estonia)",
     "lang": "et-EE",
     "gender": "Female",
@@ -2380,13 +2538,14 @@
     "localService": false,
     "voiceURI": "et-EE-AnuNeural",
     "cleanName": "Anu",
-    "languageName": "ET",
-    "country": "et-EE",
-    "flag": "🌐"
+    "languageName": "Estonian",
+    "country": "Estonia",
+    "flag": "🌐",
+    "countryCode": "EE"
   },
   {
     "name": "et-EE-KertNeural",
-    "displayName": "Kert · 🌐 et-EE (Male)",
+    "displayName": "Kert · Estonia (Male)",
     "friendlyName": "Microsoft Kert Online (Natural) - Estonian (Estonia)",
     "lang": "et-EE",
     "gender": "Male",
@@ -2395,13 +2554,14 @@
     "localService": false,
     "voiceURI": "et-EE-KertNeural",
     "cleanName": "Kert",
-    "languageName": "ET",
-    "country": "et-EE",
-    "flag": "🌐"
+    "languageName": "Estonian",
+    "country": "Estonia",
+    "flag": "🌐",
+    "countryCode": "EE"
   },
   {
     "name": "fa-IR-DilaraNeural",
-    "displayName": "Dilara · 🌐 fa-IR (Female)",
+    "displayName": "Dilara · Iran (Female)",
     "friendlyName": "Microsoft Dilara Online (Natural) - Persian (Iran)",
     "lang": "fa-IR",
     "gender": "Female",
@@ -2410,13 +2570,14 @@
     "localService": false,
     "voiceURI": "fa-IR-DilaraNeural",
     "cleanName": "Dilara",
-    "languageName": "FA",
-    "country": "fa-IR",
-    "flag": "🌐"
+    "languageName": "Persian",
+    "country": "Iran",
+    "flag": "🌐",
+    "countryCode": "IR"
   },
   {
     "name": "fa-IR-FaridNeural",
-    "displayName": "Farid · 🌐 fa-IR (Male)",
+    "displayName": "Farid · Iran (Male)",
     "friendlyName": "Microsoft Farid Online (Natural) - Persian (Iran)",
     "lang": "fa-IR",
     "gender": "Male",
@@ -2425,13 +2586,14 @@
     "localService": false,
     "voiceURI": "fa-IR-FaridNeural",
     "cleanName": "Farid",
-    "languageName": "FA",
-    "country": "fa-IR",
-    "flag": "🌐"
+    "languageName": "Persian",
+    "country": "Iran",
+    "flag": "🌐",
+    "countryCode": "IR"
   },
   {
     "name": "fi-FI-HarriNeural",
-    "displayName": "Harri · 🌐 fi-FI (Male)",
+    "displayName": "Harri · Finland (Male)",
     "friendlyName": "Microsoft Harri Online (Natural) - Finnish (Finland)",
     "lang": "fi-FI",
     "gender": "Male",
@@ -2440,13 +2602,14 @@
     "localService": false,
     "voiceURI": "fi-FI-HarriNeural",
     "cleanName": "Harri",
-    "languageName": "FI",
-    "country": "fi-FI",
-    "flag": "🌐"
+    "languageName": "Finnish",
+    "country": "Finland",
+    "flag": "🌐",
+    "countryCode": "FI"
   },
   {
     "name": "fi-FI-NooraNeural",
-    "displayName": "Noora · 🌐 fi-FI (Female)",
+    "displayName": "Noora · Finland (Female)",
     "friendlyName": "Microsoft Noora Online (Natural) - Finnish (Finland)",
     "lang": "fi-FI",
     "gender": "Female",
@@ -2455,13 +2618,14 @@
     "localService": false,
     "voiceURI": "fi-FI-NooraNeural",
     "cleanName": "Noora",
-    "languageName": "FI",
-    "country": "fi-FI",
-    "flag": "🌐"
+    "languageName": "Finnish",
+    "country": "Finland",
+    "flag": "🌐",
+    "countryCode": "FI"
   },
   {
     "name": "fil-PH-AngeloNeural",
-    "displayName": "Angelo · 🌐 fil-PH (Male)",
+    "displayName": "Angelo · Philippines (Male)",
     "friendlyName": "Microsoft Angelo Online (Natural) - Filipino (Philippines)",
     "lang": "fil-PH",
     "gender": "Male",
@@ -2470,13 +2634,14 @@
     "localService": false,
     "voiceURI": "fil-PH-AngeloNeural",
     "cleanName": "Angelo",
-    "languageName": "FIL",
-    "country": "fil-PH",
-    "flag": "🌐"
+    "languageName": "Filipino",
+    "country": "Philippines",
+    "flag": "🌐",
+    "countryCode": "PH"
   },
   {
     "name": "fil-PH-BlessicaNeural",
-    "displayName": "Blessica · 🌐 fil-PH (Female)",
+    "displayName": "Blessica · Philippines (Female)",
     "friendlyName": "Microsoft Blessica Online (Natural) - Filipino (Philippines)",
     "lang": "fil-PH",
     "gender": "Female",
@@ -2485,13 +2650,14 @@
     "localService": false,
     "voiceURI": "fil-PH-BlessicaNeural",
     "cleanName": "Blessica",
-    "languageName": "FIL",
-    "country": "fil-PH",
-    "flag": "🌐"
+    "languageName": "Filipino",
+    "country": "Philippines",
+    "flag": "🌐",
+    "countryCode": "PH"
   },
   {
     "name": "fr-BE-CharlineNeural",
-    "displayName": "Charline · 🌐 fr-BE (Female)",
+    "displayName": "Charline · Belgium (Female)",
     "friendlyName": "Microsoft Charline Online (Natural) - French (Belgium)",
     "lang": "fr-BE",
     "gender": "Female",
@@ -2500,13 +2666,14 @@
     "localService": false,
     "voiceURI": "fr-BE-CharlineNeural",
     "cleanName": "Charline",
-    "languageName": "FR",
-    "country": "fr-BE",
-    "flag": "🌐"
+    "languageName": "French",
+    "country": "Belgium",
+    "flag": "🌐",
+    "countryCode": "BE"
   },
   {
     "name": "fr-BE-GerardNeural",
-    "displayName": "Gerard · 🌐 fr-BE (Male)",
+    "displayName": "Gerard · Belgium (Male)",
     "friendlyName": "Microsoft Gerard Online (Natural) - French (Belgium)",
     "lang": "fr-BE",
     "gender": "Male",
@@ -2515,13 +2682,14 @@
     "localService": false,
     "voiceURI": "fr-BE-GerardNeural",
     "cleanName": "Gerard",
-    "languageName": "FR",
-    "country": "fr-BE",
-    "flag": "🌐"
+    "languageName": "French",
+    "country": "Belgium",
+    "flag": "🌐",
+    "countryCode": "BE"
   },
   {
     "name": "fr-CA-AntoineNeural",
-    "displayName": "Antoine · 🇨🇦 Canada (Male)",
+    "displayName": "Antoine · Canada (Male)",
     "friendlyName": "Microsoft Antoine Online (Natural) - French (Canada)",
     "lang": "fr-CA",
     "gender": "Male",
@@ -2532,11 +2700,12 @@
     "cleanName": "Antoine",
     "languageName": "French",
     "country": "Canada",
-    "flag": "🇨🇦"
+    "flag": "🇨🇦",
+    "countryCode": "CA"
   },
   {
     "name": "fr-CA-JeanNeural",
-    "displayName": "Jean · 🇨🇦 Canada (Male)",
+    "displayName": "Jean · Canada (Male)",
     "friendlyName": "Microsoft Jean Online (Natural) - French (Canada)",
     "lang": "fr-CA",
     "gender": "Male",
@@ -2547,11 +2716,12 @@
     "cleanName": "Jean",
     "languageName": "French",
     "country": "Canada",
-    "flag": "🇨🇦"
+    "flag": "🇨🇦",
+    "countryCode": "CA"
   },
   {
     "name": "fr-CA-SylvieNeural",
-    "displayName": "Sylvie · 🇨🇦 Canada (Female)",
+    "displayName": "Sylvie · Canada (Female)",
     "friendlyName": "Microsoft Sylvie Online (Natural) - French (Canada)",
     "lang": "fr-CA",
     "gender": "Female",
@@ -2562,11 +2732,12 @@
     "cleanName": "Sylvie",
     "languageName": "French",
     "country": "Canada",
-    "flag": "🇨🇦"
+    "flag": "🇨🇦",
+    "countryCode": "CA"
   },
   {
     "name": "fr-CA-ThierryNeural",
-    "displayName": "Thierry · 🇨🇦 Canada (Male)",
+    "displayName": "Thierry · Canada (Male)",
     "friendlyName": "Microsoft Thierry Online (Natural) - French (Canada)",
     "lang": "fr-CA",
     "gender": "Male",
@@ -2577,11 +2748,12 @@
     "cleanName": "Thierry",
     "languageName": "French",
     "country": "Canada",
-    "flag": "🇨🇦"
+    "flag": "🇨🇦",
+    "countryCode": "CA"
   },
   {
     "name": "fr-CH-ArianeNeural",
-    "displayName": "Ariane · 🌐 fr-CH (Female)",
+    "displayName": "Ariane · Switzerland (Female)",
     "friendlyName": "Microsoft Ariane Online (Natural) - French (Switzerland)",
     "lang": "fr-CH",
     "gender": "Female",
@@ -2590,13 +2762,14 @@
     "localService": false,
     "voiceURI": "fr-CH-ArianeNeural",
     "cleanName": "Ariane",
-    "languageName": "FR",
-    "country": "fr-CH",
-    "flag": "🌐"
+    "languageName": "French",
+    "country": "Switzerland",
+    "flag": "🌐",
+    "countryCode": "CH"
   },
   {
     "name": "fr-CH-FabriceNeural",
-    "displayName": "Fabrice · 🌐 fr-CH (Male)",
+    "displayName": "Fabrice · Switzerland (Male)",
     "friendlyName": "Microsoft Fabrice Online (Natural) - French (Switzerland)",
     "lang": "fr-CH",
     "gender": "Male",
@@ -2605,13 +2778,14 @@
     "localService": false,
     "voiceURI": "fr-CH-FabriceNeural",
     "cleanName": "Fabrice",
-    "languageName": "FR",
-    "country": "fr-CH",
-    "flag": "🌐"
+    "languageName": "French",
+    "country": "Switzerland",
+    "flag": "🌐",
+    "countryCode": "CH"
   },
   {
     "name": "fr-FR-DeniseNeural",
-    "displayName": "Denise · 🇫🇷 France (Female)",
+    "displayName": "Denise · France (Female)",
     "friendlyName": "Microsoft Denise Online (Natural) - French (France)",
     "lang": "fr-FR",
     "gender": "Female",
@@ -2622,11 +2796,12 @@
     "cleanName": "Denise",
     "languageName": "French",
     "country": "France",
-    "flag": "🇫🇷"
+    "flag": "🇫🇷",
+    "countryCode": "FR"
   },
   {
     "name": "fr-FR-EloiseNeural",
-    "displayName": "Eloise · 🇫🇷 France (Female)",
+    "displayName": "Eloise · France (Female)",
     "friendlyName": "Microsoft Eloise Online (Natural) - French (France)",
     "lang": "fr-FR",
     "gender": "Female",
@@ -2637,11 +2812,12 @@
     "cleanName": "Eloise",
     "languageName": "French",
     "country": "France",
-    "flag": "🇫🇷"
+    "flag": "🇫🇷",
+    "countryCode": "FR"
   },
   {
     "name": "fr-FR-HenriNeural",
-    "displayName": "Henri · 🇫🇷 France (Male)",
+    "displayName": "Henri · France (Male)",
     "friendlyName": "Microsoft Henri Online (Natural) - French (France)",
     "lang": "fr-FR",
     "gender": "Male",
@@ -2652,11 +2828,12 @@
     "cleanName": "Henri",
     "languageName": "French",
     "country": "France",
-    "flag": "🇫🇷"
+    "flag": "🇫🇷",
+    "countryCode": "FR"
   },
   {
     "name": "fr-FR-RemyMultilingualNeural",
-    "displayName": "Remy (Multi) · 🇫🇷 France (Male)",
+    "displayName": "Remy (Multi) · France (Male)",
     "friendlyName": "Microsoft RemyMultilingual Online (Natural) - French (France)",
     "lang": "fr-FR",
     "gender": "Male",
@@ -2667,11 +2844,12 @@
     "cleanName": "Remy (Multi)",
     "languageName": "French",
     "country": "France",
-    "flag": "🇫🇷"
+    "flag": "🇫🇷",
+    "countryCode": "FR"
   },
   {
     "name": "fr-FR-VivienneMultilingualNeural",
-    "displayName": "Vivienne (Multi) · 🇫🇷 France (Female)",
+    "displayName": "Vivienne (Multi) · France (Female)",
     "friendlyName": "Microsoft VivienneMultilingual Online (Natural) - French (France)",
     "lang": "fr-FR",
     "gender": "Female",
@@ -2682,11 +2860,12 @@
     "cleanName": "Vivienne (Multi)",
     "languageName": "French",
     "country": "France",
-    "flag": "🇫🇷"
+    "flag": "🇫🇷",
+    "countryCode": "FR"
   },
   {
     "name": "ga-IE-ColmNeural",
-    "displayName": "Colm · 🌐 ga-IE (Male)",
+    "displayName": "Colm · Ireland (Male)",
     "friendlyName": "Microsoft Colm Online (Natural) - Irish (Ireland)",
     "lang": "ga-IE",
     "gender": "Male",
@@ -2695,13 +2874,14 @@
     "localService": false,
     "voiceURI": "ga-IE-ColmNeural",
     "cleanName": "Colm",
-    "languageName": "GA",
-    "country": "ga-IE",
-    "flag": "🌐"
+    "languageName": "Irish",
+    "country": "Ireland",
+    "flag": "🌐",
+    "countryCode": "IE"
   },
   {
     "name": "ga-IE-OrlaNeural",
-    "displayName": "Orla · 🌐 ga-IE (Female)",
+    "displayName": "Orla · Ireland (Female)",
     "friendlyName": "Microsoft Orla Online (Natural) - Irish (Ireland)",
     "lang": "ga-IE",
     "gender": "Female",
@@ -2710,13 +2890,14 @@
     "localService": false,
     "voiceURI": "ga-IE-OrlaNeural",
     "cleanName": "Orla",
-    "languageName": "GA",
-    "country": "ga-IE",
-    "flag": "🌐"
+    "languageName": "Irish",
+    "country": "Ireland",
+    "flag": "🌐",
+    "countryCode": "IE"
   },
   {
     "name": "gl-ES-RoiNeural",
-    "displayName": "Roi · 🌐 gl-ES (Male)",
+    "displayName": "Roi · Spain (Male)",
     "friendlyName": "Microsoft Roi Online (Natural) - Galician",
     "lang": "gl-ES",
     "gender": "Male",
@@ -2725,13 +2906,14 @@
     "localService": false,
     "voiceURI": "gl-ES-RoiNeural",
     "cleanName": "Roi",
-    "languageName": "GL",
-    "country": "gl-ES",
-    "flag": "🌐"
+    "languageName": "Galician",
+    "country": "Spain",
+    "flag": "🌐",
+    "countryCode": "ES"
   },
   {
     "name": "gl-ES-SabelaNeural",
-    "displayName": "Sabela · 🌐 gl-ES (Female)",
+    "displayName": "Sabela · Spain (Female)",
     "friendlyName": "Microsoft Sabela Online (Natural) - Galician",
     "lang": "gl-ES",
     "gender": "Female",
@@ -2740,13 +2922,14 @@
     "localService": false,
     "voiceURI": "gl-ES-SabelaNeural",
     "cleanName": "Sabela",
-    "languageName": "GL",
-    "country": "gl-ES",
-    "flag": "🌐"
+    "languageName": "Galician",
+    "country": "Spain",
+    "flag": "🌐",
+    "countryCode": "ES"
   },
   {
     "name": "gu-IN-DhwaniNeural",
-    "displayName": "Dhwani · 🌐 gu-IN (Female)",
+    "displayName": "Dhwani · India (Female)",
     "friendlyName": "Microsoft Dhwani Online (Natural) - Gujarati (India)",
     "lang": "gu-IN",
     "gender": "Female",
@@ -2755,13 +2938,14 @@
     "localService": false,
     "voiceURI": "gu-IN-DhwaniNeural",
     "cleanName": "Dhwani",
-    "languageName": "GU",
-    "country": "gu-IN",
-    "flag": "🌐"
+    "languageName": "Gujarati",
+    "country": "India",
+    "flag": "🌐",
+    "countryCode": "IN"
   },
   {
     "name": "gu-IN-NiranjanNeural",
-    "displayName": "Niranjan · 🌐 gu-IN (Male)",
+    "displayName": "Niranjan · India (Male)",
     "friendlyName": "Microsoft Niranjan Online (Natural) - Gujarati (India)",
     "lang": "gu-IN",
     "gender": "Male",
@@ -2770,13 +2954,14 @@
     "localService": false,
     "voiceURI": "gu-IN-NiranjanNeural",
     "cleanName": "Niranjan",
-    "languageName": "GU",
-    "country": "gu-IN",
-    "flag": "🌐"
+    "languageName": "Gujarati",
+    "country": "India",
+    "flag": "🌐",
+    "countryCode": "IN"
   },
   {
     "name": "he-IL-AvriNeural",
-    "displayName": "Avri · 🌐 he-IL (Male)",
+    "displayName": "Avri · Israel (Male)",
     "friendlyName": "Microsoft Avri Online (Natural) - Hebrew (Israel)",
     "lang": "he-IL",
     "gender": "Male",
@@ -2785,13 +2970,14 @@
     "localService": false,
     "voiceURI": "he-IL-AvriNeural",
     "cleanName": "Avri",
-    "languageName": "HE",
-    "country": "he-IL",
-    "flag": "🌐"
+    "languageName": "Hebrew",
+    "country": "Israel",
+    "flag": "🌐",
+    "countryCode": "IL"
   },
   {
     "name": "he-IL-HilaNeural",
-    "displayName": "Hila · 🌐 he-IL (Female)",
+    "displayName": "Hila · Israel (Female)",
     "friendlyName": "Microsoft Hila Online (Natural) - Hebrew (Israel)",
     "lang": "he-IL",
     "gender": "Female",
@@ -2800,13 +2986,14 @@
     "localService": false,
     "voiceURI": "he-IL-HilaNeural",
     "cleanName": "Hila",
-    "languageName": "HE",
-    "country": "he-IL",
-    "flag": "🌐"
+    "languageName": "Hebrew",
+    "country": "Israel",
+    "flag": "🌐",
+    "countryCode": "IL"
   },
   {
     "name": "hi-IN-MadhurNeural",
-    "displayName": "Madhur · 🇮🇳 India (Male)",
+    "displayName": "Madhur · India (Male)",
     "friendlyName": "Microsoft Madhur Online (Natural) - Hindi (India)",
     "lang": "hi-IN",
     "gender": "Male",
@@ -2817,11 +3004,12 @@
     "cleanName": "Madhur",
     "languageName": "Hindi",
     "country": "India",
-    "flag": "🇮🇳"
+    "flag": "🇮🇳",
+    "countryCode": "IN"
   },
   {
     "name": "hi-IN-SwaraNeural",
-    "displayName": "Swara · 🇮🇳 India (Female)",
+    "displayName": "Swara · India (Female)",
     "friendlyName": "Microsoft Swara Online (Natural) - Hindi (India)",
     "lang": "hi-IN",
     "gender": "Female",
@@ -2832,11 +3020,12 @@
     "cleanName": "Swara",
     "languageName": "Hindi",
     "country": "India",
-    "flag": "🇮🇳"
+    "flag": "🇮🇳",
+    "countryCode": "IN"
   },
   {
     "name": "hr-HR-GabrijelaNeural",
-    "displayName": "Gabrijela · 🌐 hr-HR (Female)",
+    "displayName": "Gabrijela · Croatia (Female)",
     "friendlyName": "Microsoft Gabrijela Online (Natural) - Croatian (Croatia)",
     "lang": "hr-HR",
     "gender": "Female",
@@ -2845,13 +3034,14 @@
     "localService": false,
     "voiceURI": "hr-HR-GabrijelaNeural",
     "cleanName": "Gabrijela",
-    "languageName": "HR",
-    "country": "hr-HR",
-    "flag": "🌐"
+    "languageName": "Croatian",
+    "country": "Croatia",
+    "flag": "🌐",
+    "countryCode": "HR"
   },
   {
     "name": "hr-HR-SreckoNeural",
-    "displayName": "Srecko · 🌐 hr-HR (Male)",
+    "displayName": "Srecko · Croatia (Male)",
     "friendlyName": "Microsoft Srecko Online (Natural) - Croatian (Croatia)",
     "lang": "hr-HR",
     "gender": "Male",
@@ -2860,13 +3050,14 @@
     "localService": false,
     "voiceURI": "hr-HR-SreckoNeural",
     "cleanName": "Srecko",
-    "languageName": "HR",
-    "country": "hr-HR",
-    "flag": "🌐"
+    "languageName": "Croatian",
+    "country": "Croatia",
+    "flag": "🌐",
+    "countryCode": "HR"
   },
   {
     "name": "hu-HU-NoemiNeural",
-    "displayName": "Noemi · 🌐 hu-HU (Female)",
+    "displayName": "Noemi · Hungary (Female)",
     "friendlyName": "Microsoft Noemi Online (Natural) - Hungarian (Hungary)",
     "lang": "hu-HU",
     "gender": "Female",
@@ -2875,13 +3066,14 @@
     "localService": false,
     "voiceURI": "hu-HU-NoemiNeural",
     "cleanName": "Noemi",
-    "languageName": "HU",
-    "country": "hu-HU",
-    "flag": "🌐"
+    "languageName": "Hungarian",
+    "country": "Hungary",
+    "flag": "🌐",
+    "countryCode": "HU"
   },
   {
     "name": "hu-HU-TamasNeural",
-    "displayName": "Tamas · 🌐 hu-HU (Male)",
+    "displayName": "Tamas · Hungary (Male)",
     "friendlyName": "Microsoft Tamas Online (Natural) - Hungarian (Hungary)",
     "lang": "hu-HU",
     "gender": "Male",
@@ -2890,13 +3082,14 @@
     "localService": false,
     "voiceURI": "hu-HU-TamasNeural",
     "cleanName": "Tamas",
-    "languageName": "HU",
-    "country": "hu-HU",
-    "flag": "🌐"
+    "languageName": "Hungarian",
+    "country": "Hungary",
+    "flag": "🌐",
+    "countryCode": "HU"
   },
   {
     "name": "id-ID-ArdiNeural",
-    "displayName": "Ardi · 🇮🇩 Indonesia (Male)",
+    "displayName": "Ardi · Indonesia (Male)",
     "friendlyName": "Microsoft Ardi Online (Natural) - Indonesian (Indonesia)",
     "lang": "id-ID",
     "gender": "Male",
@@ -2907,11 +3100,12 @@
     "cleanName": "Ardi",
     "languageName": "Indonesian",
     "country": "Indonesia",
-    "flag": "🇮🇩"
+    "flag": "🇮🇩",
+    "countryCode": "ID"
   },
   {
     "name": "id-ID-GadisNeural",
-    "displayName": "Gadis · 🇮🇩 Indonesia (Female)",
+    "displayName": "Gadis · Indonesia (Female)",
     "friendlyName": "Microsoft Gadis Online (Natural) - Indonesian (Indonesia)",
     "lang": "id-ID",
     "gender": "Female",
@@ -2922,11 +3116,12 @@
     "cleanName": "Gadis",
     "languageName": "Indonesian",
     "country": "Indonesia",
-    "flag": "🇮🇩"
+    "flag": "🇮🇩",
+    "countryCode": "ID"
   },
   {
     "name": "is-IS-GudrunNeural",
-    "displayName": "Gudrun · 🌐 is-IS (Female)",
+    "displayName": "Gudrun · Iceland (Female)",
     "friendlyName": "Microsoft Gudrun Online (Natural) - Icelandic (Iceland)",
     "lang": "is-IS",
     "gender": "Female",
@@ -2935,13 +3130,14 @@
     "localService": false,
     "voiceURI": "is-IS-GudrunNeural",
     "cleanName": "Gudrun",
-    "languageName": "IS",
-    "country": "is-IS",
-    "flag": "🌐"
+    "languageName": "Icelandic",
+    "country": "Iceland",
+    "flag": "🌐",
+    "countryCode": "IS"
   },
   {
     "name": "is-IS-GunnarNeural",
-    "displayName": "Gunnar · 🌐 is-IS (Male)",
+    "displayName": "Gunnar · Iceland (Male)",
     "friendlyName": "Microsoft Gunnar Online (Natural) - Icelandic (Iceland)",
     "lang": "is-IS",
     "gender": "Male",
@@ -2950,13 +3146,14 @@
     "localService": false,
     "voiceURI": "is-IS-GunnarNeural",
     "cleanName": "Gunnar",
-    "languageName": "IS",
-    "country": "is-IS",
-    "flag": "🌐"
+    "languageName": "Icelandic",
+    "country": "Iceland",
+    "flag": "🌐",
+    "countryCode": "IS"
   },
   {
     "name": "it-IT-DiegoNeural",
-    "displayName": "Diego · 🇮🇹 Italy (Male)",
+    "displayName": "Diego · Italy (Male)",
     "friendlyName": "Microsoft Diego Online (Natural) - Italian (Italy)",
     "lang": "it-IT",
     "gender": "Male",
@@ -2967,11 +3164,12 @@
     "cleanName": "Diego",
     "languageName": "Italian",
     "country": "Italy",
-    "flag": "🇮🇹"
+    "flag": "🇮🇹",
+    "countryCode": "IT"
   },
   {
     "name": "it-IT-ElsaNeural",
-    "displayName": "Elsa · 🇮🇹 Italy (Female)",
+    "displayName": "Elsa · Italy (Female)",
     "friendlyName": "Microsoft Elsa Online (Natural) - Italian (Italy)",
     "lang": "it-IT",
     "gender": "Female",
@@ -2982,11 +3180,12 @@
     "cleanName": "Elsa",
     "languageName": "Italian",
     "country": "Italy",
-    "flag": "🇮🇹"
+    "flag": "🇮🇹",
+    "countryCode": "IT"
   },
   {
     "name": "it-IT-GiuseppeMultilingualNeural",
-    "displayName": "Giuseppe (Multi) · 🇮🇹 Italy (Male)",
+    "displayName": "Giuseppe (Multi) · Italy (Male)",
     "friendlyName": "Microsoft GiuseppeMultilingual Online (Natural) - Italian (Italy)",
     "lang": "it-IT",
     "gender": "Male",
@@ -2997,11 +3196,12 @@
     "cleanName": "Giuseppe (Multi)",
     "languageName": "Italian",
     "country": "Italy",
-    "flag": "🇮🇹"
+    "flag": "🇮🇹",
+    "countryCode": "IT"
   },
   {
     "name": "it-IT-IsabellaNeural",
-    "displayName": "Isabella · 🇮🇹 Italy (Female)",
+    "displayName": "Isabella · Italy (Female)",
     "friendlyName": "Microsoft Isabella Online (Natural) - Italian (Italy)",
     "lang": "it-IT",
     "gender": "Female",
@@ -3012,11 +3212,12 @@
     "cleanName": "Isabella",
     "languageName": "Italian",
     "country": "Italy",
-    "flag": "🇮🇹"
+    "flag": "🇮🇹",
+    "countryCode": "IT"
   },
   {
     "name": "iu-Cans-CA-SiqiniqNeural",
-    "displayName": "iu-Cans-CA-Siqiniq · 🌐 iu-Cans-CA (Female)",
+    "displayName": "iu-Cans-CA-Siqiniq · CANS (Female)",
     "friendlyName": "Microsoft Siqiniq Online (Natural) - Inuktitut (Syllabics, Canada)",
     "lang": "iu-Cans-CA",
     "gender": "Female",
@@ -3025,13 +3226,14 @@
     "localService": false,
     "voiceURI": "iu-Cans-CA-SiqiniqNeural",
     "cleanName": "iu-Cans-CA-Siqiniq",
-    "languageName": "IU",
-    "country": "iu-Cans-CA",
-    "flag": "🌐"
+    "languageName": "Inuktitut",
+    "country": "CANS",
+    "flag": "🌐",
+    "countryCode": "CANS"
   },
   {
     "name": "iu-Cans-CA-TaqqiqNeural",
-    "displayName": "iu-Cans-CA-Taqqiq · 🌐 iu-Cans-CA (Male)",
+    "displayName": "iu-Cans-CA-Taqqiq · CANS (Male)",
     "friendlyName": "Microsoft Taqqiq Online (Natural) - Inuktitut (Syllabics, Canada)",
     "lang": "iu-Cans-CA",
     "gender": "Male",
@@ -3040,13 +3242,14 @@
     "localService": false,
     "voiceURI": "iu-Cans-CA-TaqqiqNeural",
     "cleanName": "iu-Cans-CA-Taqqiq",
-    "languageName": "IU",
-    "country": "iu-Cans-CA",
-    "flag": "🌐"
+    "languageName": "Inuktitut",
+    "country": "CANS",
+    "flag": "🌐",
+    "countryCode": "CANS"
   },
   {
     "name": "iu-Latn-CA-SiqiniqNeural",
-    "displayName": "iu-Latn-CA-Siqiniq · 🌐 iu-Latn-CA (Female)",
+    "displayName": "iu-Latn-CA-Siqiniq · LATN (Female)",
     "friendlyName": "Microsoft Siqiniq Online (Natural) - Inuktitut (Latin, Canada)",
     "lang": "iu-Latn-CA",
     "gender": "Female",
@@ -3055,13 +3258,14 @@
     "localService": false,
     "voiceURI": "iu-Latn-CA-SiqiniqNeural",
     "cleanName": "iu-Latn-CA-Siqiniq",
-    "languageName": "IU",
-    "country": "iu-Latn-CA",
-    "flag": "🌐"
+    "languageName": "Inuktitut",
+    "country": "LATN",
+    "flag": "🌐",
+    "countryCode": "LATN"
   },
   {
     "name": "iu-Latn-CA-TaqqiqNeural",
-    "displayName": "iu-Latn-CA-Taqqiq · 🌐 iu-Latn-CA (Male)",
+    "displayName": "iu-Latn-CA-Taqqiq · LATN (Male)",
     "friendlyName": "Microsoft Taqqiq Online (Natural) - Inuktitut (Latin, Canada)",
     "lang": "iu-Latn-CA",
     "gender": "Male",
@@ -3070,13 +3274,14 @@
     "localService": false,
     "voiceURI": "iu-Latn-CA-TaqqiqNeural",
     "cleanName": "iu-Latn-CA-Taqqiq",
-    "languageName": "IU",
-    "country": "iu-Latn-CA",
-    "flag": "🌐"
+    "languageName": "Inuktitut",
+    "country": "LATN",
+    "flag": "🌐",
+    "countryCode": "LATN"
   },
   {
     "name": "ja-JP-KeitaNeural",
-    "displayName": "Keita · 🇯🇵 Japan (Male)",
+    "displayName": "Keita · Japan (Male)",
     "friendlyName": "Microsoft Keita Online (Natural) - Japanese (Japan)",
     "lang": "ja-JP",
     "gender": "Male",
@@ -3087,11 +3292,12 @@
     "cleanName": "Keita",
     "languageName": "Japanese",
     "country": "Japan",
-    "flag": "🇯🇵"
+    "flag": "🇯🇵",
+    "countryCode": "JP"
   },
   {
     "name": "ja-JP-NanamiNeural",
-    "displayName": "Nanami · 🇯🇵 Japan (Female)",
+    "displayName": "Nanami · Japan (Female)",
     "friendlyName": "Microsoft Nanami Online (Natural) - Japanese (Japan)",
     "lang": "ja-JP",
     "gender": "Female",
@@ -3102,11 +3308,12 @@
     "cleanName": "Nanami",
     "languageName": "Japanese",
     "country": "Japan",
-    "flag": "🇯🇵"
+    "flag": "🇯🇵",
+    "countryCode": "JP"
   },
   {
     "name": "jv-ID-DimasNeural",
-    "displayName": "Dimas · 🌐 jv-ID (Male)",
+    "displayName": "Dimas · Indonesia (Male)",
     "friendlyName": "Microsoft Dimas Online (Natural) - Javanese (Indonesia)",
     "lang": "jv-ID",
     "gender": "Male",
@@ -3115,13 +3322,14 @@
     "localService": false,
     "voiceURI": "jv-ID-DimasNeural",
     "cleanName": "Dimas",
-    "languageName": "JV",
-    "country": "jv-ID",
-    "flag": "🌐"
+    "languageName": "Javanese",
+    "country": "Indonesia",
+    "flag": "🌐",
+    "countryCode": "ID"
   },
   {
     "name": "jv-ID-SitiNeural",
-    "displayName": "Siti · 🌐 jv-ID (Female)",
+    "displayName": "Siti · Indonesia (Female)",
     "friendlyName": "Microsoft Siti Online (Natural) - Javanese (Indonesia)",
     "lang": "jv-ID",
     "gender": "Female",
@@ -3130,13 +3338,14 @@
     "localService": false,
     "voiceURI": "jv-ID-SitiNeural",
     "cleanName": "Siti",
-    "languageName": "JV",
-    "country": "jv-ID",
-    "flag": "🌐"
+    "languageName": "Javanese",
+    "country": "Indonesia",
+    "flag": "🌐",
+    "countryCode": "ID"
   },
   {
     "name": "ka-GE-EkaNeural",
-    "displayName": "Eka · 🌐 ka-GE (Female)",
+    "displayName": "Eka · Georgia (Female)",
     "friendlyName": "Microsoft Eka Online (Natural) - Georgian (Georgia)",
     "lang": "ka-GE",
     "gender": "Female",
@@ -3145,13 +3354,14 @@
     "localService": false,
     "voiceURI": "ka-GE-EkaNeural",
     "cleanName": "Eka",
-    "languageName": "KA",
-    "country": "ka-GE",
-    "flag": "🌐"
+    "languageName": "Georgian",
+    "country": "Georgia",
+    "flag": "🌐",
+    "countryCode": "GE"
   },
   {
     "name": "ka-GE-GiorgiNeural",
-    "displayName": "Giorgi · 🌐 ka-GE (Male)",
+    "displayName": "Giorgi · Georgia (Male)",
     "friendlyName": "Microsoft Giorgi Online (Natural) - Georgian (Georgia)",
     "lang": "ka-GE",
     "gender": "Male",
@@ -3160,13 +3370,14 @@
     "localService": false,
     "voiceURI": "ka-GE-GiorgiNeural",
     "cleanName": "Giorgi",
-    "languageName": "KA",
-    "country": "ka-GE",
-    "flag": "🌐"
+    "languageName": "Georgian",
+    "country": "Georgia",
+    "flag": "🌐",
+    "countryCode": "GE"
   },
   {
     "name": "kk-KZ-AigulNeural",
-    "displayName": "Aigul · 🌐 kk-KZ (Female)",
+    "displayName": "Aigul · Kazakhstan (Female)",
     "friendlyName": "Microsoft Aigul Online (Natural) - Kazakh (Kazakhstan)",
     "lang": "kk-KZ",
     "gender": "Female",
@@ -3175,13 +3386,14 @@
     "localService": false,
     "voiceURI": "kk-KZ-AigulNeural",
     "cleanName": "Aigul",
-    "languageName": "KK",
-    "country": "kk-KZ",
-    "flag": "🌐"
+    "languageName": "Kazakh",
+    "country": "Kazakhstan",
+    "flag": "🌐",
+    "countryCode": "KZ"
   },
   {
     "name": "kk-KZ-DauletNeural",
-    "displayName": "Daulet · 🌐 kk-KZ (Male)",
+    "displayName": "Daulet · Kazakhstan (Male)",
     "friendlyName": "Microsoft Daulet Online (Natural) - Kazakh (Kazakhstan)",
     "lang": "kk-KZ",
     "gender": "Male",
@@ -3190,13 +3402,14 @@
     "localService": false,
     "voiceURI": "kk-KZ-DauletNeural",
     "cleanName": "Daulet",
-    "languageName": "KK",
-    "country": "kk-KZ",
-    "flag": "🌐"
+    "languageName": "Kazakh",
+    "country": "Kazakhstan",
+    "flag": "🌐",
+    "countryCode": "KZ"
   },
   {
     "name": "km-KH-PisethNeural",
-    "displayName": "Piseth · 🌐 km-KH (Male)",
+    "displayName": "Piseth · Cambodia (Male)",
     "friendlyName": "Microsoft Piseth Online (Natural) - Khmer (Cambodia)",
     "lang": "km-KH",
     "gender": "Male",
@@ -3205,13 +3418,14 @@
     "localService": false,
     "voiceURI": "km-KH-PisethNeural",
     "cleanName": "Piseth",
-    "languageName": "KM",
-    "country": "km-KH",
-    "flag": "🌐"
+    "languageName": "Khmer",
+    "country": "Cambodia",
+    "flag": "🌐",
+    "countryCode": "KH"
   },
   {
     "name": "km-KH-SreymomNeural",
-    "displayName": "Sreymom · 🌐 km-KH (Female)",
+    "displayName": "Sreymom · Cambodia (Female)",
     "friendlyName": "Microsoft Sreymom Online (Natural) - Khmer (Cambodia)",
     "lang": "km-KH",
     "gender": "Female",
@@ -3220,13 +3434,14 @@
     "localService": false,
     "voiceURI": "km-KH-SreymomNeural",
     "cleanName": "Sreymom",
-    "languageName": "KM",
-    "country": "km-KH",
-    "flag": "🌐"
+    "languageName": "Khmer",
+    "country": "Cambodia",
+    "flag": "🌐",
+    "countryCode": "KH"
   },
   {
     "name": "kn-IN-GaganNeural",
-    "displayName": "Gagan · 🌐 kn-IN (Male)",
+    "displayName": "Gagan · India (Male)",
     "friendlyName": "Microsoft Gagan Online (Natural) - Kannada (India)",
     "lang": "kn-IN",
     "gender": "Male",
@@ -3235,13 +3450,14 @@
     "localService": false,
     "voiceURI": "kn-IN-GaganNeural",
     "cleanName": "Gagan",
-    "languageName": "KN",
-    "country": "kn-IN",
-    "flag": "🌐"
+    "languageName": "Kannada",
+    "country": "India",
+    "flag": "🌐",
+    "countryCode": "IN"
   },
   {
     "name": "kn-IN-SapnaNeural",
-    "displayName": "Sapna · 🌐 kn-IN (Female)",
+    "displayName": "Sapna · India (Female)",
     "friendlyName": "Microsoft Sapna Online (Natural) - Kannada (India)",
     "lang": "kn-IN",
     "gender": "Female",
@@ -3250,13 +3466,14 @@
     "localService": false,
     "voiceURI": "kn-IN-SapnaNeural",
     "cleanName": "Sapna",
-    "languageName": "KN",
-    "country": "kn-IN",
-    "flag": "🌐"
+    "languageName": "Kannada",
+    "country": "India",
+    "flag": "🌐",
+    "countryCode": "IN"
   },
   {
     "name": "ko-KR-HyunsuMultilingualNeural",
-    "displayName": "Hyunsu (Multi) · 🇰🇷 South Korea (Male)",
+    "displayName": "Hyunsu (Multi) · South Korea (Male)",
     "friendlyName": "Microsoft HyunsuMultilingual Online (Natural) - Korean (Korea)",
     "lang": "ko-KR",
     "gender": "Male",
@@ -3267,11 +3484,12 @@
     "cleanName": "Hyunsu (Multi)",
     "languageName": "Korean",
     "country": "South Korea",
-    "flag": "🇰🇷"
+    "flag": "🇰🇷",
+    "countryCode": "KR"
   },
   {
     "name": "ko-KR-InJoonNeural",
-    "displayName": "InJoon · 🇰🇷 South Korea (Male)",
+    "displayName": "InJoon · South Korea (Male)",
     "friendlyName": "Microsoft InJoon Online (Natural) - Korean (Korea)",
     "lang": "ko-KR",
     "gender": "Male",
@@ -3282,11 +3500,12 @@
     "cleanName": "InJoon",
     "languageName": "Korean",
     "country": "South Korea",
-    "flag": "🇰🇷"
+    "flag": "🇰🇷",
+    "countryCode": "KR"
   },
   {
     "name": "ko-KR-SunHiNeural",
-    "displayName": "SunHi · 🇰🇷 South Korea (Female)",
+    "displayName": "SunHi · South Korea (Female)",
     "friendlyName": "Microsoft SunHi Online (Natural) - Korean (Korea)",
     "lang": "ko-KR",
     "gender": "Female",
@@ -3297,11 +3516,12 @@
     "cleanName": "SunHi",
     "languageName": "Korean",
     "country": "South Korea",
-    "flag": "🇰🇷"
+    "flag": "🇰🇷",
+    "countryCode": "KR"
   },
   {
     "name": "lo-LA-ChanthavongNeural",
-    "displayName": "Chanthavong · 🌐 lo-LA (Male)",
+    "displayName": "Chanthavong · Laos (Male)",
     "friendlyName": "Microsoft Chanthavong Online (Natural) - Lao (Laos)",
     "lang": "lo-LA",
     "gender": "Male",
@@ -3310,13 +3530,14 @@
     "localService": false,
     "voiceURI": "lo-LA-ChanthavongNeural",
     "cleanName": "Chanthavong",
-    "languageName": "LO",
-    "country": "lo-LA",
-    "flag": "🌐"
+    "languageName": "Lao",
+    "country": "Laos",
+    "flag": "🌐",
+    "countryCode": "LA"
   },
   {
     "name": "lo-LA-KeomanyNeural",
-    "displayName": "Keomany · 🌐 lo-LA (Female)",
+    "displayName": "Keomany · Laos (Female)",
     "friendlyName": "Microsoft Keomany Online (Natural) - Lao (Laos)",
     "lang": "lo-LA",
     "gender": "Female",
@@ -3325,13 +3546,14 @@
     "localService": false,
     "voiceURI": "lo-LA-KeomanyNeural",
     "cleanName": "Keomany",
-    "languageName": "LO",
-    "country": "lo-LA",
-    "flag": "🌐"
+    "languageName": "Lao",
+    "country": "Laos",
+    "flag": "🌐",
+    "countryCode": "LA"
   },
   {
     "name": "lt-LT-LeonasNeural",
-    "displayName": "Leonas · 🌐 lt-LT (Male)",
+    "displayName": "Leonas · Lithuania (Male)",
     "friendlyName": "Microsoft Leonas Online (Natural) - Lithuanian (Lithuania)",
     "lang": "lt-LT",
     "gender": "Male",
@@ -3340,13 +3562,14 @@
     "localService": false,
     "voiceURI": "lt-LT-LeonasNeural",
     "cleanName": "Leonas",
-    "languageName": "LT",
-    "country": "lt-LT",
-    "flag": "🌐"
+    "languageName": "Lithuanian",
+    "country": "Lithuania",
+    "flag": "🌐",
+    "countryCode": "LT"
   },
   {
     "name": "lt-LT-OnaNeural",
-    "displayName": "Ona · 🌐 lt-LT (Female)",
+    "displayName": "Ona · Lithuania (Female)",
     "friendlyName": "Microsoft Ona Online (Natural) - Lithuanian (Lithuania)",
     "lang": "lt-LT",
     "gender": "Female",
@@ -3355,13 +3578,14 @@
     "localService": false,
     "voiceURI": "lt-LT-OnaNeural",
     "cleanName": "Ona",
-    "languageName": "LT",
-    "country": "lt-LT",
-    "flag": "🌐"
+    "languageName": "Lithuanian",
+    "country": "Lithuania",
+    "flag": "🌐",
+    "countryCode": "LT"
   },
   {
     "name": "lv-LV-EveritaNeural",
-    "displayName": "Everita · 🌐 lv-LV (Female)",
+    "displayName": "Everita · Latvia (Female)",
     "friendlyName": "Microsoft Everita Online (Natural) - Latvian (Latvia)",
     "lang": "lv-LV",
     "gender": "Female",
@@ -3370,13 +3594,14 @@
     "localService": false,
     "voiceURI": "lv-LV-EveritaNeural",
     "cleanName": "Everita",
-    "languageName": "LV",
-    "country": "lv-LV",
-    "flag": "🌐"
+    "languageName": "Latvian",
+    "country": "Latvia",
+    "flag": "🌐",
+    "countryCode": "LV"
   },
   {
     "name": "lv-LV-NilsNeural",
-    "displayName": "Nils · 🌐 lv-LV (Male)",
+    "displayName": "Nils · Latvia (Male)",
     "friendlyName": "Microsoft Nils Online (Natural) - Latvian (Latvia)",
     "lang": "lv-LV",
     "gender": "Male",
@@ -3385,13 +3610,14 @@
     "localService": false,
     "voiceURI": "lv-LV-NilsNeural",
     "cleanName": "Nils",
-    "languageName": "LV",
-    "country": "lv-LV",
-    "flag": "🌐"
+    "languageName": "Latvian",
+    "country": "Latvia",
+    "flag": "🌐",
+    "countryCode": "LV"
   },
   {
     "name": "mk-MK-AleksandarNeural",
-    "displayName": "Aleksandar · 🌐 mk-MK (Male)",
+    "displayName": "Aleksandar · North Macedonia (Male)",
     "friendlyName": "Microsoft Aleksandar Online (Natural) - Macedonian (North Macedonia)",
     "lang": "mk-MK",
     "gender": "Male",
@@ -3400,13 +3626,14 @@
     "localService": false,
     "voiceURI": "mk-MK-AleksandarNeural",
     "cleanName": "Aleksandar",
-    "languageName": "MK",
-    "country": "mk-MK",
-    "flag": "🌐"
+    "languageName": "Macedonian",
+    "country": "North Macedonia",
+    "flag": "🌐",
+    "countryCode": "MK"
   },
   {
     "name": "mk-MK-MarijaNeural",
-    "displayName": "Marija · 🌐 mk-MK (Female)",
+    "displayName": "Marija · North Macedonia (Female)",
     "friendlyName": "Microsoft Marija Online (Natural) - Macedonian (North Macedonia)",
     "lang": "mk-MK",
     "gender": "Female",
@@ -3415,13 +3642,14 @@
     "localService": false,
     "voiceURI": "mk-MK-MarijaNeural",
     "cleanName": "Marija",
-    "languageName": "MK",
-    "country": "mk-MK",
-    "flag": "🌐"
+    "languageName": "Macedonian",
+    "country": "North Macedonia",
+    "flag": "🌐",
+    "countryCode": "MK"
   },
   {
     "name": "ml-IN-MidhunNeural",
-    "displayName": "Midhun · 🌐 ml-IN (Male)",
+    "displayName": "Midhun · India (Male)",
     "friendlyName": "Microsoft Midhun Online (Natural) - Malayalam (India)",
     "lang": "ml-IN",
     "gender": "Male",
@@ -3430,13 +3658,14 @@
     "localService": false,
     "voiceURI": "ml-IN-MidhunNeural",
     "cleanName": "Midhun",
-    "languageName": "ML",
-    "country": "ml-IN",
-    "flag": "🌐"
+    "languageName": "Malayalam",
+    "country": "India",
+    "flag": "🌐",
+    "countryCode": "IN"
   },
   {
     "name": "ml-IN-SobhanaNeural",
-    "displayName": "Sobhana · 🌐 ml-IN (Female)",
+    "displayName": "Sobhana · India (Female)",
     "friendlyName": "Microsoft Sobhana Online (Natural) - Malayalam (India)",
     "lang": "ml-IN",
     "gender": "Female",
@@ -3445,13 +3674,14 @@
     "localService": false,
     "voiceURI": "ml-IN-SobhanaNeural",
     "cleanName": "Sobhana",
-    "languageName": "ML",
-    "country": "ml-IN",
-    "flag": "🌐"
+    "languageName": "Malayalam",
+    "country": "India",
+    "flag": "🌐",
+    "countryCode": "IN"
   },
   {
     "name": "mn-MN-BataaNeural",
-    "displayName": "Bataa · 🌐 mn-MN (Male)",
+    "displayName": "Bataa · Mongolia (Male)",
     "friendlyName": "Microsoft Bataa Online (Natural) - Mongolian (Mongolia)",
     "lang": "mn-MN",
     "gender": "Male",
@@ -3460,13 +3690,14 @@
     "localService": false,
     "voiceURI": "mn-MN-BataaNeural",
     "cleanName": "Bataa",
-    "languageName": "MN",
-    "country": "mn-MN",
-    "flag": "🌐"
+    "languageName": "Mongolian",
+    "country": "Mongolia",
+    "flag": "🌐",
+    "countryCode": "MN"
   },
   {
     "name": "mn-MN-YesuiNeural",
-    "displayName": "Yesui · 🌐 mn-MN (Female)",
+    "displayName": "Yesui · Mongolia (Female)",
     "friendlyName": "Microsoft Yesui Online (Natural) - Mongolian (Mongolia)",
     "lang": "mn-MN",
     "gender": "Female",
@@ -3475,13 +3706,14 @@
     "localService": false,
     "voiceURI": "mn-MN-YesuiNeural",
     "cleanName": "Yesui",
-    "languageName": "MN",
-    "country": "mn-MN",
-    "flag": "🌐"
+    "languageName": "Mongolian",
+    "country": "Mongolia",
+    "flag": "🌐",
+    "countryCode": "MN"
   },
   {
     "name": "mr-IN-AarohiNeural",
-    "displayName": "Aarohi · 🌐 mr-IN (Female)",
+    "displayName": "Aarohi · India (Female)",
     "friendlyName": "Microsoft Aarohi Online (Natural) - Marathi (India)",
     "lang": "mr-IN",
     "gender": "Female",
@@ -3490,13 +3722,14 @@
     "localService": false,
     "voiceURI": "mr-IN-AarohiNeural",
     "cleanName": "Aarohi",
-    "languageName": "MR",
-    "country": "mr-IN",
-    "flag": "🌐"
+    "languageName": "Marathi",
+    "country": "India",
+    "flag": "🌐",
+    "countryCode": "IN"
   },
   {
     "name": "mr-IN-ManoharNeural",
-    "displayName": "Manohar · 🌐 mr-IN (Male)",
+    "displayName": "Manohar · India (Male)",
     "friendlyName": "Microsoft Manohar Online (Natural) - Marathi (India)",
     "lang": "mr-IN",
     "gender": "Male",
@@ -3505,13 +3738,14 @@
     "localService": false,
     "voiceURI": "mr-IN-ManoharNeural",
     "cleanName": "Manohar",
-    "languageName": "MR",
-    "country": "mr-IN",
-    "flag": "🌐"
+    "languageName": "Marathi",
+    "country": "India",
+    "flag": "🌐",
+    "countryCode": "IN"
   },
   {
     "name": "ms-MY-OsmanNeural",
-    "displayName": "Osman · 🌐 ms-MY (Male)",
+    "displayName": "Osman · Malaysia (Male)",
     "friendlyName": "Microsoft Osman Online (Natural) - Malay (Malaysia)",
     "lang": "ms-MY",
     "gender": "Male",
@@ -3520,13 +3754,14 @@
     "localService": false,
     "voiceURI": "ms-MY-OsmanNeural",
     "cleanName": "Osman",
-    "languageName": "MS",
-    "country": "ms-MY",
-    "flag": "🌐"
+    "languageName": "Malay",
+    "country": "Malaysia",
+    "flag": "🌐",
+    "countryCode": "MY"
   },
   {
     "name": "ms-MY-YasminNeural",
-    "displayName": "Yasmin · 🌐 ms-MY (Female)",
+    "displayName": "Yasmin · Malaysia (Female)",
     "friendlyName": "Microsoft Yasmin Online (Natural) - Malay (Malaysia)",
     "lang": "ms-MY",
     "gender": "Female",
@@ -3535,13 +3770,14 @@
     "localService": false,
     "voiceURI": "ms-MY-YasminNeural",
     "cleanName": "Yasmin",
-    "languageName": "MS",
-    "country": "ms-MY",
-    "flag": "🌐"
+    "languageName": "Malay",
+    "country": "Malaysia",
+    "flag": "🌐",
+    "countryCode": "MY"
   },
   {
     "name": "mt-MT-GraceNeural",
-    "displayName": "Grace · 🌐 mt-MT (Female)",
+    "displayName": "Grace · Malta (Female)",
     "friendlyName": "Microsoft Grace Online (Natural) - Maltese (Malta)",
     "lang": "mt-MT",
     "gender": "Female",
@@ -3550,13 +3786,14 @@
     "localService": false,
     "voiceURI": "mt-MT-GraceNeural",
     "cleanName": "Grace",
-    "languageName": "MT",
-    "country": "mt-MT",
-    "flag": "🌐"
+    "languageName": "Maltese",
+    "country": "Malta",
+    "flag": "🌐",
+    "countryCode": "MT"
   },
   {
     "name": "mt-MT-JosephNeural",
-    "displayName": "Joseph · 🌐 mt-MT (Male)",
+    "displayName": "Joseph · Malta (Male)",
     "friendlyName": "Microsoft Joseph Online (Natural) - Maltese (Malta)",
     "lang": "mt-MT",
     "gender": "Male",
@@ -3565,13 +3802,14 @@
     "localService": false,
     "voiceURI": "mt-MT-JosephNeural",
     "cleanName": "Joseph",
-    "languageName": "MT",
-    "country": "mt-MT",
-    "flag": "🌐"
+    "languageName": "Maltese",
+    "country": "Malta",
+    "flag": "🌐",
+    "countryCode": "MT"
   },
   {
     "name": "my-MM-NilarNeural",
-    "displayName": "Nilar · 🌐 my-MM (Female)",
+    "displayName": "Nilar · Myanmar (Burma) (Female)",
     "friendlyName": "Microsoft Nilar Online (Natural) - Burmese (Myanmar)",
     "lang": "my-MM",
     "gender": "Female",
@@ -3580,13 +3818,14 @@
     "localService": false,
     "voiceURI": "my-MM-NilarNeural",
     "cleanName": "Nilar",
-    "languageName": "MY",
-    "country": "my-MM",
-    "flag": "🌐"
+    "languageName": "Burmese",
+    "country": "Myanmar (Burma)",
+    "flag": "🌐",
+    "countryCode": "MM"
   },
   {
     "name": "my-MM-ThihaNeural",
-    "displayName": "Thiha · 🌐 my-MM (Male)",
+    "displayName": "Thiha · Myanmar (Burma) (Male)",
     "friendlyName": "Microsoft Thiha Online (Natural) - Burmese (Myanmar)",
     "lang": "my-MM",
     "gender": "Male",
@@ -3595,13 +3834,14 @@
     "localService": false,
     "voiceURI": "my-MM-ThihaNeural",
     "cleanName": "Thiha",
-    "languageName": "MY",
-    "country": "my-MM",
-    "flag": "🌐"
+    "languageName": "Burmese",
+    "country": "Myanmar (Burma)",
+    "flag": "🌐",
+    "countryCode": "MM"
   },
   {
     "name": "nb-NO-FinnNeural",
-    "displayName": "Finn · 🌐 nb-NO (Male)",
+    "displayName": "Finn · Norway (Male)",
     "friendlyName": "Microsoft Finn Online (Natural) - Norwegian (Bokmål Norway)",
     "lang": "nb-NO",
     "gender": "Male",
@@ -3610,13 +3850,14 @@
     "localService": false,
     "voiceURI": "nb-NO-FinnNeural",
     "cleanName": "Finn",
-    "languageName": "NB",
-    "country": "nb-NO",
-    "flag": "🌐"
+    "languageName": "Norwegian Bokmål",
+    "country": "Norway",
+    "flag": "🌐",
+    "countryCode": "NO"
   },
   {
     "name": "nb-NO-PernilleNeural",
-    "displayName": "Pernille · 🌐 nb-NO (Female)",
+    "displayName": "Pernille · Norway (Female)",
     "friendlyName": "Microsoft Pernille Online (Natural) - Norwegian (Bokmål, Norway)",
     "lang": "nb-NO",
     "gender": "Female",
@@ -3625,13 +3866,14 @@
     "localService": false,
     "voiceURI": "nb-NO-PernilleNeural",
     "cleanName": "Pernille",
-    "languageName": "NB",
-    "country": "nb-NO",
-    "flag": "🌐"
+    "languageName": "Norwegian Bokmål",
+    "country": "Norway",
+    "flag": "🌐",
+    "countryCode": "NO"
   },
   {
     "name": "ne-NP-HemkalaNeural",
-    "displayName": "Hemkala · 🌐 ne-NP (Female)",
+    "displayName": "Hemkala · Nepal (Female)",
     "friendlyName": "Microsoft Hemkala Online (Natural) - Nepali (Nepal)",
     "lang": "ne-NP",
     "gender": "Female",
@@ -3640,13 +3882,14 @@
     "localService": false,
     "voiceURI": "ne-NP-HemkalaNeural",
     "cleanName": "Hemkala",
-    "languageName": "NE",
-    "country": "ne-NP",
-    "flag": "🌐"
+    "languageName": "Nepali",
+    "country": "Nepal",
+    "flag": "🌐",
+    "countryCode": "NP"
   },
   {
     "name": "ne-NP-SagarNeural",
-    "displayName": "Sagar · 🌐 ne-NP (Male)",
+    "displayName": "Sagar · Nepal (Male)",
     "friendlyName": "Microsoft Sagar Online (Natural) - Nepali (Nepal)",
     "lang": "ne-NP",
     "gender": "Male",
@@ -3655,13 +3898,14 @@
     "localService": false,
     "voiceURI": "ne-NP-SagarNeural",
     "cleanName": "Sagar",
-    "languageName": "NE",
-    "country": "ne-NP",
-    "flag": "🌐"
+    "languageName": "Nepali",
+    "country": "Nepal",
+    "flag": "🌐",
+    "countryCode": "NP"
   },
   {
     "name": "nl-BE-ArnaudNeural",
-    "displayName": "Arnaud · 🌐 nl-BE (Male)",
+    "displayName": "Arnaud · Belgium (Male)",
     "friendlyName": "Microsoft Arnaud Online (Natural) - Dutch (Belgium)",
     "lang": "nl-BE",
     "gender": "Male",
@@ -3670,13 +3914,14 @@
     "localService": false,
     "voiceURI": "nl-BE-ArnaudNeural",
     "cleanName": "Arnaud",
-    "languageName": "NL",
-    "country": "nl-BE",
-    "flag": "🌐"
+    "languageName": "Dutch",
+    "country": "Belgium",
+    "flag": "🌐",
+    "countryCode": "BE"
   },
   {
     "name": "nl-BE-DenaNeural",
-    "displayName": "Dena · 🌐 nl-BE (Female)",
+    "displayName": "Dena · Belgium (Female)",
     "friendlyName": "Microsoft Dena Online (Natural) - Dutch (Belgium)",
     "lang": "nl-BE",
     "gender": "Female",
@@ -3685,13 +3930,14 @@
     "localService": false,
     "voiceURI": "nl-BE-DenaNeural",
     "cleanName": "Dena",
-    "languageName": "NL",
-    "country": "nl-BE",
-    "flag": "🌐"
+    "languageName": "Dutch",
+    "country": "Belgium",
+    "flag": "🌐",
+    "countryCode": "BE"
   },
   {
     "name": "nl-NL-ColetteNeural",
-    "displayName": "Colette · 🇳🇱 Netherlands (Female)",
+    "displayName": "Colette · Netherlands (Female)",
     "friendlyName": "Microsoft Colette Online (Natural) - Dutch (Netherlands)",
     "lang": "nl-NL",
     "gender": "Female",
@@ -3702,11 +3948,12 @@
     "cleanName": "Colette",
     "languageName": "Dutch",
     "country": "Netherlands",
-    "flag": "🇳🇱"
+    "flag": "🇳🇱",
+    "countryCode": "NL"
   },
   {
     "name": "nl-NL-FennaNeural",
-    "displayName": "Fenna · 🇳🇱 Netherlands (Female)",
+    "displayName": "Fenna · Netherlands (Female)",
     "friendlyName": "Microsoft Fenna Online (Natural) - Dutch (Netherlands)",
     "lang": "nl-NL",
     "gender": "Female",
@@ -3717,11 +3964,12 @@
     "cleanName": "Fenna",
     "languageName": "Dutch",
     "country": "Netherlands",
-    "flag": "🇳🇱"
+    "flag": "🇳🇱",
+    "countryCode": "NL"
   },
   {
     "name": "nl-NL-MaartenNeural",
-    "displayName": "Maarten · 🇳🇱 Netherlands (Male)",
+    "displayName": "Maarten · Netherlands (Male)",
     "friendlyName": "Microsoft Maarten Online (Natural) - Dutch (Netherlands)",
     "lang": "nl-NL",
     "gender": "Male",
@@ -3732,11 +3980,12 @@
     "cleanName": "Maarten",
     "languageName": "Dutch",
     "country": "Netherlands",
-    "flag": "🇳🇱"
+    "flag": "🇳🇱",
+    "countryCode": "NL"
   },
   {
     "name": "pl-PL-MarekNeural",
-    "displayName": "Marek · 🇵🇱 Poland (Male)",
+    "displayName": "Marek · Poland (Male)",
     "friendlyName": "Microsoft Marek Online (Natural) - Polish (Poland)",
     "lang": "pl-PL",
     "gender": "Male",
@@ -3747,11 +3996,12 @@
     "cleanName": "Marek",
     "languageName": "Polish",
     "country": "Poland",
-    "flag": "🇵🇱"
+    "flag": "🇵🇱",
+    "countryCode": "PL"
   },
   {
     "name": "pl-PL-ZofiaNeural",
-    "displayName": "Zofia · 🇵🇱 Poland (Female)",
+    "displayName": "Zofia · Poland (Female)",
     "friendlyName": "Microsoft Zofia Online (Natural) - Polish (Poland)",
     "lang": "pl-PL",
     "gender": "Female",
@@ -3762,11 +4012,12 @@
     "cleanName": "Zofia",
     "languageName": "Polish",
     "country": "Poland",
-    "flag": "🇵🇱"
+    "flag": "🇵🇱",
+    "countryCode": "PL"
   },
   {
     "name": "ps-AF-GulNawazNeural",
-    "displayName": "GulNawaz · 🌐 ps-AF (Male)",
+    "displayName": "GulNawaz · Afghanistan (Male)",
     "friendlyName": "Microsoft GulNawaz Online (Natural) - Pashto (Afghanistan)",
     "lang": "ps-AF",
     "gender": "Male",
@@ -3775,13 +4026,14 @@
     "localService": false,
     "voiceURI": "ps-AF-GulNawazNeural",
     "cleanName": "GulNawaz",
-    "languageName": "PS",
-    "country": "ps-AF",
-    "flag": "🌐"
+    "languageName": "Pashto",
+    "country": "Afghanistan",
+    "flag": "🌐",
+    "countryCode": "AF"
   },
   {
     "name": "ps-AF-LatifaNeural",
-    "displayName": "Latifa · 🌐 ps-AF (Female)",
+    "displayName": "Latifa · Afghanistan (Female)",
     "friendlyName": "Microsoft Latifa Online (Natural) - Pashto (Afghanistan)",
     "lang": "ps-AF",
     "gender": "Female",
@@ -3790,13 +4042,14 @@
     "localService": false,
     "voiceURI": "ps-AF-LatifaNeural",
     "cleanName": "Latifa",
-    "languageName": "PS",
-    "country": "ps-AF",
-    "flag": "🌐"
+    "languageName": "Pashto",
+    "country": "Afghanistan",
+    "flag": "🌐",
+    "countryCode": "AF"
   },
   {
     "name": "pt-BR-AntonioNeural",
-    "displayName": "Antonio · 🇧🇷 Brazil (Male)",
+    "displayName": "Antonio · Brazil (Male)",
     "friendlyName": "Microsoft Antonio Online (Natural) - Portuguese (Brazil)",
     "lang": "pt-BR",
     "gender": "Male",
@@ -3807,11 +4060,12 @@
     "cleanName": "Antonio",
     "languageName": "Portuguese",
     "country": "Brazil",
-    "flag": "🇧🇷"
+    "flag": "🇧🇷",
+    "countryCode": "BR"
   },
   {
     "name": "pt-BR-FranciscaNeural",
-    "displayName": "Francisca · 🇧🇷 Brazil (Female)",
+    "displayName": "Francisca · Brazil (Female)",
     "friendlyName": "Microsoft Francisca Online (Natural) - Portuguese (Brazil)",
     "lang": "pt-BR",
     "gender": "Female",
@@ -3822,11 +4076,12 @@
     "cleanName": "Francisca",
     "languageName": "Portuguese",
     "country": "Brazil",
-    "flag": "🇧🇷"
+    "flag": "🇧🇷",
+    "countryCode": "BR"
   },
   {
     "name": "pt-BR-ThalitaMultilingualNeural",
-    "displayName": "Thalita (Multi) · 🇧🇷 Brazil (Female)",
+    "displayName": "Thalita (Multi) · Brazil (Female)",
     "friendlyName": "Microsoft ThalitaMultilingual Online (Natural) - Portuguese (Brazil)",
     "lang": "pt-BR",
     "gender": "Female",
@@ -3837,11 +4092,12 @@
     "cleanName": "Thalita (Multi)",
     "languageName": "Portuguese",
     "country": "Brazil",
-    "flag": "🇧🇷"
+    "flag": "🇧🇷",
+    "countryCode": "BR"
   },
   {
     "name": "pt-PT-DuarteNeural",
-    "displayName": "Duarte · 🇵🇹 Portugal (Male)",
+    "displayName": "Duarte · Portugal (Male)",
     "friendlyName": "Microsoft Duarte Online (Natural) - Portuguese (Portugal)",
     "lang": "pt-PT",
     "gender": "Male",
@@ -3852,11 +4108,12 @@
     "cleanName": "Duarte",
     "languageName": "Portuguese",
     "country": "Portugal",
-    "flag": "🇵🇹"
+    "flag": "🇵🇹",
+    "countryCode": "PT"
   },
   {
     "name": "pt-PT-RaquelNeural",
-    "displayName": "Raquel · 🇵🇹 Portugal (Female)",
+    "displayName": "Raquel · Portugal (Female)",
     "friendlyName": "Microsoft Raquel Online (Natural) - Portuguese (Portugal)",
     "lang": "pt-PT",
     "gender": "Female",
@@ -3867,11 +4124,12 @@
     "cleanName": "Raquel",
     "languageName": "Portuguese",
     "country": "Portugal",
-    "flag": "🇵🇹"
+    "flag": "🇵🇹",
+    "countryCode": "PT"
   },
   {
     "name": "ro-RO-AlinaNeural",
-    "displayName": "Alina · 🌐 ro-RO (Female)",
+    "displayName": "Alina · Romania (Female)",
     "friendlyName": "Microsoft Alina Online (Natural) - Romanian (Romania)",
     "lang": "ro-RO",
     "gender": "Female",
@@ -3880,13 +4138,14 @@
     "localService": false,
     "voiceURI": "ro-RO-AlinaNeural",
     "cleanName": "Alina",
-    "languageName": "RO",
-    "country": "ro-RO",
-    "flag": "🌐"
+    "languageName": "Romanian",
+    "country": "Romania",
+    "flag": "🌐",
+    "countryCode": "RO"
   },
   {
     "name": "ro-RO-EmilNeural",
-    "displayName": "Emil · 🌐 ro-RO (Male)",
+    "displayName": "Emil · Romania (Male)",
     "friendlyName": "Microsoft Emil Online (Natural) - Romanian (Romania)",
     "lang": "ro-RO",
     "gender": "Male",
@@ -3895,13 +4154,14 @@
     "localService": false,
     "voiceURI": "ro-RO-EmilNeural",
     "cleanName": "Emil",
-    "languageName": "RO",
-    "country": "ro-RO",
-    "flag": "🌐"
+    "languageName": "Romanian",
+    "country": "Romania",
+    "flag": "🌐",
+    "countryCode": "RO"
   },
   {
     "name": "ru-RU-DmitryNeural",
-    "displayName": "Dmitry · 🇷🇺 Russia (Male)",
+    "displayName": "Dmitry · Russia (Male)",
     "friendlyName": "Microsoft Dmitry Online (Natural) - Russian (Russia)",
     "lang": "ru-RU",
     "gender": "Male",
@@ -3912,11 +4172,12 @@
     "cleanName": "Dmitry",
     "languageName": "Russian",
     "country": "Russia",
-    "flag": "🇷🇺"
+    "flag": "🇷🇺",
+    "countryCode": "RU"
   },
   {
     "name": "ru-RU-SvetlanaNeural",
-    "displayName": "Svetlana · 🇷🇺 Russia (Female)",
+    "displayName": "Svetlana · Russia (Female)",
     "friendlyName": "Microsoft Svetlana Online (Natural) - Russian (Russia)",
     "lang": "ru-RU",
     "gender": "Female",
@@ -3927,11 +4188,12 @@
     "cleanName": "Svetlana",
     "languageName": "Russian",
     "country": "Russia",
-    "flag": "🇷🇺"
+    "flag": "🇷🇺",
+    "countryCode": "RU"
   },
   {
     "name": "si-LK-SameeraNeural",
-    "displayName": "Sameera · 🌐 si-LK (Male)",
+    "displayName": "Sameera · Sri Lanka (Male)",
     "friendlyName": "Microsoft Sameera Online (Natural) - Sinhala (Sri Lanka)",
     "lang": "si-LK",
     "gender": "Male",
@@ -3940,13 +4202,14 @@
     "localService": false,
     "voiceURI": "si-LK-SameeraNeural",
     "cleanName": "Sameera",
-    "languageName": "SI",
-    "country": "si-LK",
-    "flag": "🌐"
+    "languageName": "Sinhala",
+    "country": "Sri Lanka",
+    "flag": "🌐",
+    "countryCode": "LK"
   },
   {
     "name": "si-LK-ThiliniNeural",
-    "displayName": "Thilini · 🌐 si-LK (Female)",
+    "displayName": "Thilini · Sri Lanka (Female)",
     "friendlyName": "Microsoft Thilini Online (Natural) - Sinhala (Sri Lanka)",
     "lang": "si-LK",
     "gender": "Female",
@@ -3955,13 +4218,14 @@
     "localService": false,
     "voiceURI": "si-LK-ThiliniNeural",
     "cleanName": "Thilini",
-    "languageName": "SI",
-    "country": "si-LK",
-    "flag": "🌐"
+    "languageName": "Sinhala",
+    "country": "Sri Lanka",
+    "flag": "🌐",
+    "countryCode": "LK"
   },
   {
     "name": "sk-SK-LukasNeural",
-    "displayName": "Lukas · 🌐 sk-SK (Male)",
+    "displayName": "Lukas · Slovakia (Male)",
     "friendlyName": "Microsoft Lukas Online (Natural) - Slovak (Slovakia)",
     "lang": "sk-SK",
     "gender": "Male",
@@ -3970,13 +4234,14 @@
     "localService": false,
     "voiceURI": "sk-SK-LukasNeural",
     "cleanName": "Lukas",
-    "languageName": "SK",
-    "country": "sk-SK",
-    "flag": "🌐"
+    "languageName": "Slovak",
+    "country": "Slovakia",
+    "flag": "🌐",
+    "countryCode": "SK"
   },
   {
     "name": "sk-SK-ViktoriaNeural",
-    "displayName": "Viktoria · 🌐 sk-SK (Female)",
+    "displayName": "Viktoria · Slovakia (Female)",
     "friendlyName": "Microsoft Viktoria Online (Natural) - Slovak (Slovakia)",
     "lang": "sk-SK",
     "gender": "Female",
@@ -3985,13 +4250,14 @@
     "localService": false,
     "voiceURI": "sk-SK-ViktoriaNeural",
     "cleanName": "Viktoria",
-    "languageName": "SK",
-    "country": "sk-SK",
-    "flag": "🌐"
+    "languageName": "Slovak",
+    "country": "Slovakia",
+    "flag": "🌐",
+    "countryCode": "SK"
   },
   {
     "name": "sl-SI-PetraNeural",
-    "displayName": "Petra · 🌐 sl-SI (Female)",
+    "displayName": "Petra · Slovenia (Female)",
     "friendlyName": "Microsoft Petra Online (Natural) - Slovenian (Slovenia)",
     "lang": "sl-SI",
     "gender": "Female",
@@ -4000,13 +4266,14 @@
     "localService": false,
     "voiceURI": "sl-SI-PetraNeural",
     "cleanName": "Petra",
-    "languageName": "SL",
-    "country": "sl-SI",
-    "flag": "🌐"
+    "languageName": "Slovenian",
+    "country": "Slovenia",
+    "flag": "🌐",
+    "countryCode": "SI"
   },
   {
     "name": "sl-SI-RokNeural",
-    "displayName": "Rok · 🌐 sl-SI (Male)",
+    "displayName": "Rok · Slovenia (Male)",
     "friendlyName": "Microsoft Rok Online (Natural) - Slovenian (Slovenia)",
     "lang": "sl-SI",
     "gender": "Male",
@@ -4015,13 +4282,14 @@
     "localService": false,
     "voiceURI": "sl-SI-RokNeural",
     "cleanName": "Rok",
-    "languageName": "SL",
-    "country": "sl-SI",
-    "flag": "🌐"
+    "languageName": "Slovenian",
+    "country": "Slovenia",
+    "flag": "🌐",
+    "countryCode": "SI"
   },
   {
     "name": "so-SO-MuuseNeural",
-    "displayName": "Muuse · 🌐 so-SO (Male)",
+    "displayName": "Muuse · Somalia (Male)",
     "friendlyName": "Microsoft Muuse Online (Natural) - Somali (Somalia)",
     "lang": "so-SO",
     "gender": "Male",
@@ -4030,13 +4298,14 @@
     "localService": false,
     "voiceURI": "so-SO-MuuseNeural",
     "cleanName": "Muuse",
-    "languageName": "SO",
-    "country": "so-SO",
-    "flag": "🌐"
+    "languageName": "Somali",
+    "country": "Somalia",
+    "flag": "🌐",
+    "countryCode": "SO"
   },
   {
     "name": "so-SO-UbaxNeural",
-    "displayName": "Ubax · 🌐 so-SO (Female)",
+    "displayName": "Ubax · Somalia (Female)",
     "friendlyName": "Microsoft Ubax Online (Natural) - Somali (Somalia)",
     "lang": "so-SO",
     "gender": "Female",
@@ -4045,13 +4314,14 @@
     "localService": false,
     "voiceURI": "so-SO-UbaxNeural",
     "cleanName": "Ubax",
-    "languageName": "SO",
-    "country": "so-SO",
-    "flag": "🌐"
+    "languageName": "Somali",
+    "country": "Somalia",
+    "flag": "🌐",
+    "countryCode": "SO"
   },
   {
     "name": "sq-AL-AnilaNeural",
-    "displayName": "Anila · 🌐 sq-AL (Female)",
+    "displayName": "Anila · Albania (Female)",
     "friendlyName": "Microsoft Anila Online (Natural) - Albanian (Albania)",
     "lang": "sq-AL",
     "gender": "Female",
@@ -4060,13 +4330,14 @@
     "localService": false,
     "voiceURI": "sq-AL-AnilaNeural",
     "cleanName": "Anila",
-    "languageName": "SQ",
-    "country": "sq-AL",
-    "flag": "🌐"
+    "languageName": "Albanian",
+    "country": "Albania",
+    "flag": "🌐",
+    "countryCode": "AL"
   },
   {
     "name": "sq-AL-IlirNeural",
-    "displayName": "Ilir · 🌐 sq-AL (Male)",
+    "displayName": "Ilir · Albania (Male)",
     "friendlyName": "Microsoft Ilir Online (Natural) - Albanian (Albania)",
     "lang": "sq-AL",
     "gender": "Male",
@@ -4075,13 +4346,14 @@
     "localService": false,
     "voiceURI": "sq-AL-IlirNeural",
     "cleanName": "Ilir",
-    "languageName": "SQ",
-    "country": "sq-AL",
-    "flag": "🌐"
+    "languageName": "Albanian",
+    "country": "Albania",
+    "flag": "🌐",
+    "countryCode": "AL"
   },
   {
     "name": "sr-RS-NicholasNeural",
-    "displayName": "Nicholas · 🌐 sr-RS (Male)",
+    "displayName": "Nicholas · Serbia (Male)",
     "friendlyName": "Microsoft Nicholas Online (Natural) - Serbian (Serbia)",
     "lang": "sr-RS",
     "gender": "Male",
@@ -4090,13 +4362,14 @@
     "localService": false,
     "voiceURI": "sr-RS-NicholasNeural",
     "cleanName": "Nicholas",
-    "languageName": "SR",
-    "country": "sr-RS",
-    "flag": "🌐"
+    "languageName": "Serbian",
+    "country": "Serbia",
+    "flag": "🌐",
+    "countryCode": "RS"
   },
   {
     "name": "sr-RS-SophieNeural",
-    "displayName": "Sophie · 🌐 sr-RS (Female)",
+    "displayName": "Sophie · Serbia (Female)",
     "friendlyName": "Microsoft Sophie Online (Natural) - Serbian (Serbia)",
     "lang": "sr-RS",
     "gender": "Female",
@@ -4105,13 +4378,14 @@
     "localService": false,
     "voiceURI": "sr-RS-SophieNeural",
     "cleanName": "Sophie",
-    "languageName": "SR",
-    "country": "sr-RS",
-    "flag": "🌐"
+    "languageName": "Serbian",
+    "country": "Serbia",
+    "flag": "🌐",
+    "countryCode": "RS"
   },
   {
     "name": "su-ID-JajangNeural",
-    "displayName": "Jajang · 🌐 su-ID (Male)",
+    "displayName": "Jajang · Indonesia (Male)",
     "friendlyName": "Microsoft Jajang Online (Natural) - Sundanese (Indonesia)",
     "lang": "su-ID",
     "gender": "Male",
@@ -4120,13 +4394,14 @@
     "localService": false,
     "voiceURI": "su-ID-JajangNeural",
     "cleanName": "Jajang",
-    "languageName": "SU",
-    "country": "su-ID",
-    "flag": "🌐"
+    "languageName": "Sundanese",
+    "country": "Indonesia",
+    "flag": "🌐",
+    "countryCode": "ID"
   },
   {
     "name": "su-ID-TutiNeural",
-    "displayName": "Tuti · 🌐 su-ID (Female)",
+    "displayName": "Tuti · Indonesia (Female)",
     "friendlyName": "Microsoft Tuti Online (Natural) - Sundanese (Indonesia)",
     "lang": "su-ID",
     "gender": "Female",
@@ -4135,13 +4410,14 @@
     "localService": false,
     "voiceURI": "su-ID-TutiNeural",
     "cleanName": "Tuti",
-    "languageName": "SU",
-    "country": "su-ID",
-    "flag": "🌐"
+    "languageName": "Sundanese",
+    "country": "Indonesia",
+    "flag": "🌐",
+    "countryCode": "ID"
   },
   {
     "name": "sv-SE-MattiasNeural",
-    "displayName": "Mattias · 🇸🇪 Sweden (Male)",
+    "displayName": "Mattias · Sweden (Male)",
     "friendlyName": "Microsoft Mattias Online (Natural) - Swedish (Sweden)",
     "lang": "sv-SE",
     "gender": "Male",
@@ -4152,11 +4428,12 @@
     "cleanName": "Mattias",
     "languageName": "Swedish",
     "country": "Sweden",
-    "flag": "🇸🇪"
+    "flag": "🇸🇪",
+    "countryCode": "SE"
   },
   {
     "name": "sv-SE-SofieNeural",
-    "displayName": "Sofie · 🇸🇪 Sweden (Female)",
+    "displayName": "Sofie · Sweden (Female)",
     "friendlyName": "Microsoft Sofie Online (Natural) - Swedish (Sweden)",
     "lang": "sv-SE",
     "gender": "Female",
@@ -4167,11 +4444,12 @@
     "cleanName": "Sofie",
     "languageName": "Swedish",
     "country": "Sweden",
-    "flag": "🇸🇪"
+    "flag": "🇸🇪",
+    "countryCode": "SE"
   },
   {
     "name": "sw-KE-RafikiNeural",
-    "displayName": "Rafiki · 🌐 sw-KE (Male)",
+    "displayName": "Rafiki · Kenya (Male)",
     "friendlyName": "Microsoft Rafiki Online (Natural) - Swahili (Kenya)",
     "lang": "sw-KE",
     "gender": "Male",
@@ -4180,13 +4458,14 @@
     "localService": false,
     "voiceURI": "sw-KE-RafikiNeural",
     "cleanName": "Rafiki",
-    "languageName": "SW",
-    "country": "sw-KE",
-    "flag": "🌐"
+    "languageName": "Swahili",
+    "country": "Kenya",
+    "flag": "🌐",
+    "countryCode": "KE"
   },
   {
     "name": "sw-KE-ZuriNeural",
-    "displayName": "Zuri · 🌐 sw-KE (Female)",
+    "displayName": "Zuri · Kenya (Female)",
     "friendlyName": "Microsoft Zuri Online (Natural) - Swahili (Kenya)",
     "lang": "sw-KE",
     "gender": "Female",
@@ -4195,13 +4474,14 @@
     "localService": false,
     "voiceURI": "sw-KE-ZuriNeural",
     "cleanName": "Zuri",
-    "languageName": "SW",
-    "country": "sw-KE",
-    "flag": "🌐"
+    "languageName": "Swahili",
+    "country": "Kenya",
+    "flag": "🌐",
+    "countryCode": "KE"
   },
   {
     "name": "sw-TZ-DaudiNeural",
-    "displayName": "Daudi · 🌐 sw-TZ (Male)",
+    "displayName": "Daudi · Tanzania (Male)",
     "friendlyName": "Microsoft Daudi Online (Natural) - Swahili (Tanzania)",
     "lang": "sw-TZ",
     "gender": "Male",
@@ -4210,13 +4490,14 @@
     "localService": false,
     "voiceURI": "sw-TZ-DaudiNeural",
     "cleanName": "Daudi",
-    "languageName": "SW",
-    "country": "sw-TZ",
-    "flag": "🌐"
+    "languageName": "Swahili",
+    "country": "Tanzania",
+    "flag": "🌐",
+    "countryCode": "TZ"
   },
   {
     "name": "sw-TZ-RehemaNeural",
-    "displayName": "Rehema · 🌐 sw-TZ (Female)",
+    "displayName": "Rehema · Tanzania (Female)",
     "friendlyName": "Microsoft Rehema Online (Natural) - Swahili (Tanzania)",
     "lang": "sw-TZ",
     "gender": "Female",
@@ -4225,13 +4506,14 @@
     "localService": false,
     "voiceURI": "sw-TZ-RehemaNeural",
     "cleanName": "Rehema",
-    "languageName": "SW",
-    "country": "sw-TZ",
-    "flag": "🌐"
+    "languageName": "Swahili",
+    "country": "Tanzania",
+    "flag": "🌐",
+    "countryCode": "TZ"
   },
   {
     "name": "ta-IN-PallaviNeural",
-    "displayName": "Pallavi · 🌐 ta-IN (Female)",
+    "displayName": "Pallavi · India (Female)",
     "friendlyName": "Microsoft Pallavi Online (Natural) - Tamil (India)",
     "lang": "ta-IN",
     "gender": "Female",
@@ -4240,13 +4522,14 @@
     "localService": false,
     "voiceURI": "ta-IN-PallaviNeural",
     "cleanName": "Pallavi",
-    "languageName": "TA",
-    "country": "ta-IN",
-    "flag": "🌐"
+    "languageName": "Tamil",
+    "country": "India",
+    "flag": "🌐",
+    "countryCode": "IN"
   },
   {
     "name": "ta-IN-ValluvarNeural",
-    "displayName": "Valluvar · 🌐 ta-IN (Male)",
+    "displayName": "Valluvar · India (Male)",
     "friendlyName": "Microsoft Valluvar Online (Natural) - Tamil (India)",
     "lang": "ta-IN",
     "gender": "Male",
@@ -4255,13 +4538,14 @@
     "localService": false,
     "voiceURI": "ta-IN-ValluvarNeural",
     "cleanName": "Valluvar",
-    "languageName": "TA",
-    "country": "ta-IN",
-    "flag": "🌐"
+    "languageName": "Tamil",
+    "country": "India",
+    "flag": "🌐",
+    "countryCode": "IN"
   },
   {
     "name": "ta-LK-KumarNeural",
-    "displayName": "Kumar · 🌐 ta-LK (Male)",
+    "displayName": "Kumar · Sri Lanka (Male)",
     "friendlyName": "Microsoft Kumar Online (Natural) - Tamil (Sri Lanka)",
     "lang": "ta-LK",
     "gender": "Male",
@@ -4270,13 +4554,14 @@
     "localService": false,
     "voiceURI": "ta-LK-KumarNeural",
     "cleanName": "Kumar",
-    "languageName": "TA",
-    "country": "ta-LK",
-    "flag": "🌐"
+    "languageName": "Tamil",
+    "country": "Sri Lanka",
+    "flag": "🌐",
+    "countryCode": "LK"
   },
   {
     "name": "ta-LK-SaranyaNeural",
-    "displayName": "Saranya · 🌐 ta-LK (Female)",
+    "displayName": "Saranya · Sri Lanka (Female)",
     "friendlyName": "Microsoft Saranya Online (Natural) - Tamil (Sri Lanka)",
     "lang": "ta-LK",
     "gender": "Female",
@@ -4285,13 +4570,14 @@
     "localService": false,
     "voiceURI": "ta-LK-SaranyaNeural",
     "cleanName": "Saranya",
-    "languageName": "TA",
-    "country": "ta-LK",
-    "flag": "🌐"
+    "languageName": "Tamil",
+    "country": "Sri Lanka",
+    "flag": "🌐",
+    "countryCode": "LK"
   },
   {
     "name": "ta-MY-KaniNeural",
-    "displayName": "Kani · 🌐 ta-MY (Female)",
+    "displayName": "Kani · Malaysia (Female)",
     "friendlyName": "Microsoft Kani Online (Natural) - Tamil (Malaysia)",
     "lang": "ta-MY",
     "gender": "Female",
@@ -4300,13 +4586,14 @@
     "localService": false,
     "voiceURI": "ta-MY-KaniNeural",
     "cleanName": "Kani",
-    "languageName": "TA",
-    "country": "ta-MY",
-    "flag": "🌐"
+    "languageName": "Tamil",
+    "country": "Malaysia",
+    "flag": "🌐",
+    "countryCode": "MY"
   },
   {
     "name": "ta-MY-SuryaNeural",
-    "displayName": "Surya · 🌐 ta-MY (Male)",
+    "displayName": "Surya · Malaysia (Male)",
     "friendlyName": "Microsoft Surya Online (Natural) - Tamil (Malaysia)",
     "lang": "ta-MY",
     "gender": "Male",
@@ -4315,13 +4602,14 @@
     "localService": false,
     "voiceURI": "ta-MY-SuryaNeural",
     "cleanName": "Surya",
-    "languageName": "TA",
-    "country": "ta-MY",
-    "flag": "🌐"
+    "languageName": "Tamil",
+    "country": "Malaysia",
+    "flag": "🌐",
+    "countryCode": "MY"
   },
   {
     "name": "ta-SG-AnbuNeural",
-    "displayName": "Anbu · 🌐 ta-SG (Male)",
+    "displayName": "Anbu · Singapore (Male)",
     "friendlyName": "Microsoft Anbu Online (Natural) - Tamil (Singapore)",
     "lang": "ta-SG",
     "gender": "Male",
@@ -4330,13 +4618,14 @@
     "localService": false,
     "voiceURI": "ta-SG-AnbuNeural",
     "cleanName": "Anbu",
-    "languageName": "TA",
-    "country": "ta-SG",
-    "flag": "🌐"
+    "languageName": "Tamil",
+    "country": "Singapore",
+    "flag": "🌐",
+    "countryCode": "SG"
   },
   {
     "name": "ta-SG-VenbaNeural",
-    "displayName": "Venba · 🌐 ta-SG (Female)",
+    "displayName": "Venba · Singapore (Female)",
     "friendlyName": "Microsoft Venba Online (Natural) - Tamil (Singapore)",
     "lang": "ta-SG",
     "gender": "Female",
@@ -4345,13 +4634,14 @@
     "localService": false,
     "voiceURI": "ta-SG-VenbaNeural",
     "cleanName": "Venba",
-    "languageName": "TA",
-    "country": "ta-SG",
-    "flag": "🌐"
+    "languageName": "Tamil",
+    "country": "Singapore",
+    "flag": "🌐",
+    "countryCode": "SG"
   },
   {
     "name": "te-IN-MohanNeural",
-    "displayName": "Mohan · 🌐 te-IN (Male)",
+    "displayName": "Mohan · India (Male)",
     "friendlyName": "Microsoft Mohan Online (Natural) - Telugu (India)",
     "lang": "te-IN",
     "gender": "Male",
@@ -4360,13 +4650,14 @@
     "localService": false,
     "voiceURI": "te-IN-MohanNeural",
     "cleanName": "Mohan",
-    "languageName": "TE",
-    "country": "te-IN",
-    "flag": "🌐"
+    "languageName": "Telugu",
+    "country": "India",
+    "flag": "🌐",
+    "countryCode": "IN"
   },
   {
     "name": "te-IN-ShrutiNeural",
-    "displayName": "Shruti · 🌐 te-IN (Female)",
+    "displayName": "Shruti · India (Female)",
     "friendlyName": "Microsoft Shruti Online (Natural) - Telugu (India)",
     "lang": "te-IN",
     "gender": "Female",
@@ -4375,13 +4666,14 @@
     "localService": false,
     "voiceURI": "te-IN-ShrutiNeural",
     "cleanName": "Shruti",
-    "languageName": "TE",
-    "country": "te-IN",
-    "flag": "🌐"
+    "languageName": "Telugu",
+    "country": "India",
+    "flag": "🌐",
+    "countryCode": "IN"
   },
   {
     "name": "th-TH-NiwatNeural",
-    "displayName": "Niwat · 🇹🇭 Thailand (Male)",
+    "displayName": "Niwat · Thailand (Male)",
     "friendlyName": "Microsoft Niwat Online (Natural) - Thai (Thailand)",
     "lang": "th-TH",
     "gender": "Male",
@@ -4392,11 +4684,12 @@
     "cleanName": "Niwat",
     "languageName": "Thai",
     "country": "Thailand",
-    "flag": "🇹🇭"
+    "flag": "🇹🇭",
+    "countryCode": "TH"
   },
   {
     "name": "th-TH-PremwadeeNeural",
-    "displayName": "Premwadee · 🇹🇭 Thailand (Female)",
+    "displayName": "Premwadee · Thailand (Female)",
     "friendlyName": "Microsoft Premwadee Online (Natural) - Thai (Thailand)",
     "lang": "th-TH",
     "gender": "Female",
@@ -4407,11 +4700,12 @@
     "cleanName": "Premwadee",
     "languageName": "Thai",
     "country": "Thailand",
-    "flag": "🇹🇭"
+    "flag": "🇹🇭",
+    "countryCode": "TH"
   },
   {
     "name": "tr-TR-AhmetNeural",
-    "displayName": "Ahmet · 🇹🇷 Turkey (Male)",
+    "displayName": "Ahmet · Türkiye (Male)",
     "friendlyName": "Microsoft Ahmet Online (Natural) - Turkish (Türkiye)",
     "lang": "tr-TR",
     "gender": "Male",
@@ -4421,12 +4715,13 @@
     "voiceURI": "tr-TR-AhmetNeural",
     "cleanName": "Ahmet",
     "languageName": "Turkish",
-    "country": "Turkey",
-    "flag": "🇹🇷"
+    "country": "Türkiye",
+    "flag": "🇹🇷",
+    "countryCode": "TR"
   },
   {
     "name": "tr-TR-EmelNeural",
-    "displayName": "Emel · 🇹🇷 Turkey (Female)",
+    "displayName": "Emel · Türkiye (Female)",
     "friendlyName": "Microsoft Emel Online (Natural) - Turkish (Turkey)",
     "lang": "tr-TR",
     "gender": "Female",
@@ -4436,12 +4731,13 @@
     "voiceURI": "tr-TR-EmelNeural",
     "cleanName": "Emel",
     "languageName": "Turkish",
-    "country": "Turkey",
-    "flag": "🇹🇷"
+    "country": "Türkiye",
+    "flag": "🇹🇷",
+    "countryCode": "TR"
   },
   {
     "name": "uk-UA-OstapNeural",
-    "displayName": "Ostap · 🇺🇦 Ukraine (Male)",
+    "displayName": "Ostap · Ukraine (Male)",
     "friendlyName": "Microsoft Ostap Online (Natural) - Ukrainian (Ukraine)",
     "lang": "uk-UA",
     "gender": "Male",
@@ -4452,11 +4748,12 @@
     "cleanName": "Ostap",
     "languageName": "Ukrainian",
     "country": "Ukraine",
-    "flag": "🇺🇦"
+    "flag": "🇺🇦",
+    "countryCode": "UA"
   },
   {
     "name": "uk-UA-PolinaNeural",
-    "displayName": "Polina · 🇺🇦 Ukraine (Female)",
+    "displayName": "Polina · Ukraine (Female)",
     "friendlyName": "Microsoft Polina Online (Natural) - Ukrainian (Ukraine)",
     "lang": "uk-UA",
     "gender": "Female",
@@ -4467,11 +4764,12 @@
     "cleanName": "Polina",
     "languageName": "Ukrainian",
     "country": "Ukraine",
-    "flag": "🇺🇦"
+    "flag": "🇺🇦",
+    "countryCode": "UA"
   },
   {
     "name": "ur-IN-GulNeural",
-    "displayName": "Gul · 🌐 ur-IN (Female)",
+    "displayName": "Gul · India (Female)",
     "friendlyName": "Microsoft Gul Online (Natural) - Urdu (India)",
     "lang": "ur-IN",
     "gender": "Female",
@@ -4480,13 +4778,14 @@
     "localService": false,
     "voiceURI": "ur-IN-GulNeural",
     "cleanName": "Gul",
-    "languageName": "UR",
-    "country": "ur-IN",
-    "flag": "🌐"
+    "languageName": "Urdu",
+    "country": "India",
+    "flag": "🌐",
+    "countryCode": "IN"
   },
   {
     "name": "ur-IN-SalmanNeural",
-    "displayName": "Salman · 🌐 ur-IN (Male)",
+    "displayName": "Salman · India (Male)",
     "friendlyName": "Microsoft Salman Online (Natural) - Urdu (India)",
     "lang": "ur-IN",
     "gender": "Male",
@@ -4495,13 +4794,14 @@
     "localService": false,
     "voiceURI": "ur-IN-SalmanNeural",
     "cleanName": "Salman",
-    "languageName": "UR",
-    "country": "ur-IN",
-    "flag": "🌐"
+    "languageName": "Urdu",
+    "country": "India",
+    "flag": "🌐",
+    "countryCode": "IN"
   },
   {
     "name": "ur-PK-AsadNeural",
-    "displayName": "Asad · 🌐 ur-PK (Male)",
+    "displayName": "Asad · Pakistan (Male)",
     "friendlyName": "Microsoft Asad Online (Natural) - Urdu (Pakistan)",
     "lang": "ur-PK",
     "gender": "Male",
@@ -4510,13 +4810,14 @@
     "localService": false,
     "voiceURI": "ur-PK-AsadNeural",
     "cleanName": "Asad",
-    "languageName": "UR",
-    "country": "ur-PK",
-    "flag": "🌐"
+    "languageName": "Urdu",
+    "country": "Pakistan",
+    "flag": "🌐",
+    "countryCode": "PK"
   },
   {
     "name": "ur-PK-UzmaNeural",
-    "displayName": "Uzma · 🌐 ur-PK (Female)",
+    "displayName": "Uzma · Pakistan (Female)",
     "friendlyName": "Microsoft Uzma Online (Natural) - Urdu (Pakistan)",
     "lang": "ur-PK",
     "gender": "Female",
@@ -4525,13 +4826,14 @@
     "localService": false,
     "voiceURI": "ur-PK-UzmaNeural",
     "cleanName": "Uzma",
-    "languageName": "UR",
-    "country": "ur-PK",
-    "flag": "🌐"
+    "languageName": "Urdu",
+    "country": "Pakistan",
+    "flag": "🌐",
+    "countryCode": "PK"
   },
   {
     "name": "uz-UZ-MadinaNeural",
-    "displayName": "Madina · 🌐 uz-UZ (Female)",
+    "displayName": "Madina · Uzbekistan (Female)",
     "friendlyName": "Microsoft Madina Online (Natural) - Uzbek (Uzbekistan)",
     "lang": "uz-UZ",
     "gender": "Female",
@@ -4540,13 +4842,14 @@
     "localService": false,
     "voiceURI": "uz-UZ-MadinaNeural",
     "cleanName": "Madina",
-    "languageName": "UZ",
-    "country": "uz-UZ",
-    "flag": "🌐"
+    "languageName": "Uzbek",
+    "country": "Uzbekistan",
+    "flag": "🌐",
+    "countryCode": "UZ"
   },
   {
     "name": "uz-UZ-SardorNeural",
-    "displayName": "Sardor · 🌐 uz-UZ (Male)",
+    "displayName": "Sardor · Uzbekistan (Male)",
     "friendlyName": "Microsoft Sardor Online (Natural) - Uzbek (Uzbekistan)",
     "lang": "uz-UZ",
     "gender": "Male",
@@ -4555,13 +4858,14 @@
     "localService": false,
     "voiceURI": "uz-UZ-SardorNeural",
     "cleanName": "Sardor",
-    "languageName": "UZ",
-    "country": "uz-UZ",
-    "flag": "🌐"
+    "languageName": "Uzbek",
+    "country": "Uzbekistan",
+    "flag": "🌐",
+    "countryCode": "UZ"
   },
   {
     "name": "vi-VN-HoaiMyNeural",
-    "displayName": "HoaiMy · 🇻🇳 Vietnam (Female)",
+    "displayName": "HoaiMy · Vietnam (Female)",
     "friendlyName": "Microsoft HoaiMy Online (Natural) - Vietnamese (Vietnam)",
     "lang": "vi-VN",
     "gender": "Female",
@@ -4572,11 +4876,12 @@
     "cleanName": "HoaiMy",
     "languageName": "Vietnamese",
     "country": "Vietnam",
-    "flag": "🇻🇳"
+    "flag": "🇻🇳",
+    "countryCode": "VN"
   },
   {
     "name": "vi-VN-NamMinhNeural",
-    "displayName": "NamMinh · 🇻🇳 Vietnam (Male)",
+    "displayName": "NamMinh · Vietnam (Male)",
     "friendlyName": "Microsoft NamMinh Online (Natural) - Vietnamese (Vietnam)",
     "lang": "vi-VN",
     "gender": "Male",
@@ -4587,11 +4892,12 @@
     "cleanName": "NamMinh",
     "languageName": "Vietnamese",
     "country": "Vietnam",
-    "flag": "🇻🇳"
+    "flag": "🇻🇳",
+    "countryCode": "VN"
   },
   {
     "name": "zh-CN-XiaoxiaoNeural",
-    "displayName": "Xiaoxiao · 🇨🇳 China (Female)",
+    "displayName": "Xiaoxiao · China (Female)",
     "friendlyName": "Microsoft Xiaoxiao Online (Natural) - Chinese (Mainland)",
     "lang": "zh-CN",
     "gender": "Female",
@@ -4602,11 +4908,12 @@
     "cleanName": "Xiaoxiao",
     "languageName": "Chinese",
     "country": "China",
-    "flag": "🇨🇳"
+    "flag": "🇨🇳",
+    "countryCode": "CN"
   },
   {
     "name": "zh-CN-XiaoyiNeural",
-    "displayName": "Xiaoyi · 🇨🇳 China (Female)",
+    "displayName": "Xiaoyi · China (Female)",
     "friendlyName": "Microsoft Xiaoyi Online (Natural) - Chinese (Mainland)",
     "lang": "zh-CN",
     "gender": "Female",
@@ -4617,11 +4924,12 @@
     "cleanName": "Xiaoyi",
     "languageName": "Chinese",
     "country": "China",
-    "flag": "🇨🇳"
+    "flag": "🇨🇳",
+    "countryCode": "CN"
   },
   {
     "name": "zh-CN-YunjianNeural",
-    "displayName": "Yunjian · 🇨🇳 China (Male)",
+    "displayName": "Yunjian · China (Male)",
     "friendlyName": "Microsoft Yunjian Online (Natural) - Chinese (Mainland)",
     "lang": "zh-CN",
     "gender": "Male",
@@ -4632,11 +4940,12 @@
     "cleanName": "Yunjian",
     "languageName": "Chinese",
     "country": "China",
-    "flag": "🇨🇳"
+    "flag": "🇨🇳",
+    "countryCode": "CN"
   },
   {
     "name": "zh-CN-YunxiaNeural",
-    "displayName": "Yunxia · 🇨🇳 China (Male)",
+    "displayName": "Yunxia · China (Male)",
     "friendlyName": "Microsoft Yunxia Online (Natural) - Chinese (Mainland)",
     "lang": "zh-CN",
     "gender": "Male",
@@ -4647,11 +4956,12 @@
     "cleanName": "Yunxia",
     "languageName": "Chinese",
     "country": "China",
-    "flag": "🇨🇳"
+    "flag": "🇨🇳",
+    "countryCode": "CN"
   },
   {
     "name": "zh-CN-YunxiNeural",
-    "displayName": "Yunxi · 🇨🇳 China (Male)",
+    "displayName": "Yunxi · China (Male)",
     "friendlyName": "Microsoft Yunxi Online (Natural) - Chinese (Mainland)",
     "lang": "zh-CN",
     "gender": "Male",
@@ -4662,11 +4972,12 @@
     "cleanName": "Yunxi",
     "languageName": "Chinese",
     "country": "China",
-    "flag": "🇨🇳"
+    "flag": "🇨🇳",
+    "countryCode": "CN"
   },
   {
     "name": "zh-CN-YunyangNeural",
-    "displayName": "Yunyang · 🇨🇳 China (Male)",
+    "displayName": "Yunyang · China (Male)",
     "friendlyName": "Microsoft Yunyang Online (Natural) - Chinese (Mainland)",
     "lang": "zh-CN",
     "gender": "Male",
@@ -4677,11 +4988,12 @@
     "cleanName": "Yunyang",
     "languageName": "Chinese",
     "country": "China",
-    "flag": "🇨🇳"
+    "flag": "🇨🇳",
+    "countryCode": "CN"
   },
   {
     "name": "zh-CN-liaoning-XiaobeiNeural",
-    "displayName": "liaoning-Xiaobei · 🌐 zh-CN-liaoning (Female)",
+    "displayName": "liaoning-Xiaobei · China (Female)",
     "friendlyName": "Microsoft Xiaobei Online (Natural) - Chinese (Northeastern Mandarin)",
     "lang": "zh-CN-liaoning",
     "gender": "Female",
@@ -4690,13 +5002,14 @@
     "localService": false,
     "voiceURI": "zh-CN-liaoning-XiaobeiNeural",
     "cleanName": "liaoning-Xiaobei",
-    "languageName": "ZH",
-    "country": "zh-CN-liaoning",
-    "flag": "🌐"
+    "languageName": "Chinese",
+    "country": "China",
+    "flag": "🌐",
+    "countryCode": "CN"
   },
   {
     "name": "zh-CN-shaanxi-XiaoniNeural",
-    "displayName": "shaanxi-Xiaoni · 🌐 zh-CN-shaanxi (Female)",
+    "displayName": "shaanxi-Xiaoni · China (Female)",
     "friendlyName": "Microsoft Xiaoni Online (Natural) - Chinese (Zhongyuan Mandarin Shaanxi)",
     "lang": "zh-CN-shaanxi",
     "gender": "Female",
@@ -4705,13 +5018,14 @@
     "localService": false,
     "voiceURI": "zh-CN-shaanxi-XiaoniNeural",
     "cleanName": "shaanxi-Xiaoni",
-    "languageName": "ZH",
-    "country": "zh-CN-shaanxi",
-    "flag": "🌐"
+    "languageName": "Chinese",
+    "country": "China",
+    "flag": "🌐",
+    "countryCode": "CN"
   },
   {
     "name": "zh-HK-HiuGaaiNeural",
-    "displayName": "HiuGaai · 🇭🇰 Hong Kong (Female)",
+    "displayName": "HiuGaai · Hong Kong SAR China (Female)",
     "friendlyName": "Microsoft HiuGaai Online (Natural) - Chinese (Cantonese Traditional)",
     "lang": "zh-HK",
     "gender": "Female",
@@ -4721,12 +5035,13 @@
     "voiceURI": "zh-HK-HiuGaaiNeural",
     "cleanName": "HiuGaai",
     "languageName": "Chinese",
-    "country": "Hong Kong",
-    "flag": "🇭🇰"
+    "country": "Hong Kong SAR China",
+    "flag": "🇭🇰",
+    "countryCode": "HK"
   },
   {
     "name": "zh-HK-HiuMaanNeural",
-    "displayName": "HiuMaan · 🇭🇰 Hong Kong (Female)",
+    "displayName": "HiuMaan · Hong Kong SAR China (Female)",
     "friendlyName": "Microsoft HiuMaan Online (Natural) - Chinese (Hong Kong SAR)",
     "lang": "zh-HK",
     "gender": "Female",
@@ -4736,12 +5051,13 @@
     "voiceURI": "zh-HK-HiuMaanNeural",
     "cleanName": "HiuMaan",
     "languageName": "Chinese",
-    "country": "Hong Kong",
-    "flag": "🇭🇰"
+    "country": "Hong Kong SAR China",
+    "flag": "🇭🇰",
+    "countryCode": "HK"
   },
   {
     "name": "zh-HK-WanLungNeural",
-    "displayName": "WanLung · 🇭🇰 Hong Kong (Male)",
+    "displayName": "WanLung · Hong Kong SAR China (Male)",
     "friendlyName": "Microsoft WanLung Online (Natural) - Chinese (Hong Kong SAR)",
     "lang": "zh-HK",
     "gender": "Male",
@@ -4751,12 +5067,13 @@
     "voiceURI": "zh-HK-WanLungNeural",
     "cleanName": "WanLung",
     "languageName": "Chinese",
-    "country": "Hong Kong",
-    "flag": "🇭🇰"
+    "country": "Hong Kong SAR China",
+    "flag": "🇭🇰",
+    "countryCode": "HK"
   },
   {
     "name": "zh-TW-HsiaoChenNeural",
-    "displayName": "HsiaoChen · 🇹🇼 Taiwan (Female)",
+    "displayName": "HsiaoChen · Taiwan (Female)",
     "friendlyName": "Microsoft HsiaoChen Online (Natural) - Chinese (Taiwan)",
     "lang": "zh-TW",
     "gender": "Female",
@@ -4767,11 +5084,12 @@
     "cleanName": "HsiaoChen",
     "languageName": "Chinese",
     "country": "Taiwan",
-    "flag": "🇹🇼"
+    "flag": "🇹🇼",
+    "countryCode": "TW"
   },
   {
     "name": "zh-TW-HsiaoYuNeural",
-    "displayName": "HsiaoYu · 🇹🇼 Taiwan (Female)",
+    "displayName": "HsiaoYu · Taiwan (Female)",
     "friendlyName": "Microsoft HsiaoYu Online (Natural) - Chinese (Taiwanese Mandarin)",
     "lang": "zh-TW",
     "gender": "Female",
@@ -4782,11 +5100,12 @@
     "cleanName": "HsiaoYu",
     "languageName": "Chinese",
     "country": "Taiwan",
-    "flag": "🇹🇼"
+    "flag": "🇹🇼",
+    "countryCode": "TW"
   },
   {
     "name": "zh-TW-YunJheNeural",
-    "displayName": "YunJhe · 🇹🇼 Taiwan (Male)",
+    "displayName": "YunJhe · Taiwan (Male)",
     "friendlyName": "Microsoft YunJhe Online (Natural) - Chinese (Taiwan)",
     "lang": "zh-TW",
     "gender": "Male",
@@ -4797,11 +5116,12 @@
     "cleanName": "YunJhe",
     "languageName": "Chinese",
     "country": "Taiwan",
-    "flag": "🇹🇼"
+    "flag": "🇹🇼",
+    "countryCode": "TW"
   },
   {
     "name": "zu-ZA-ThandoNeural",
-    "displayName": "Thando · 🌐 zu-ZA (Female)",
+    "displayName": "Thando · South Africa (Female)",
     "friendlyName": "Microsoft Thando Online (Natural) - Zulu (South Africa)",
     "lang": "zu-ZA",
     "gender": "Female",
@@ -4810,13 +5130,14 @@
     "localService": false,
     "voiceURI": "zu-ZA-ThandoNeural",
     "cleanName": "Thando",
-    "languageName": "ZU",
-    "country": "zu-ZA",
-    "flag": "🌐"
+    "languageName": "Zulu",
+    "country": "South Africa",
+    "flag": "🌐",
+    "countryCode": "ZA"
   },
   {
     "name": "zu-ZA-ThembaNeural",
-    "displayName": "Themba · 🌐 zu-ZA (Male)",
+    "displayName": "Themba · South Africa (Male)",
     "friendlyName": "Microsoft Themba Online (Natural) - Zulu (South Africa)",
     "lang": "zu-ZA",
     "gender": "Male",
@@ -4825,8 +5146,9 @@
     "localService": false,
     "voiceURI": "zu-ZA-ThembaNeural",
     "cleanName": "Themba",
-    "languageName": "ZU",
-    "country": "zu-ZA",
-    "flag": "🌐"
+    "languageName": "Zulu",
+    "country": "South Africa",
+    "flag": "🌐",
+    "countryCode": "ZA"
   }
 ]

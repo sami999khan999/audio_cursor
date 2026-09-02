@@ -9,12 +9,13 @@ class DecorationController {
 
     this._wordDecorationType = vscode.window.createTextEditorDecorationType({
       backgroundColor: new vscode.ThemeColor('editor.findMatchHighlightBackground'),
-      borderRadius: '3px'
+      borderRadius: '3px',
+      border: '1px solid var(--vscode-editor-findMatchHighlightBorder, rgba(234, 92, 0, 0.4))'
     });
 
     this._sentenceDecorationType = vscode.window.createTextEditorDecorationType({
       backgroundColor: new vscode.ThemeColor('editor.rangeHighlightBackground'),
-      borderRadius: '2px'
+      borderRadius: '3px'
     });
 
     this._lastRevealTime = 0;

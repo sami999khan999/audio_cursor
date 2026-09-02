@@ -55,7 +55,7 @@ And when a page won't let you select cleanly, `Alt+S` drops a real caret into it
 | 🎞️ **Live word ticker** | A sliding strip highlights the exact word being spoken in real-time. |
 | 🎚️ **Scrub to seek** | Drag the progress bar to jump anywhere in the text — playback restarts smoothly from that word. |
 | 🧲 **Draggable + edge snap** | Move the player anywhere; release and it springs to the nearest screen edge. |
-| ⌨️ **Keyboard shortcuts** | Configurable hotkeys for playback (`Alt+P`), MP3 download (`Alt+D`), text cursor (`Alt+S`), and auto-play selection. |
+| ⌨️ **Keyboard shortcuts** | Rebindable hotkeys for playback (`Alt+P`), MP3 download (`Alt+D`), text cursor (`Alt+S`), and auto-play on select (`Ctrl+Alt`) — open the popup's **Shortcuts** tab, click a shortcut and press the keys you want. |
 | ✍️ **Text cursor** | `Alt+S` drops a real blinking caret into the page. Arrows move, `Shift` selects, `Ctrl+C` copies — any page reads like a text editor. |
 | 📚 **Handles huge selections** | Text is split into sentence-aligned chunks and streamed through an offscreen document queue, so long articles never cut off. |
 | 🎨 **Modern dark UI** | Clean matte dark popup with custom sliders, preset speed pills (`0.8×`–`2.0×`), pitch tuning, and voice library browser. |
@@ -88,7 +88,7 @@ node build.js          # bundles src/ → dist/
 |---|---|
 | **Start listening** | Select text → click ▶ on the floating player, or press `Alt+P` |
 | **Download MP3 audio** | Press `Alt+D` while text is selected |
-| **Auto-play selection** | Select text while holding `Ctrl+Alt` |
+| **Auto-play selection** | Select text while holding `Ctrl+Alt` (rebindable in the popup's Shortcuts tab) |
 | **Play / pause** | `Alt+P` or click the player button |
 | **Repeat / loop** | Toggle "Repeat playback" in popup settings |
 | **Seek** | Drag anywhere along the progress bar |

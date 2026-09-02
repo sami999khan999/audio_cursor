@@ -142,13 +142,36 @@ class AudioCursorViewProvider {
     const htmlPath = path.join(this._extensionUri.fsPath, 'src', 'view', 'player.html');
     let html = fs.readFileSync(htmlPath, 'utf8');
 
+    const cssPath = path.join(this._extensionUri.fsPath, 'src', 'view', 'player.css');
+    let cssContent = '';
+    try {
+      cssContent = fs.readFileSync(cssPath, 'utf8');
+    } catch (_) {}
+
+    const jsPath = path.join(this._extensionUri.fsPath, 'src', 'view', 'player.js');
+    let jsContent = '';
+    try {
+      jsContent = fs.readFileSync(jsPath, 'utf8');
+    } catch (_) {}
+
     const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'src', 'view', 'player.css'));
     const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'src', 'view', 'player.js'));
 
     html = html.replace(/#{cspSource}/g, webview.cspSource);
     html = html.replace(/#{nonce}/g, nonce);
-    html = html.replace(/#{styleUri}/g, styleUri.toString());
-    html = html.replace(/#{scriptUri}/g, scriptUri.toString());
+    html = html.replace(/#{styleUri}/g, `${styleUri.toString()}?v=${Date.now()}`);
+    html = html.replace(/#{scriptUri}/g, `${scriptUri.toString()}?v=${Date.now()}`);
+
+    if (cssContent) {
+      html = html.replace('</head>', `<style>${cssContent}</style></head>`);
+    }
+
+    if (jsContent) {
+      html = html.replace(
+        /<script nonce="[^"]*" src="[^"]*"><\/script>/,
+        `<script nonce="${nonce}">${jsContent}</script>`
+      );
+    }
 
     return html;
   }

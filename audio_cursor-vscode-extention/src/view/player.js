@@ -68,6 +68,7 @@
   const elSourceName = document.getElementById('source-name');
   const elSourceSub = document.getElementById('source-sub');
   const elSourceKind = document.getElementById('source-kind');
+  const elVisualizerBars = document.getElementById('visualizer-bars');
 
   const elScrubTrack = document.getElementById('scrub-track');
   const elScrubFill = document.getElementById('scrub-fill');
@@ -78,6 +79,7 @@
   const elTextContainer = document.getElementById('text-container');
   const elTextFileName = document.getElementById('text-filename');
   const elTextStats = document.getElementById('text-stats');
+  const elCopyTextBtn = document.getElementById('btn-copy-text');
 
   // Voice Card & Modal Elements
   const elVoiceCard = document.getElementById('btn-open-voice-modal');
@@ -91,6 +93,7 @@
   const elVoiceModal = document.getElementById('voice-modal');
   const elCloseVoiceModal = document.getElementById('btn-close-voice-modal');
   const elVoiceSearchInput = document.getElementById('voice-search-input');
+  const elClearSearchBtn = document.getElementById('btn-clear-search');
   const elVoiceModalList = document.getElementById('voice-modal-list');
   const elModalVoiceCount = document.getElementById('modal-voice-count');
 
@@ -106,6 +109,7 @@
   // SVG Icons
   const SVG_FILE = '<svg viewBox="0 0 16 16"><path d="M9 1H3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6l-5-5zm0 1.5L12.5 6H9V2.5zM3 14V2h5v5h5v7H3z"/></svg>';
   const SVG_TERMINAL = '<svg viewBox="0 0 16 16"><path d="M1.5 2h13a.5.5 0 0 1 .5.5v11a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5zM2 13h12V3H2v10zm1.35-7.85l.7-.7L7.2 7.6a.5.5 0 0 1 0 .7l-3.15 3.16-.7-.71L6.15 8 3.35 5.15zM8 10.5h4v1H8v-1z"/></svg>';
+  const SVG_PREVIEW = '<svg viewBox="0 0 16 16"><path d="M8 3C4.5 3 1.7 5.2 1 8c.7 2.8 3.5 5 7 5s6.3-2.2 7-5c-.7-2.8-3.5-5-7-5zm0 8.5A3.5 3.5 0 1 1 8 4.5a3.5 3.5 0 0 1 0 7zm0-5.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>';
   const SVG_PLAY = '<svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5-9-5.5z"/></svg>';
   const SVG_PAUSE = '<svg viewBox="0 0 16 16"><path d="M3.5 2h3v12h-3V2zm6 0h3v12h-3V2z"/></svg>';
 
@@ -150,21 +154,28 @@
     if (!voiceName) {
       return {
         name: '',
-        cleanName: 'Default Voice',
-        country: 'System Default',
-        flag: '💻',
-        gender: 'Local',
-        isNeural: false
+        cleanName: 'Jenny (US)',
+        country: 'United States',
+        languageName: 'English',
+        countryCode: 'US',
+        flag: 'US',
+        gender: 'Female',
+        isNeural: true
       };
     }
     const found = allVoices.find(v => v.name === voiceName || v.voiceURI === voiceName);
     if (found) return found;
 
+    const langParts = voiceName.split('-');
+    const countryCode = langParts[1] ? langParts[1].substring(0, 2).toUpperCase() : 'AI';
+
     return {
       name: voiceName,
-      cleanName: voiceName.replace(/^[a-z]{2,3}-[A-Z]{2,4}-/, '').replace(/Neural$/, ''),
-      country: voiceName.startsWith('en-') ? 'English' : 'Natural AI',
-      flag: '✨',
+      cleanName: voiceName.replace(/^[a-z]{2,3}-[A-Z]{2,4}-/, '').replace(/Neural$/, '').replace(/Multilingual$/, ' (Multi)'),
+      country: voiceName.startsWith('en-') ? 'United States' : 'Natural AI',
+      languageName: 'English',
+      countryCode: countryCode,
+      flag: countryCode,
       gender: 'AI',
       isNeural: voiceName.includes('Neural')
     };
@@ -172,18 +183,18 @@
 
   function updateVoiceCardUI() {
     const v = getVoiceInfo(currentSettings.voice);
-    if (elCurrentVoiceFlag) elCurrentVoiceFlag.textContent = v.flag || (v.isNeural ? '✨' : '💻');
+    if (elCurrentVoiceFlag) elCurrentVoiceFlag.textContent = v.countryCode || 'US';
     if (elCurrentVoiceName) elCurrentVoiceName.textContent = v.cleanName || v.name || 'Default';
-    if (elCurrentVoiceCountry) elCurrentVoiceCountry.textContent = v.country || v.lang || '';
-    if (elCurrentVoiceGender) elCurrentVoiceGender.textContent = v.gender || (v.isNeural ? 'Neural' : 'Local');
+    if (elCurrentVoiceCountry) elCurrentVoiceCountry.textContent = v.country || 'United States';
+    if (elCurrentVoiceGender) elCurrentVoiceGender.textContent = v.gender || (v.isNeural ? 'Female' : 'Local');
 
     if (elCurrentVoiceBadge) {
       elCurrentVoiceBadge.textContent = v.isNeural ? 'Natural AI' : 'Offline';
-      elCurrentVoiceBadge.className = 'tag ' + (v.isNeural ? 'tag-neural' : '');
+      elCurrentVoiceBadge.className = 'tag ' + (v.isNeural ? 'tag-neural' : 'tag-offline');
     }
 
     if (elVoiceCountSummary) {
-      elVoiceCountSummary.textContent = `${allVoices.length} voices`;
+      elVoiceCountSummary.textContent = `${allVoices.length || 325} voices`;
     }
   }
 
@@ -232,6 +243,10 @@
         if (activeLangFilter === 'fr' && !v.lang.startsWith('fr-')) return false;
         if (activeLangFilter === 'de' && !v.lang.startsWith('de-')) return false;
         if (activeLangFilter === 'ja' && !v.lang.startsWith('ja-')) return false;
+        if (activeLangFilter === 'zh' && !v.lang.startsWith('zh-')) return false;
+        if (activeLangFilter === 'it' && !v.lang.startsWith('it-')) return false;
+        if (activeLangFilter === 'pt' && !v.lang.startsWith('pt-')) return false;
+        if (activeLangFilter === 'ko' && !v.lang.startsWith('ko-')) return false;
       }
 
       // 3. Gender Filter
@@ -252,7 +267,7 @@
   function renderVoiceModalList() {
     if (!elVoiceModalList) return;
     const filtered = getFilteredVoices();
-    if (elModalVoiceCount) elModalVoiceCount.textContent = `${filtered.length} of ${allVoices.length}`;
+    if (elModalVoiceCount) elModalVoiceCount.textContent = `${filtered.length} of ${allVoices.length || 325}`;
 
     elVoiceModalList.innerHTML = '';
 
@@ -274,25 +289,31 @@
       itemEl.className = 'voice-list-item' + (isSelected ? ' selected' : '');
 
       const genderClass = v.gender === 'Female' ? 'tag-female' : (v.gender === 'Male' ? 'tag-male' : '');
-      const typeBadge = v.isNeural ? '<span class="tag tag-neural">Natural AI</span>' : '<span class="tag">Offline</span>';
+      const typeBadge = v.isNeural ? '<span class="tag tag-neural">Natural AI</span>' : '<span class="tag tag-offline">Offline</span>';
       const genderBadge = v.gender ? `<span class="tag ${genderClass}">${v.gender}</span>` : '';
+      const checkmark = isSelected ? '<span class="selected-checkmark" title="Active Voice">✓ Selected</span>' : '';
+      const cCode = v.countryCode || (v.lang ? (v.lang.split('-')[1] || v.lang.substring(0,2)).toUpperCase() : 'AI');
 
       itemEl.innerHTML = `
         <div class="voice-item-left">
-          <span style="font-size: 16px;">${v.flag || '✨'}</span>
+          <div class="voice-avatar-mini"><span class="avatar-code">${cCode}</span></div>
           <div class="voice-item-details">
             <div class="voice-item-name">
-              <span>${v.cleanName || v.name}</span>
+              <span class="voice-name-title">${v.cleanName || v.name}</span>
               ${typeBadge}
               ${genderBadge}
+              ${checkmark}
             </div>
             <div class="voice-item-sub">
-              ${v.country || v.lang || ''} • ${v.languageName || v.lang}
+              ${v.country || ''} • ${v.languageName || v.lang || ''}
             </div>
           </div>
         </div>
         <div class="voice-item-actions">
-          <button class="btn-preview" data-voice="${v.name}" title="Listen to a voice sample">▶ Preview</button>
+          <button class="btn-preview" data-voice="${v.name}" title="Listen to a voice sample">
+            <svg class="preview-svg" viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5-9-5.5z"/></svg>
+            <span>Preview</span>
+          </button>
         </div>
       `;
 
@@ -305,7 +326,7 @@
       if (previewBtn) {
         previewBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          previewVoice(v);
+          previewVoice(v, previewBtn);
         });
       }
 
@@ -322,15 +343,27 @@
     closeVoiceModal();
   }
 
+  let currentPreviewBtn = null;
+
   function stopPreviewAudio() {
+    if (currentPreviewBtn) {
+      currentPreviewBtn.classList.remove('playing');
+      currentPreviewBtn.innerHTML = '<svg class="preview-svg" viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5-9-5.5z"/></svg><span>Preview</span>';
+      currentPreviewBtn = null;
+    }
     stopCurrentAudioSource();
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
   }
 
-  function previewVoice(voice) {
+  function previewVoice(voice, btnEl) {
     stopPreviewAudio();
+    if (btnEl) {
+      currentPreviewBtn = btnEl;
+      btnEl.classList.add('playing');
+      btnEl.innerHTML = '<span style="font-size:10px;">🔊</span><span>Playing...</span>';
+    }
     const sampleText = `Hi! I am ${voice.cleanName || voice.name}, an audio voice for your editor.`;
 
     if (voice.isNeural) {
@@ -350,6 +383,12 @@
         const localList = window.speechSynthesis.getVoices() || [];
         const match = localList.find(v => v.name === voice.name);
         if (match) utt.voice = match;
+        utt.onend = () => {
+          stopPreviewAudio();
+        };
+        utt.onerror = () => {
+          stopPreviewAudio();
+        };
         window.speechSynthesis.speak(utt);
       }
     }
@@ -486,38 +525,89 @@
   if (elVoiceSearchInput) {
     elVoiceSearchInput.addEventListener('input', () => {
       voiceSearchQuery = elVoiceSearchInput.value.trim();
+      if (elClearSearchBtn) {
+        elClearSearchBtn.style.display = elVoiceSearchInput.value ? 'flex' : 'none';
+      }
       renderVoiceModalList();
     });
   }
 
-  // Filter Chips Click Listeners
-  document.querySelectorAll('#filter-chips-lang .filter-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      document.querySelectorAll('#filter-chips-lang .filter-chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      activeLangFilter = chip.dataset.filterLang || 'all';
-      renderVoiceModalList();
+  if (elClearSearchBtn) {
+    elClearSearchBtn.addEventListener('click', () => {
+      if (elVoiceSearchInput) {
+        elVoiceSearchInput.value = '';
+        voiceSearchQuery = '';
+        elClearSearchBtn.style.display = 'none';
+        elVoiceSearchInput.focus();
+        renderVoiceModalList();
+      }
     });
+  }
+
+  if (elCopyTextBtn) {
+    elCopyTextBtn.addEventListener('click', () => {
+      if (currentSnapshot && currentSnapshot.text) {
+        navigator.clipboard.writeText(currentSnapshot.text).then(() => {
+          const originalHTML = elCopyTextBtn.innerHTML;
+          elCopyTextBtn.innerHTML = '<span style="font-size:11px; color:#22c55e; font-weight:bold;">✓</span>';
+          setTimeout(() => {
+            elCopyTextBtn.innerHTML = originalHTML;
+          }, 1500);
+        }).catch(() => {});
+      }
+    });
+  }
+
+  // Custom Filter Dropdowns (Matching Browser Extension)
+  function closeAllDropdowns() {
+    document.querySelectorAll('.custom-dropdown').forEach(dd => dd.classList.remove('open'));
+  }
+
+  function setupCustomDropdown(dropdownId, onSelect) {
+    const dd = document.getElementById(dropdownId);
+    if (!dd) return;
+    const btn = dd.querySelector('.custom-dropdown-btn');
+    const valSpan = dd.querySelector('.custom-dropdown-val');
+    const items = dd.querySelectorAll('.custom-dropdown-item');
+
+    if (btn) {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const wasOpen = dd.classList.contains('open');
+        closeAllDropdowns();
+        if (!wasOpen) dd.classList.add('open');
+      });
+    }
+
+    items.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        items.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        if (valSpan) valSpan.innerHTML = item.innerHTML;
+        dd.classList.remove('open');
+        if (onSelect) onSelect(item.dataset.val);
+      });
+    });
+  }
+
+  setupCustomDropdown('dropdown-lang', (val) => {
+    activeLangFilter = val || 'all';
+    renderVoiceModalList();
   });
 
-  document.querySelectorAll('#filter-chips-gender .filter-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      if (chip.dataset.filterGender) {
-        document.querySelectorAll('#filter-chips-gender [data-filter-gender]').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        activeGenderFilter = chip.dataset.filterGender;
-      } else if (chip.dataset.filterType) {
-        if (chip.classList.contains('active')) {
-          chip.classList.remove('active');
-          activeTypeFilter = 'all';
-        } else {
-          document.querySelectorAll('#filter-chips-gender [data-filter-type]').forEach(c => c.classList.remove('active'));
-          chip.classList.add('active');
-          activeTypeFilter = chip.dataset.filterType;
-        }
-      }
-      renderVoiceModalList();
-    });
+  setupCustomDropdown('dropdown-gender', (val) => {
+    activeGenderFilter = val || 'all';
+    renderVoiceModalList();
+  });
+
+  setupCustomDropdown('dropdown-type', (val) => {
+    activeTypeFilter = val || 'all';
+    renderVoiceModalList();
+  });
+
+  document.addEventListener('click', () => {
+    closeAllDropdowns();
   });
 
   // Speed Pills Click Listeners
@@ -530,9 +620,22 @@
     });
   });
 
+  function updateRangeFill(slider) {
+    if (!slider) return;
+    const min = parseFloat(slider.min) || 0;
+    const max = parseFloat(slider.max) || 100;
+    const val = parseFloat(slider.value) || 0;
+    const percent = Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100));
+    slider.style.setProperty('--val', `${percent}%`);
+    slider.style.background = `linear-gradient(to right, var(--vscode-button-background, #007acc) 0%, var(--vscode-button-background, #007acc) ${percent}%, rgba(128, 128, 128, 0.25) ${percent}%, rgba(128, 128, 128, 0.25) 100%)`;
+  }
+
   function setSpeed(speedVal) {
     currentSettings.rate = speedVal;
-    if (elRateSlider) elRateSlider.value = speedVal;
+    if (elRateSlider) {
+      elRateSlider.value = speedVal;
+      updateRangeFill(elRateSlider);
+    }
     if (elRateVal) elRateVal.textContent = speedVal.toFixed(1) + 'x';
     document.querySelectorAll('.speed-pill').forEach(p => {
       p.classList.toggle('active', parseFloat(p.dataset.speed) === speedVal);
@@ -572,6 +675,13 @@
     post({ type: 'command', action: 'nextSentence' });
   });
 
+  const elKeybindingsBtn = document.getElementById('btn-keybindings');
+  if (elKeybindingsBtn) {
+    elKeybindingsBtn.addEventListener('click', () => {
+      post({ type: 'command', action: 'openKeybindings' });
+    });
+  }
+
   if (elSettingsLink) {
     elSettingsLink.addEventListener('click', (e) => {
       e.preventDefault();
@@ -605,30 +715,40 @@
     elScrubTrack.classList.remove('scrubbing');
   });
 
-  elRateSlider.addEventListener('input', () => {
-    const val = parseFloat(elRateSlider.value);
-    elRateVal.textContent = val.toFixed(1) + 'x';
-    document.querySelectorAll('.speed-pill').forEach(p => {
-      p.classList.toggle('active', parseFloat(p.dataset.speed) === val);
+  if (elRateSlider) {
+    updateRangeFill(elRateSlider);
+    elRateSlider.addEventListener('input', () => {
+      const val = parseFloat(elRateSlider.value);
+      elRateVal.textContent = val.toFixed(1) + 'x';
+      updateRangeFill(elRateSlider);
+      document.querySelectorAll('.speed-pill').forEach(p => {
+        p.classList.toggle('active', parseFloat(p.dataset.speed) === val);
+      });
     });
-  });
 
-  elRateSlider.addEventListener('change', () => {
-    const val = parseFloat(elRateSlider.value);
-    currentSettings.rate = val;
-    post({ type: 'setSetting', key: 'rate', value: val });
-  });
+    elRateSlider.addEventListener('change', () => {
+      const val = parseFloat(elRateSlider.value);
+      currentSettings.rate = val;
+      updateRangeFill(elRateSlider);
+      post({ type: 'setSetting', key: 'rate', value: val });
+    });
+  }
 
-  elPitchSlider.addEventListener('input', () => {
-    const val = parseFloat(elPitchSlider.value);
-    elPitchVal.textContent = val.toFixed(1);
-  });
+  if (elPitchSlider) {
+    updateRangeFill(elPitchSlider);
+    elPitchSlider.addEventListener('input', () => {
+      const val = parseFloat(elPitchSlider.value);
+      elPitchVal.textContent = val.toFixed(1);
+      updateRangeFill(elPitchSlider);
+    });
 
-  elPitchSlider.addEventListener('change', () => {
-    const val = parseFloat(elPitchSlider.value);
-    currentSettings.pitch = val;
-    post({ type: 'setSetting', key: 'pitch', value: val });
-  });
+    elPitchSlider.addEventListener('change', () => {
+      const val = parseFloat(elPitchSlider.value);
+      currentSettings.pitch = val;
+      updateRangeFill(elPitchSlider);
+      post({ type: 'setSetting', key: 'pitch', value: val });
+    });
+  }
 
   elHighlightWord.addEventListener('change', () => {
     currentSettings.highlightWord = elHighlightWord.checked;
@@ -727,10 +847,14 @@
 
   function updateSourceCard(snapshot) {
     if (!elSourceName) return;
-    const isTerminal = snapshot && snapshot.source === 'terminal';
+    const source = (snapshot && snapshot.source) || 'editor';
+    const isTerminal = source === 'terminal';
+    const isPreview = source === 'preview';
     const words = (snapshot && snapshot.wordCount) || 0;
 
-    if (elSourceIcon) elSourceIcon.innerHTML = isTerminal ? SVG_TERMINAL : SVG_FILE;
+    if (elSourceIcon) {
+      elSourceIcon.innerHTML = isTerminal ? SVG_TERMINAL : (isPreview ? SVG_PREVIEW : SVG_FILE);
+    }
     elSourceName.textContent = (snapshot && snapshot.fileName) || 'Selection';
     elSourceName.title = elSourceName.textContent;
 
@@ -741,8 +865,8 @@
     }
 
     if (elSourceKind) {
-      elSourceKind.textContent = isTerminal ? 'Terminal' : 'Editor';
-      elSourceKind.className = 'tag' + (isTerminal ? ' tag-neural' : '');
+      elSourceKind.textContent = isTerminal ? 'Terminal' : (isPreview ? 'Preview' : 'Editor');
+      elSourceKind.className = 'tag ' + (isTerminal ? 'tag-terminal' : (isPreview ? 'tag-preview' : 'tag-editor'));
     }
   }
 
@@ -772,6 +896,9 @@
 
   function updateStatusUI(status) {
     currentStatus = status;
+    if (elVisualizerBars) {
+      elVisualizerBars.classList.toggle('active', status === 'playing');
+    }
     if (status === 'playing') {
       elPlayPauseIcon.innerHTML = SVG_PAUSE;
       elPlayPauseText.textContent = 'Pause';
@@ -782,13 +909,13 @@
       elPlayPauseIcon.innerHTML = SVG_PLAY;
       elPlayPauseText.textContent = 'Resume';
       elStopBtn.disabled = false;
-      elStatusBadge.className = 'status-badge';
+      elStatusBadge.className = 'status-badge paused';
       elStatusText.textContent = `Paused ${Math.round(currentPercent)}%`;
     } else {
       elPlayPauseIcon.innerHTML = SVG_PLAY;
       elPlayPauseText.textContent = 'Play';
       elStopBtn.disabled = status === 'idle' || status === 'stopped';
-      elStatusBadge.className = 'status-badge';
+      elStatusBadge.className = 'status-badge ready';
       elStatusText.textContent = 'Ready';
     }
   }
@@ -1086,6 +1213,7 @@
           if (elRateSlider) {
             elRateSlider.value = currentSettings.rate;
             elRateVal.textContent = currentSettings.rate.toFixed(1) + 'x';
+            updateRangeFill(elRateSlider);
             document.querySelectorAll('.speed-pill').forEach(p => {
               p.classList.toggle('active', parseFloat(p.dataset.speed) === currentSettings.rate);
             });
@@ -1093,6 +1221,7 @@
           if (elPitchSlider) {
             elPitchSlider.value = currentSettings.pitch;
             elPitchVal.textContent = currentSettings.pitch.toFixed(1);
+            updateRangeFill(elPitchSlider);
           }
           if (elHighlightWord) elHighlightWord.checked = currentSettings.highlightWord;
           if (elFollowCursor) elFollowCursor.checked = currentSettings.followCursor;
@@ -1124,6 +1253,7 @@
           if (elRateSlider) {
             elRateSlider.value = currentSettings.rate;
             elRateVal.textContent = currentSettings.rate.toFixed(1) + 'x';
+            updateRangeFill(elRateSlider);
             document.querySelectorAll('.speed-pill').forEach(p => {
               p.classList.toggle('active', parseFloat(p.dataset.speed) === currentSettings.rate);
             });
@@ -1131,6 +1261,7 @@
           if (elPitchSlider) {
             elPitchSlider.value = currentSettings.pitch;
             elPitchVal.textContent = currentSettings.pitch.toFixed(1);
+            updateRangeFill(elPitchSlider);
           }
           if (elHighlightWord) elHighlightWord.checked = currentSettings.highlightWord;
           if (elFollowCursor) elFollowCursor.checked = currentSettings.followCursor;
@@ -1151,6 +1282,8 @@
 
         if (msg && msg.reason === 'selectionChanged') {
           showNotice('Stopped — new text selected. Press Play or Alt+P to read it.');
+        } else if (msg && msg.reason === 'previewDocument') {
+          showNotice('Reading the whole document. To read part of it, select in the preview and press Ctrl+C.');
         } else {
           showNotice('');
         }
@@ -1170,7 +1303,6 @@
 
       case 'neuralAudio': {
         if (msg.sessionId && msg.sessionId.startsWith('preview-')) {
-          stopPreviewAudio();
           const ctx = getAudioContext();
           if (ctx) {
             ctx.resume().then(async () => {
@@ -1183,10 +1315,15 @@
                 currentSourceNode = source;
                 source.onended = () => {
                   if (currentSourceNode === source) currentSourceNode = null;
+                  stopPreviewAudio();
                 };
                 source.start(0);
-              } catch (_) {}
-            }).catch(() => {});
+              } catch (_) {
+                stopPreviewAudio();
+              }
+            }).catch(() => {
+              stopPreviewAudio();
+            });
           }
           return;
         }

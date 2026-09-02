@@ -2,7 +2,7 @@
 
 **Audio Cursor** brings intelligent text-to-speech reading with synchronized editor word highlighting directly into your VS Code environment.
 
-Whether you are proofreading code comments, reviewing documentation, or listening to code aloud for accessibility, Audio Cursor lets you listen comfortably with zero external cloud dependencies.
+Whether you are proofreading code comments, reviewing documentation, listening to terminal output, or listening to code aloud for accessibility, Audio Cursor lets you listen comfortably with both high-fidelity natural AI voices and offline system voices.
 
 ---
 
@@ -10,29 +10,29 @@ Whether you are proofreading code comments, reviewing documentation, or listenin
 
 ### 1. Two Convenient Surfaces
 * **Status Bar Item**: Displays play/pause status, speech progress percentage (`42%`), estimated listening time, and word count. One click starts or pauses reading.
-* **Activity Bar & Sidebar Player**: Full-featured player with scrub bar, interactive text preview, sentence navigation, and customizable speech settings.
+* **Activity Bar & Sidebar Player**: Full-featured player with scrub bar, interactive text preview, sentence navigation, preset speed pills (`0.8×`–`2.0×`), and voice selector with language/gender/type filter dropdowns.
 
 ### 2. Synchronized Word Highlighting
 * The currently spoken word is highlighted in real-time in the active editor.
 * **Follow Cursor / Auto-Scroll**: Keeps the spoken word in view without fighting manual scrolls.
 
-### 3. Reads Any Text in VS Code — Including the Terminal
-* Select any block of text in any editor — files, untitled buffers, diffs, output channels, notebook cells, remote documents.
-* **Terminal**: select output in an integrated terminal and press `Alt+P`, click **Read terminal selection** in the sidebar player, or run *Audio Cursor: Read Terminal Selection*. (VS Code exposes no terminal-selection event, so reading terminal text is always an explicit action — it cannot preview as you select.)
-* If nothing is selected, `Alt+P` starts reading from the cursor position to the end of the file.
+### 3. Reads Any Text in VS Code — Including Terminal & Markdown
+* **Code & Documents**: Select any block of text in any editor — files, untitled buffers, diffs, output channels, notebook cells, and remote documents.
+* **Terminal**: Select output in an integrated terminal and press `Alt+P` or click **Read terminal selection** in the sidebar player.
+* **Markdown as Prose**: Reads markdown files and preview tabs naturally without reading raw syntax symbols.
+* **Cursor-to-EOF**: If nothing is selected, `Alt+P` starts reading smoothly from the cursor position to the end of the file.
 
-### 3b. Selection Never Auto-Plays
-* Selecting new text updates the player preview and **stops** whatever was reading, so the old text never keeps talking over you.
-* Playback only ever starts when you ask for it: `Alt+P`, the sidebar **Play** button, a command, or clicking a word in the preview.
+### 4. 340+ Natural AI & Offline Voices
+* Browse and search over 340 natural AI neural voices across dozens of languages and accents, plus all offline system voices.
+* Filter by Language, Gender, and Engine Type using the compact filter dropdowns.
 
-### 4. Interactive Text Preview & Seeking
+### 5. Interactive Text Preview & Seeking
 * Click any word in the sidebar text pane or drag the scrub bar to jump playback instantly to that exact position.
-* Navigate sentence-by-sentence using **Previous Sentence** and **Next Sentence** controls.
+* Navigate sentence-by-sentence using **Previous Sentence** (`Alt+[`) and **Next Sentence** (`Alt+]`) controls.
 
-### 5. Highly Customizable Settings
-* Choose from all installed system and browser TTS voices.
-* Adjust playback speed (0.5x – 2.0x) and pitch in real-time.
-* Settings automatically sync across your machines via VS Code Settings Sync.
+### 6. Customizable Speech Settings
+* Adjust playback speed (`0.5x` – `2.0x`) with quick preset pills (`0.8x`, `1.0x`, `1.2x`, `1.5x`, `2.0x`) and fine-tune voice pitch.
+* Native VS Code theme matching using official theme tokens (`--vscode-*`).
 
 ---
 
@@ -43,6 +43,8 @@ Whether you are proofreading code comments, reviewing documentation, or listenin
 | `Alt+P` | Toggle Play / Pause | While focused in editor or during playback |
 | `Alt+P` | Read Terminal Selection | While focused in an integrated terminal |
 | `Alt+Shift+P` | Stop | While playing or paused |
+| `Alt+[` | Previous Sentence | During playback |
+| `Alt+]` | Next Sentence | During playback |
 
 ---
 
@@ -82,6 +84,7 @@ Configure Audio Cursor via **Settings** (`Ctrl+,` / `Cmd+,`) under `audioCursor`
 | `audioCursor.statusBar` | string | `"auto"` | Status bar visibility: `auto`, `always`, or `never`. |
 | `audioCursor.autoRevealPanel` | boolean | `true` | Automatically reveal sidebar panel when playback starts. |
 | `audioCursor.stopOnDocumentChange` | boolean | `false` | Stop playback if document is modified during reading. |
+| `audioCursor.readMarkdownAsProse` | boolean | `true` | Speak Markdown as prose without reciting markdown syntax. |
 | `audioCursor.chunkSize` | number | `300` | Target character length per speech chunk. |
 | `audioCursor.queueAhead` | number | `12` | Number of chunks queued ahead in speech engine. |
 | `audioCursor.sanitizeCode` | boolean | `false` | Clean up excessive code punctuation before speaking. |
@@ -91,5 +94,5 @@ Configure Audio Cursor via **Settings** (`Ctrl+,` / `Cmd+,`) under `audioCursor`
 ## Architecture & Technology
 
 Audio Cursor uses a zero-runtime-dependency architecture:
-* The VS Code Extension Host manages document selection snapshots, token chunking, session lifecycle, status bar updates, and editor decorations.
-* The Sidebar Webview (`WebviewViewProvider` with `retainContextWhenHidden: true`) runs the Web Speech API (`speechSynthesis`) to deliver offline, low-latency audio output with word-level boundary synchronization (`utterance.onboundary`).
+* **VS Code Extension Host**: Manages document selection snapshots, token chunking, session lifecycle, status bar updates, and editor decorations.
+* **Sidebar Webview**: Runs the audio engine with real-time neural WebSocket audio streaming and Web Speech API fallback, delivering low-latency audio output with word-level boundary synchronization.

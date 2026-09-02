@@ -24,9 +24,12 @@
     <div class="section-content">
       <!-- Empty State -->
       <div class="empty-state" id="empty-state">
-        <svg class="empty-state-icon" viewBox="0 0 16 16">
-          <path d="M11.5 2H4.5A1.5 1.5 0 0 0 3 3.5v9A1.5 1.5 0 0 0 4.5 14h7a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 11.5 2zm.5 10.5a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v9zM5 5h6v1H5V5zm0 2h6v1H5V7zm0 2h4v1H5V9z"/>
-        </svg>
+        <div class="empty-state-icon-wrapper">
+          <svg class="empty-state-icon" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+          </svg>
+          <div class="empty-state-pulse"></div>
+        </div>
         <div class="empty-state-title">Nothing queued</div>
         <div class="empty-state-text">
           Select text in any editor or terminal, then press <kbd>Alt+P</kbd>.<br>
@@ -38,11 +41,12 @@
       <div class="controls-container" id="player-content" style="display: none;">
         <!-- User Gesture Activation Banner -->
         <div class="gesture-banner" id="gesture-banner" style="display: none;">
+          <div class="gesture-icon">🔊</div>
           <div class="gesture-info">
-            <div class="gesture-title">🔊 Click to start playback</div>
-            <div class="gesture-subtitle">Click here once to allow audio in editor</div>
+            <div class="gesture-title">Audio Ready — Click to Start</div>
+            <div class="gesture-subtitle">Browser requires a single click to allow speech</div>
           </div>
-          <button class="btn btn-primary-play" id="btn-gesture-activate" style="padding: 4px 10px; font-size: 11px;">Play ▶</button>
+          <button class="btn btn-primary-play btn-gesture-btn" id="btn-gesture-activate">Play ▶</button>
         </div>
 
         <!-- Why playback stopped / what will be read next -->
@@ -51,52 +55,61 @@
           <span id="player-notice-text"></span>
         </div>
 
-        <!-- What is queued -->
+        <!-- Source Card & Visualizer -->
         <div class="source-card">
           <span class="source-icon" id="source-icon"></span>
           <div class="source-details">
             <div class="source-name" id="source-name">Selection</div>
             <div class="source-sub" id="source-sub">0 words</div>
           </div>
+          <!-- Animated Audio Visualizer Bars -->
+          <div class="visualizer-bars" id="visualizer-bars" title="Audio Waveform">
+            <span class="bar bar-1"></span>
+            <span class="bar bar-2"></span>
+            <span class="bar bar-3"></span>
+            <span class="bar bar-4"></span>
+            <span class="bar bar-5"></span>
+          </div>
           <span class="tag" id="source-kind">Editor</span>
         </div>
 
-        <div class="button-bar">
-          <button class="btn btn-secondary btn-icon" id="btn-prev" title="Previous Sentence">
-            <svg viewBox="0 0 16 16"><path d="M11 3.5v9l-6-4.5 6-4.5zM4 3h1.5v10H4V3z"/></svg>
-          </button>
-          <button class="btn btn-primary-play" id="btn-play-pause" title="Play / Pause (Alt+P)">
-            <span class="btn-icon" id="icon-play-pause" style="width: 16px; height: 16px; padding: 0;">
-              <svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5-9-5.5z"/></svg>
-            </span>
-            <span id="text-play-pause">Play</span>
-          </button>
-          <button class="btn btn-secondary btn-icon" id="btn-stop" title="Stop Playback" disabled>
-            <svg viewBox="0 0 16 16"><path d="M3.5 3.5h9v9h-9v-9z"/></svg>
-          </button>
-          <button class="btn btn-secondary btn-icon" id="btn-next" title="Next Sentence">
-            <svg viewBox="0 0 16 16"><path d="M5 3.5v9l6-4.5-6-4.5zM10.5 3H12v10h-1.5V3z"/></svg>
-          </button>
-        </div>
-
+        <!-- Scrub Bar -->
         <div class="scrub-container">
           <div class="scrub-bar-track" id="scrub-track" title="Click or drag to seek">
             <div class="scrub-bar-fill" id="scrub-fill"></div>
             <div class="scrub-bar-thumb" id="scrub-thumb"></div>
           </div>
           <div class="scrub-time-row">
-            <span id="time-elapsed">0:00</span>
-            <span id="time-remaining">-0:00</span>
+            <span id="time-elapsed" class="time-display">0:00</span>
+            <span id="time-remaining" class="time-display">-0:00</span>
           </div>
+        </div>
+
+        <!-- Transport Buttons -->
+        <div class="button-bar">
+          <button class="btn btn-icon btn-secondary" id="btn-prev" title="Previous Sentence">
+            <svg viewBox="0 0 16 16"><path d="M11 3.5v9l-6-4.5 6-4.5zM4 3h1.5v10H4V3z"/></svg>
+          </button>
+          <button class="btn btn-hero-play" id="btn-play-pause" title="Play / Pause (Alt+P)">
+            <span class="btn-icon" id="icon-play-pause">
+              <svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5-9-5.5z"/></svg>
+            </span>
+            <span id="text-play-pause">Play</span>
+          </button>
+          <button class="btn btn-icon btn-secondary" id="btn-stop" title="Stop Playback" disabled>
+            <svg viewBox="0 0 16 16"><path d="M3.5 3.5h9v9h-9v-9z"/></svg>
+          </button>
+          <button class="btn btn-icon btn-secondary" id="btn-next" title="Next Sentence">
+            <svg viewBox="0 0 16 16"><path d="M5 3.5v9l6-4.5-6-4.5zM10.5 3H12v10h-1.5V3z"/></svg>
+          </button>
         </div>
       </div>
 
-      <!-- Terminal capture: VS Code fires no event for terminal selections,
-           so reading them is always an explicit action. -->
+      <!-- Terminal capture action -->
       <button class="btn btn-secondary btn-wide" id="btn-read-terminal" style="display: none;"
               title="Read the text selected in the active terminal (Alt+P while the terminal is focused)">
         <svg viewBox="0 0 16 16"><path d="M1.5 2h13a.5.5 0 0 1 .5.5v11a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5zM2 13h12V3H2v10zm1.35-7.85l.7-.7L7.2 7.6a.5.5 0 0 1 0 .7l-3.15 3.16-.7-.71L6.15 8 3.35 5.15zM8 10.5h4v1H8v-1z"/></svg>
-          <span>Read terminal selection</span>
+        <span>Read terminal selection</span>
       </button>
     </div>
   </section>
@@ -108,6 +121,11 @@
         <svg class="section-chevron" viewBox="0 0 16 16"><path d="M4.5 12.5l5-4.5-5-4.5.7-.7 5.8 5.2-5.8 5.2z"/></svg>
         <span>Text Preview</span>
       </div>
+      <div class="header-actions">
+        <button class="btn-action-icon" id="btn-copy-text" title="Copy text preview">
+          <svg viewBox="0 0 16 16"><path d="M4 4v9h7v1H3V4h1zm9-3H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zm0 10H6V2h7v9z"/></svg>
+        </button>
+      </div>
     </div>
     <div class="section-content">
       <div class="text-meta">
@@ -115,7 +133,7 @@
           <svg style="width: 13px; height: 13px; fill: currentColor;" viewBox="0 0 16 16"><path d="M9 1H3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6l-5-5zm0 1.5L12.5 6H9V2.5zM3 14V2h5v5h5v7H3z"/></svg>
           <span id="text-filename">Selection</span>
         </span>
-        <span id="text-stats">0 words</span>
+        <span class="tag tag-stats" id="text-stats">0 words</span>
       </div>
       <div class="text-container" id="text-container">
         Select text in any editor or terminal to preview it here. Click any word to start reading from there.
@@ -140,30 +158,32 @@
             <label class="setting-label">Voice</label>
             <span class="setting-val" id="voice-count-summary">325 voices</span>
           </div>
-          <div class="voice-card" id="btn-open-voice-modal">
+          <div class="voice-card" id="btn-open-voice-modal" title="Click to browse and change TTS voices">
+            <div class="voice-avatar-wrapper" id="current-voice-avatar">
+              <span class="avatar-code" id="current-voice-flag">US</span>
+            </div>
             <div class="voice-info">
               <div class="voice-name-row">
-                <span id="current-voice-flag">✨</span>
-                <span id="current-voice-name">Jenny (US)</span>
+                <span id="current-voice-name">Jenny</span>
                 <span class="tag tag-neural" id="current-voice-badge">Natural AI</span>
               </div>
               <div class="voice-meta-row">
-                <span id="current-voice-country">🇺🇸 United States</span>
-                <span>•</span>
+                <span id="current-voice-country">United States</span>
+                <span class="meta-dot">•</span>
                 <span id="current-voice-gender">Female</span>
               </div>
             </div>
-            <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;">Change</button>
+            <button class="btn btn-secondary btn-sm" id="btn-change-voice">Change</button>
           </div>
         </div>
 
-        <!-- Speed Slider & Pills -->
+        <!-- Speed Slider & Segmented Pills -->
         <div class="setting-item">
           <div class="setting-label-row">
-            <label class="setting-label" for="setting-rate">Speed</label>
-            <span class="setting-val" id="rate-val">1.0x</span>
+            <label class="setting-label" for="setting-rate">Reading Speed</label>
+            <span class="setting-val badge-val" id="rate-val">1.0x</span>
           </div>
-          <input type="range" class="setting-range" id="setting-rate" min="0.5" max="2.0" step="0.1" value="1.0">
+          <input type="range" class="setting-range" id="setting-rate" min="0.5" max="2.0" step="0.1" value="1.0" style="background: linear-gradient(to right, var(--vscode-button-background, #007acc) 33.3%, rgba(128,128,128,0.25) 33.3%);">
           <div class="speed-pills-row">
             <button class="speed-pill" data-speed="0.8">0.8x</button>
             <button class="speed-pill active" data-speed="1.0">1.0x</button>
@@ -176,29 +196,55 @@
         <!-- Pitch Slider -->
         <div class="setting-item">
           <div class="setting-label-row">
-            <label class="setting-label" for="setting-pitch">Pitch</label>
-            <span class="setting-val" id="pitch-val">1.0</span>
+            <label class="setting-label" for="setting-pitch">Voice Pitch</label>
+            <span class="setting-val badge-val" id="pitch-val">1.0</span>
           </div>
-          <input type="range" class="setting-range" id="setting-pitch" min="0.0" max="2.0" step="0.1" value="1.0">
+          <input type="range" class="setting-range" id="setting-pitch" min="0.0" max="2.0" step="0.1" value="1.0" style="background: linear-gradient(to right, var(--vscode-button-background, #007acc) 50%, rgba(128,128,128,0.25) 50%);">
         </div>
 
-        <!-- Checkboxes -->
-        <div class="setting-item">
-          <label class="setting-checkbox-label">
-            <input type="checkbox" class="setting-checkbox" id="setting-highlight-word" checked>
-            <span>Highlight spoken word in editor</span>
+        <!-- Switches -->
+        <div class="setting-switch-item">
+          <div class="switch-label-group">
+            <span class="switch-title">Highlight spoken word</span>
+            <span class="switch-desc">Highlights each word in the editor during speech</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="setting-highlight-word" checked>
+            <span class="toggle-slider"></span>
           </label>
         </div>
 
-        <div class="setting-item">
-          <label class="setting-checkbox-label">
-            <input type="checkbox" class="setting-checkbox" id="setting-follow-cursor" checked>
-            <span>Auto-scroll editor to spoken word</span>
+        <div class="setting-switch-item">
+          <div class="switch-label-group">
+            <span class="switch-title">Auto-scroll to spoken word</span>
+            <span class="switch-desc">Keeps editor viewport centered on active text</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="setting-follow-cursor" checked>
+            <span class="toggle-slider"></span>
           </label>
+        </div>
+
+        <!-- Keyboard shortcuts: VS Code owns the keymap, so this shows the
+             defaults and opens its editor filtered to Audio Cursor. -->
+        <div class="setting-item">
+          <div class="setting-label-row">
+            <label class="setting-label">Keyboard shortcuts</label>
+            <button class="btn btn-secondary" id="btn-keybindings" style="padding: 3px 8px; font-size: 11px;">Remap…</button>
+          </div>
+          <div class="keybind-list">
+            <div class="keybind-row"><span>Play / Pause in an editor</span><kbd>Alt+P</kbd></div>
+            <div class="keybind-row"><span>Play / Pause in a terminal</span><kbd>Alt+P</kbd></div>
+            <div class="keybind-row"><span>Play / Pause in a preview</span><kbd>Alt+P</kbd></div>
+            <div class="keybind-row"><span>Stop</span><kbd>Alt+Shift+P</kbd></div>
+          </div>
         </div>
 
         <div class="settings-footer">
-          <a href="#" class="settings-link" id="link-more-settings">More settings in VS Code...</a>
+          <a href="#" class="settings-link" id="link-more-settings">
+            <svg viewBox="0 0 16 16"><path d="M9.1 4.4L8.6 2H7.4l-.5 2.4-.7.3-2-1.3-.9.8 1.3 2-.2.7-2.4.5v1.2l2.4.5.3.8-1.3 2 .8.8 2-1.3.8.3.4 2.3h1.2l.5-2.4.8-.3 2 1.3.8-.8-1.3-2 .3-.8 2.3-.4V7.4l-2.4-.5-.3-.7 1.3-2-.8-.9-2 1.3-.7-.2zM8 10c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+            <span>All Audio Cursor Settings in VS Code...</span>
+          </a>
         </div>
       </div>
     </div>
@@ -209,10 +255,10 @@
     <div class="voice-browser-container">
       <div class="voice-browser-header">
         <div class="voice-browser-title">
-          <span>Choose Voice</span>
-          <span class="tag tag-neural" id="modal-voice-count">325</span>
+          <span class="title-text">Choose Voice</span>
+          <span class="tag tag-neural-pill" id="modal-voice-count">325</span>
         </div>
-        <button class="voice-browser-close" id="btn-close-voice-modal">
+        <button class="voice-browser-close" id="btn-close-voice-modal" title="Close (Esc)">
           <svg style="width: 14px; height: 14px; fill: currentColor;" viewBox="0 0 16 16"><path d="M8 7.293l4.146-4.147a.5.5 0 0 1 .708.708L8.707 8l4.147 4.146a.5.5 0 0 1-.708.708L8 8.707l-4.146 4.147a.5.5 0 0 1-.708-.708L7.293 8 3.146 3.854a.5.5 0 1 1 .708-.708L8 7.293z"/></svg>
         </button>
       </div>
@@ -221,30 +267,62 @@
       <div class="voice-search-box">
         <div class="search-input-wrapper">
           <svg class="search-icon" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
-          <input type="text" class="voice-search-input" id="voice-search-input" placeholder="Search by name, country, or language...">
+          <input type="text" class="voice-search-input" id="voice-search-input" placeholder="Search voices by name, country, or language...">
+          <button class="search-clear-btn" id="btn-clear-search" style="display: none;" title="Clear search">✕</button>
         </div>
       </div>
 
-      <!-- Filter Chips -->
-      <div class="filter-chips-row" id="filter-chips-lang">
-        <button class="filter-chip active" data-filter-lang="all">All Languages</button>
-        <button class="filter-chip" data-filter-lang="en-US">🇺🇸 US English</button>
-        <button class="filter-chip" data-filter-lang="en-GB">🇬🇧 UK English</button>
-        <button class="filter-chip" data-filter-lang="en-AU">🇦🇺 Australia</button>
-        <button class="filter-chip" data-filter-lang="en-CA">🇨🇦 Canada</button>
-        <button class="filter-chip" data-filter-lang="en-IN">🇮🇳 India</button>
-        <button class="filter-chip" data-filter-lang="es">🇪🇸 Spanish</button>
-        <button class="filter-chip" data-filter-lang="fr">🇫🇷 French</button>
-        <button class="filter-chip" data-filter-lang="de">🇩🇪 German</button>
-        <button class="filter-chip" data-filter-lang="ja">🇯🇵 Japanese</button>
-      </div>
+      <!-- Custom Filter Dropdowns Bar (Matching Browser Extension) -->
+      <div class="voice-modal-filters-bar">
+        <!-- Language Dropdown -->
+        <div class="custom-dropdown" id="dropdown-lang">
+          <button class="custom-dropdown-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+            <span class="custom-dropdown-val">🌐 All Languages</span>
+            <svg class="custom-dropdown-arrow" viewBox="0 0 16 16"><path d="M4.5 6l3.5 4 3.5-4z"/></svg>
+          </button>
+          <div class="custom-dropdown-menu" role="listbox">
+            <div class="custom-dropdown-item active" data-val="all">🌐 All Languages</div>
+            <div class="custom-dropdown-item" data-val="en-US"><span class="chip-code">US</span> English</div>
+            <div class="custom-dropdown-item" data-val="en-GB"><span class="chip-code">GB</span> UK English</div>
+            <div class="custom-dropdown-item" data-val="en-AU"><span class="chip-code">AU</span> Australia</div>
+            <div class="custom-dropdown-item" data-val="en-CA"><span class="chip-code">CA</span> Canada</div>
+            <div class="custom-dropdown-item" data-val="en-IN"><span class="chip-code">IN</span> India</div>
+            <div class="custom-dropdown-item" data-val="es"><span class="chip-code">ES</span> Spanish</div>
+            <div class="custom-dropdown-item" data-val="fr"><span class="chip-code">FR</span> French</div>
+            <div class="custom-dropdown-item" data-val="de"><span class="chip-code">DE</span> German</div>
+            <div class="custom-dropdown-item" data-val="ja"><span class="chip-code">JP</span> Japanese</div>
+            <div class="custom-dropdown-item" data-val="zh"><span class="chip-code">CN</span> Chinese</div>
+            <div class="custom-dropdown-item" data-val="it"><span class="chip-code">IT</span> Italian</div>
+            <div class="custom-dropdown-item" data-val="pt"><span class="chip-code">BR</span> Portuguese</div>
+            <div class="custom-dropdown-item" data-val="ko"><span class="chip-code">KR</span> Korean</div>
+          </div>
+        </div>
 
-      <div class="filter-chips-row" id="filter-chips-gender" style="border-top: none; padding-top: 0;">
-        <button class="filter-chip active" data-filter-gender="all">All Genders</button>
-        <button class="filter-chip" data-filter-gender="Female">♀ Female</button>
-        <button class="filter-chip" data-filter-gender="Male">♂ Male</button>
-        <button class="filter-chip" data-filter-type="neural">✨ Natural AI</button>
-        <button class="filter-chip" data-filter-type="local">💻 Offline</button>
+        <!-- Gender Dropdown -->
+        <div class="custom-dropdown" id="dropdown-gender">
+          <button class="custom-dropdown-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+            <span class="custom-dropdown-val">⚧ All Genders</span>
+            <svg class="custom-dropdown-arrow" viewBox="0 0 16 16"><path d="M4.5 6l3.5 4 3.5-4z"/></svg>
+          </button>
+          <div class="custom-dropdown-menu" role="listbox">
+            <div class="custom-dropdown-item active" data-val="all">⚧ All Genders</div>
+            <div class="custom-dropdown-item" data-val="Female">♀ Female</div>
+            <div class="custom-dropdown-item" data-val="Male">♂ Male</div>
+          </div>
+        </div>
+
+        <!-- Engine Type Dropdown -->
+        <div class="custom-dropdown" id="dropdown-type">
+          <button class="custom-dropdown-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+            <span class="custom-dropdown-val">⚡ All Types</span>
+            <svg class="custom-dropdown-arrow" viewBox="0 0 16 16"><path d="M4.5 6l3.5 4 3.5-4z"/></svg>
+          </button>
+          <div class="custom-dropdown-menu" role="listbox">
+            <div class="custom-dropdown-item active" data-val="all">⚡ All Types</div>
+            <div class="custom-dropdown-item" data-val="neural">✨ Natural AI</div>
+            <div class="custom-dropdown-item" data-val="local">💻 Offline</div>
+          </div>
+        </div>
       </div>
 
       <!-- Voice List -->

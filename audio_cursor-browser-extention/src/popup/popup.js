@@ -638,26 +638,229 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Shortcuts Display ──────────────────────────────
 
-    const DEFAULT_KEYBINDS = [
-        { label: 'Play Selection', key: 'Alt+P' },
-        { label: 'Download Audio', key: 'Alt+D' },
-        { label: 'Place Cursor / Move', key: 'Click / Arrows' },
-        { label: 'Select Word / Range', key: 'Shift+Arrows' }
+    // Remappable binds, stored in chrome.storage.sync.keybinds — the content
+    // script reads the same keys and picks changes up live.
+    const KEYBIND_DEFS = [
+        {
+            id: 'togglePlayback',
+            label: 'Play / Pause selection',
+            fallback: 'Alt+P',
+            note: 'Also a browser shortcut'
+        },
+        {
+            id: 'downloadAudio',
+            label: 'Download audio',
+            fallback: 'Alt+D',
+            note: 'Also a browser shortcut'
+        },
+        {
+            id: 'keyboardSelect',
+            label: 'Keyboard selection mode',
+            fallback: 'Alt+S'
+        },
+        {
+            id: 'autoPlaySelect',
+            label: 'Auto-play on select',
+            fallback: 'Ctrl+Alt',
+            modifiersOnly: true,
+            note: 'Hold these, then select text'
+        }
     ];
+
+    const STATIC_KEYBINDS = [
+        { label: 'Place cursor / move', key: 'Click / Arrows' },
+        { label: 'Select word / range', key: 'Shift+Arrows' }
+    ];
+
+    const MODIFIER_KEYS = new Set(['Control', 'Alt', 'Shift', 'Meta', 'OS', 'AltGraph']);
+    let keybinds = {};
+    let capture = null;
+
+    function bindFor(def) {
+        const value = keybinds[def.id];
+        return value === undefined ? def.fallback : value;
+    }
+
+    /** Build an "Ctrl+Alt+P" style string that the content script can parse. */
+    function comboFromEvent(e, modifiersOnly) {
+        const parts = [];
+        if (e.ctrlKey) parts.push('Ctrl');
+        if (e.altKey) parts.push('Alt');
+        if (e.shiftKey) parts.push('Shift');
+        if (e.metaKey) parts.push('Meta');
+        if (modifiersOnly) return parts.join('+');
+
+        const key = e.key || '';
+        if (MODIFIER_KEYS.has(key)) return null;
+        parts.push(key.length === 1 ? key.toUpperCase() : key);
+        return parts.join('+');
+    }
+
+    function conflictWith(def, combo) {
+        if (!combo) return null;
+        const clash = KEYBIND_DEFS.find(other => other.id !== def.id && bindFor(other) === combo);
+        return clash ? clash.label : null;
+    }
+
+    function saveKeybinds() {
+        chrome.storage.sync.set({ keybinds });
+    }
+
+    function endCapture() {
+        if (!capture) return;
+        window.removeEventListener('keydown', onCaptureKeydown, true);
+        window.removeEventListener('keyup', onCaptureKeyup, true);
+        capture = null;
+        renderKeybinds();
+    }
+
+    function commitCapture(combo) {
+        const def = capture.def;
+        const clash = conflictWith(def, combo);
+        if (clash) {
+            capture.error = 'Already used by ' + clash;
+            renderKeybinds();
+            return;
+        }
+        keybinds[def.id] = combo;
+        saveKeybinds();
+        endCapture();
+    }
+
+    function onCaptureKeydown(e) {
+        if (!capture) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (e.key === 'Escape') {
+            endCapture();
+            return;
+        }
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+            commitCapture('');
+            return;
+        }
+
+        if (MODIFIER_KEYS.has(e.key)) {
+            // Modifier-only binds are committed on release, so Ctrl+Alt works.
+            capture.held = comboFromEvent(e, true);
+            capture.error = '';
+            renderKeybinds();
+            return;
+        }
+
+        if (capture.def.modifiersOnly) return;
+
+        const combo = comboFromEvent(e, false);
+        if (!combo) return;
+        if (!e.ctrlKey && !e.altKey && !e.metaKey) {
+            capture.error = 'Use at least one modifier';
+            renderKeybinds();
+            return;
+        }
+        commitCapture(combo);
+    }
+
+    function onCaptureKeyup(e) {
+        if (!capture || !capture.held) return;
+        if (!MODIFIER_KEYS.has(e.key)) return;
+        if (e.ctrlKey || e.altKey || e.shiftKey || e.metaKey) return;
+        commitCapture(capture.held);
+    }
+
+    function beginCapture(def) {
+        endCapture();
+        capture = { def: def, held: '', error: '' };
+        window.addEventListener('keydown', onCaptureKeydown, true);
+        window.addEventListener('keyup', onCaptureKeyup, true);
+        renderKeybinds();
+    }
 
     function renderKeybinds() {
         if (!keybindList) return;
         keybindList.innerHTML = '';
-        DEFAULT_KEYBINDS.forEach(item => {
+
+        KEYBIND_DEFS.forEach(def => {
+            const capturing = !!capture && capture.def.id === def.id;
+            const current = bindFor(def);
+
+            const row = document.createElement('div');
+            row.className = 'keybind-row keybind-row-editable' + (capturing ? ' capturing' : '');
+
+            const info = document.createElement('div');
+            info.className = 'keybind-info';
+
+            const label = document.createElement('span');
+            label.className = 'keybind-label';
+            label.textContent = def.label;
+            info.appendChild(label);
+
+            const noteText = capturing
+                ? (capture.error || (def.modifiersOnly ? 'Hold the modifiers, then release' : 'Press a combination · Esc cancels'))
+                : def.note;
+            if (noteText) {
+                const note = document.createElement('span');
+                note.className = 'keybind-note' + (capturing && capture.error ? ' keybind-error' : '');
+                note.textContent = noteText;
+                info.appendChild(note);
+            }
+            row.appendChild(info);
+
+            const actions = document.createElement('div');
+            actions.className = 'keybind-actions';
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'keybind-key keybind-edit';
+            btn.title = 'Click, then press the keys you want';
+            btn.textContent = capturing ? (capture.held || 'Press keys…') : (current || 'Off');
+            btn.addEventListener('click', () => (capturing ? endCapture() : beginCapture(def)));
+            actions.appendChild(btn);
+
+            if (current !== def.fallback) {
+                const reset = document.createElement('button');
+                reset.type = 'button';
+                reset.className = 'keybind-reset-one';
+                reset.title = 'Reset to ' + def.fallback;
+                reset.textContent = '⟲';
+                reset.addEventListener('click', () => {
+                    delete keybinds[def.id];
+                    saveKeybinds();
+                    endCapture();
+                    renderKeybinds();
+                });
+                actions.appendChild(reset);
+            }
+
+            row.appendChild(actions);
+            keybindList.appendChild(row);
+        });
+
+        STATIC_KEYBINDS.forEach(item => {
             const row = document.createElement('div');
             row.className = 'keybind-row';
-            row.innerHTML = `
-                <span>${item.label}</span>
-                <span class="keybind-key">${item.key}</span>
-            `;
+            const label = document.createElement('span');
+            label.textContent = item.label;
+            const key = document.createElement('span');
+            key.className = 'keybind-key keybind-static';
+            key.textContent = item.key;
+            row.appendChild(label);
+            row.appendChild(key);
             keybindList.appendChild(row);
         });
     }
+
+    chrome.storage.sync.get(['keybinds'], (data) => {
+        keybinds = data.keybinds || {};
+        renderKeybinds();
+    });
+
+    chrome.storage.onChanged.addListener((changes, area) => {
+        if (area === 'sync' && changes.keybinds && !capture) {
+            keybinds = changes.keybinds.newValue || {};
+            renderKeybinds();
+        }
+    });
 
     renderKeybinds();
 

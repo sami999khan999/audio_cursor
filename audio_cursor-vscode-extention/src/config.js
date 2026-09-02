@@ -14,7 +14,10 @@ const DEFAULTS = {
   stopOnDocumentChange: false,
   chunkSize: 300,
   queueAhead: 12,
-  sanitizeCode: false
+  sanitizeCode: false,
+  watchTerminalSelection: true,
+  watchPreviewSelection: true,
+  readMarkdownAsProse: true
 };
 
 function clamp(val, min, max) {
