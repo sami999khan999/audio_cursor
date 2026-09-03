@@ -2,6 +2,15 @@
 
 All notable changes to the "audio-cursor" extension will be documented in this file.
 
+## [0.7.1]
+
+### Fixed
+- **Playback no longer takes over the editor.** Starting a read pulled the caret into the Audio Cursor sidebar, and did so again whenever audio was waiting on a click. Revealing the player is now focus-preserving: once the view exists it is shown with `WebviewView.show(true)`, and the one unavoidable case — the very first read in a window, where VS Code will not create the view without focusing it — hands focus straight back to the editor or terminal you came from, caret and selection intact.
+- Removed a `retainContextWhenHidden` flag set on `webview.options`, where it is not a recognized property and did nothing. The real one is passed to `registerWebviewViewProvider`, which was already correct — but the dead copy suggested the retention was configured in two places.
+
+### Changed
+- Marketplace metadata: added an extension icon, plus the `license`, `repository`, `bugs` and `homepage` fields the listing had been missing.
+
 ## [0.7.0]
 
 ### Added

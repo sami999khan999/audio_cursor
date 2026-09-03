@@ -1,7 +1,7 @@
 // Audio Cursor — Background Service Worker
 // Manages speech playback and communication with content scripts.
 //
-// Two speech engines:
+// Three speech engines:
 //   - Neural (Edge Natural voices, e.g. "en-US-JennyNeural"): this worker chunks
 //     the text and drives playback, but the offscreen document does the actual
 //     synthesis and audio playback, chunk by chunk. Synthesis cannot happen here:
@@ -9,11 +9,17 @@
 //     upgrades initiated from a service worker (crbug.com/1285664), so the
 //     Origin/User-Agent spoofing rules.json needs would be skipped and
 //     speech.platform.bing.com would reject the handshake with 403.
+//   - Web Speech ('webspeech'): Chrome's own default voices, including the
+//     bundled "Google …" ones that chrome.tts.getVoices() does not report.
+//     window.speechSynthesis does not exist in a service worker either, so these
+//     are chunked here and spoken by the offscreen document as well.
 //   - Local (real OS/browser voices reported by chrome.tts.getVoices()): spoken
 //     directly with chrome.tts.speak(), unchanged from before.
 
 let currentSessionId = 0;
-let neuralSession = null; // { sessionId, tabId, text, voice, rate, pitch, chunks, chunkIndex }
+// Chunked playback driven from here and performed in the offscreen document —
+// { sessionId, tabId, engine, text, voice, rate, pitch, chunks, chunkIndex }
+let offscreenSession = null;
 let offscreenReadyPromise = null;
 
 function sendToTab(tabId, msg) {
@@ -24,6 +30,16 @@ function sendToTab(tabId, msg) {
 
 function isNeuralVoiceName(voiceName) {
     return typeof voiceName === 'string' && voiceName.includes('Neural');
+}
+
+// The popup records which engine a voice belongs to when it is picked. Settings
+// saved before Chrome's default voices existed have no `voiceEngine`, so fall
+// back to the old name heuristic for them.
+function resolveEngine(voiceName, savedEngine) {
+    if (savedEngine === 'neural' || savedEngine === 'webspeech' || savedEngine === 'local') {
+        return savedEngine;
+    }
+    return isNeuralVoiceName(voiceName) ? 'neural' : 'local';
 }
 
 async function ensureOffscreenDocument() {
@@ -86,23 +102,24 @@ function findBestVoiceName(desiredVoiceName, systemVoices) {
 async function startPlayback(text, offset, tabId) {
     const sessionId = ++currentSessionId;
 
-    chrome.storage.sync.get(['voice', 'rate', 'pitch', 'enabled'], async (data) => {
+    chrome.storage.sync.get(['voice', 'voiceEngine', 'rate', 'pitch', 'enabled'], async (data) => {
         if (data.enabled === false) return;
         if (sessionId !== currentSessionId) return;
 
         const voice = data.voice || 'en-US-JennyNeural';
         const rate = parseFloat(data.rate) || 1.0;
         const pitch = parseFloat(data.pitch) || 1.0;
+        const engine = resolveEngine(voice, data.voiceEngine);
 
         // Stop whatever engine was previously speaking.
         chrome.tts.stop();
         chrome.runtime.sendMessage({ type: 'AC_STOP' }, () => void chrome.runtime.lastError);
-        neuralSession = null;
+        offscreenSession = null;
 
-        if (isNeuralVoiceName(voice)) {
-            startNeuralPlayback(text, offset, tabId, sessionId, voice, rate, pitch);
-        } else {
+        if (engine === 'local') {
             startLocalPlayback(text, offset, tabId, sessionId, voice, rate, pitch);
+        } else {
+            startOffscreenPlayback(text, offset, tabId, sessionId, engine, voice, rate, pitch);
         }
     });
 }
@@ -150,7 +167,7 @@ function startLocalPlayback(text, offset, tabId, sessionId, voice, rate, pitch) 
     });
 }
 
-function startNeuralPlayback(text, offset, tabId, sessionId, voice, rate, pitch) {
+function startOffscreenPlayback(text, offset, tabId, sessionId, engine, voice, rate, pitch) {
     const remaining = text.slice(offset);
     const rawChunks = globalThis.ChunkText
         ? globalThis.ChunkText.chunkText(remaining, 300)
@@ -166,6 +183,7 @@ function startNeuralPlayback(text, offset, tabId, sessionId, voice, rate, pitch)
     const session = {
         sessionId,
         tabId,
+        engine,
         text,
         voice,
         rate,
@@ -174,21 +192,21 @@ function startNeuralPlayback(text, offset, tabId, sessionId, voice, rate, pitch)
         chunkIndex: 0
     };
 
-    neuralSession = session;
-    playNeuralChunk(session, 0);
+    offscreenSession = session;
+    playOffscreenChunk(session, 0);
 }
 
-async function playNeuralChunk(session, index) {
-    if (neuralSession !== session) return; // superseded by a new session
+async function playOffscreenChunk(session, index) {
+    if (offscreenSession !== session) return; // superseded by a new session
 
     const chunk = session.chunks[index];
     if (!chunk) {
         chrome.storage.sync.get(['repeat'], (repData) => {
-            if (neuralSession !== session) return;
+            if (offscreenSession !== session) return;
             if (repData.repeat) {
                 startPlayback(session.text, 0, session.tabId);
             } else {
-                neuralSession = null;
+                offscreenSession = null;
                 sendToTab(session.tabId, { type: 'TTS_STATUS', status: 'idle' });
             }
         });
@@ -199,13 +217,13 @@ async function playNeuralChunk(session, index) {
         await ensureOffscreenDocument();
     } catch (err) {
         console.error('Audio Cursor: could not create offscreen document', err);
-        if (neuralSession === session) {
-            neuralSession = null;
+        if (offscreenSession === session) {
+            offscreenSession = null;
             sendToTab(session.tabId, { type: 'TTS_STATUS', status: 'idle' });
         }
         return;
     }
-    if (neuralSession !== session) return;
+    if (offscreenSession !== session) return;
 
     session.chunkIndex = index;
 
@@ -215,6 +233,7 @@ async function playNeuralChunk(session, index) {
         sessionId: session.sessionId,
         chunkIndex: index,
         isLast: index === session.chunks.length - 1,
+        engine: session.engine,
         text: chunk.text,
         voice: session.voice,
         rate: session.rate,
@@ -230,12 +249,13 @@ async function playNeuralChunk(session, index) {
     });
 
     // Pre-fetch the next chunk's audio while this one plays.
-    const nextChunk = session.chunks[index + 1];
+    const nextChunk = session.engine === 'neural' ? session.chunks[index + 1] : null;
     if (nextChunk) {
         chrome.runtime.sendMessage({
             type: 'AC_PREFETCH',
             sessionId: session.sessionId,
             chunkIndex: index + 1,
+            engine: session.engine,
             text: nextChunk.text,
             voice: session.voice,
             rate: session.rate,
@@ -264,8 +284,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             break;
 
         case 'PAUSE_TTS': {
-            const target = tabId !== undefined ? tabId : (neuralSession ? neuralSession.tabId : undefined);
-            if (neuralSession) {
+            const target = tabId !== undefined ? tabId : (offscreenSession ? offscreenSession.tabId : undefined);
+            if (offscreenSession) {
                 chrome.runtime.sendMessage({ type: 'AC_PAUSE' }, () => void chrome.runtime.lastError);
             } else {
                 currentSessionId++;
@@ -276,8 +296,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         case 'RESUME_TTS': {
-            const target = tabId !== undefined ? tabId : (neuralSession ? neuralSession.tabId : undefined);
-            if (neuralSession) {
+            const target = tabId !== undefined ? tabId : (offscreenSession ? offscreenSession.tabId : undefined);
+            if (offscreenSession) {
                 chrome.runtime.sendMessage({ type: 'AC_RESUME' }, () => void chrome.runtime.lastError);
             } else {
                 chrome.tts.resume();
@@ -287,12 +307,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         case 'STOP_TTS': {
-            const target = tabId !== undefined ? tabId : (neuralSession ? neuralSession.tabId : undefined);
+            const target = tabId !== undefined ? tabId : (offscreenSession ? offscreenSession.tabId : undefined);
             currentSessionId++;
             chrome.tts.stop();
-            if (neuralSession) {
+            if (offscreenSession) {
                 chrome.runtime.sendMessage({ type: 'AC_STOP' }, () => void chrome.runtime.lastError);
-                neuralSession = null;
+                offscreenSession = null;
             }
             sendToTab(target, { type: 'TTS_STATUS', status: 'idle' });
             break;
@@ -301,10 +321,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case 'EXPORT_MP3': {
             const text = message.text;
             if (text && text.trim()) {
-                chrome.storage.sync.get(['voice', 'rate', 'pitch'], async (data) => {
+                chrome.storage.sync.get(['voice', 'voiceEngine', 'voiceLang', 'rate', 'pitch'], async (data) => {
                     const voice = data.voice || 'en-US-JennyNeural';
                     const rate = parseFloat(data.rate) || 1.0;
                     const pitch = parseFloat(data.pitch) || 1.0;
+                    const engine = resolveEngine(voice, data.voiceEngine);
                     const cleanName = voice.replace(/^[a-z]{2,3}-[A-Z]{2,4}-/, '').replace(/Neural$/, '');
                     const filename = `AudioCursor_${cleanName.replace(/\s+/g, '_')}_${Date.now()}.mp3`;
 
@@ -346,7 +367,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             type: 'AC_EXPORT_AUDIO',
                             requestId,
                             text: text.trim(),
+                            engine,
                             voice,
+                            lang: data.voiceLang || '',
                             rate,
                             pitch
                         }, () => void chrome.runtime.lastError);
@@ -360,33 +383,33 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         case 'AC_CHUNK_ENDED':
-            if (neuralSession && message.sessionId === neuralSession.sessionId) {
-                playNeuralChunk(neuralSession, message.chunkIndex + 1);
+            if (offscreenSession && message.sessionId === offscreenSession.sessionId) {
+                playOffscreenChunk(offscreenSession, message.chunkIndex + 1);
             }
             break;
 
         case 'AC_CHUNK_ERROR':
-            if (neuralSession && message.sessionId === neuralSession.sessionId) {
-                const session = neuralSession;
+            if (offscreenSession && message.sessionId === offscreenSession.sessionId) {
+                const session = offscreenSession;
                 if (message.fatal) {
                     // Synthesis failed — silently fall back to local voice.
                     const chunk = session.chunks[message.chunkIndex];
                     const resumeAt = chunk ? chunk.start : 0;
-                    neuralSession = null;
+                    offscreenSession = null;
                     startLocalPlayback(session.text, resumeAt, session.tabId, session.sessionId, session.voice, session.rate, session.pitch);
                 } else {
-                    playNeuralChunk(session, message.chunkIndex + 1);
+                    playOffscreenChunk(session, message.chunkIndex + 1);
                 }
             }
             break;
 
         case 'AC_CHUNK_PROGRESS':
-            if (neuralSession && message.sessionId === neuralSession.sessionId) {
-                const chunk = neuralSession.chunks[message.chunkIndex];
+            if (offscreenSession && message.sessionId === offscreenSession.sessionId) {
+                const chunk = offscreenSession.chunks[message.chunkIndex];
                 if (chunk) {
                     const span = chunk.end - chunk.start;
                     const charIndex = chunk.start + Math.floor((message.fraction || 0) * span);
-                    sendToTab(neuralSession.tabId, { type: 'TTS_PROGRESS', charIndex });
+                    sendToTab(offscreenSession.tabId, { type: 'TTS_PROGRESS', charIndex });
                 }
             }
             break;
@@ -396,6 +419,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 .then(() => {
                     chrome.runtime.sendMessage({
                         type: 'AC_PREVIEW',
+                        engine: message.engine || 'neural',
                         text: message.text,
                         voice: message.voice,
                         rate: message.rate || 1.0,

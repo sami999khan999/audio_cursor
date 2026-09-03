@@ -2,14 +2,24 @@
   "name": "audio-cursor",
   "displayName": "Audio Cursor",
   "description": "Text-to-speech reading with word highlighting directly in your editor",
-  "version": "0.7.0",
-  "publisher": "audio-cursor",
+  "version": "0.7.1",
+  "publisher": "ProdigyCorp",
+  "icon": "media/icon.png",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sami999khan999/audio_cursor.git",
+    "directory": "audio_cursor-vscode-extention"
+  },
+  "bugs": {
+    "url": "https://github.com/sami999khan999/audio_cursor/issues"
+  },
+  "homepage": "https://github.com/sami999khan999/audio_cursor#readme",
   "engines": {
     "vscode": "^1.80.0"
   },
   "categories": [
-    "Other",
-    "Accessibility"
+    "Other"
   ],
   "keywords": [
     "tts",
@@ -261,7 +271,7 @@
         "audioCursor.autoRevealPanel": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Automatically reveal the Audio Cursor sidebar panel when playback starts if not already initialized."
+          "markdownDescription": "Reveal the Audio Cursor sidebar player when playback starts and the audio engine has not been initialized yet. Audio can only play inside that view and VS Code does not create it until it has been shown once, so this is needed once per window; afterwards the player is kept alive and playback never reveals or focuses it again. Turn this off to be prompted instead of having the sidebar open on your behalf."
         },
         "audioCursor.stopOnDocumentChange": {
           "type": "boolean",

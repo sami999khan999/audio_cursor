@@ -1,5 +1,12 @@
 // Audio Cursor — Offscreen Document
-// Owns BOTH Edge Neural TTS synthesis and MP3 playback.
+// Owns Edge Neural TTS synthesis, MP3 playback, and Chrome's own Web Speech
+// voices (window.speechSynthesis), which the background service worker cannot
+// reach because speechSynthesis only exists in a document context.
+//
+// Every chunked-playback message carries an `engine`: 'neural' (synthesize an
+// MP3 through Edge TTS, then play it) or 'webspeech' (hand the text to Chrome's
+// speechSynthesis). Both report progress and completion the same way, so the
+// background worker drives them with one code path.
 //
 // Synthesis must happen here rather than in the background service worker:
 // Chromium does not apply declarativeNetRequest header rules to WebSocket
@@ -9,12 +16,12 @@
 // context the rules apply normally.
 //
 // Protocol (messages from background):
-//   { type: 'AC_SYNTH_PLAY',   sessionId, chunkIndex, isLast, text, voice, rate, pitch }
-//   { type: 'AC_PREFETCH',     sessionId, chunkIndex, text, voice, rate, pitch }
+//   { type: 'AC_SYNTH_PLAY',   sessionId, chunkIndex, isLast, engine, text, voice, rate, pitch }
+//   { type: 'AC_PREFETCH',     sessionId, chunkIndex, engine, text, voice, rate, pitch }
 //   { type: 'AC_PAUSE'  }
 //   { type: 'AC_RESUME' }
 //   { type: 'AC_STOP'   }
-//   { type: 'AC_PREVIEW',      text, voice, rate, pitch }
+//   { type: 'AC_PREVIEW',      engine, text, voice, rate, pitch }
 //   { type: 'AC_PREVIEW_STOP' }
 //
 // Protocol (messages to background):
@@ -27,10 +34,23 @@
 let currentAudio = null;
 let currentAudioUrl = null;
 let currentSessionId = -1;
+let currentEngine = 'neural';
 
 let previewAudio = null;
 let previewAudioUrl = null;
 let previewToken = 0;
+
+// speechSynthesis is a single global queue shared by page playback and voice
+// previews, so remember which of the two is using it. Without this, closing the
+// voice picker would silence a page that is mid-read with a Chrome voice.
+let webSpeechOwner = null; // 'playback' | 'preview' | null
+
+function cancelWebSpeech(owner) {
+    if (typeof WebSpeech === 'undefined') return;
+    if (webSpeechOwner !== owner) return;
+    webSpeechOwner = null;
+    WebSpeech.cancel();
+}
 
 // `${sessionId}:${chunkIndex}` -> Promise<base64>
 const audioCache = new Map();
@@ -98,6 +118,7 @@ function stopCurrent() {
         try { URL.revokeObjectURL(currentAudioUrl); } catch (_) {}
         currentAudioUrl = null;
     }
+    cancelWebSpeech('playback');
 }
 
 function base64ToBlobUrl(base64, mimeType = 'audio/mp3') {
@@ -156,6 +177,41 @@ function playMp3(base64, sessionId, chunkIndex, isLast) {
     });
 }
 
+// ── Chrome default voices (Web Speech) ────────────────────────────────────────
+
+// Nothing to synthesize here: Chrome speaks the text itself and reports word
+// boundaries as it goes, which map straight onto the chunk-progress fractions
+// the neural path reports from audio playback position.
+function speakWithWebSpeech(msg) {
+    const { sessionId, chunkIndex, isLast, text, voice, rate, pitch } = msg;
+    stopCurrent();
+
+    const length = text.length || 1;
+    webSpeechOwner = 'playback';
+
+    WebSpeech.speak({
+        text,
+        voice,
+        rate,
+        pitch,
+        onBoundary: (charIndex) => {
+            if (sessionId !== currentSessionId) return;
+            const fraction = Math.min(1, Math.max(0, charIndex / length));
+            post({ type: 'AC_CHUNK_PROGRESS', sessionId, chunkIndex, fraction });
+        },
+        onEnd: () => {
+            if (webSpeechOwner === 'playback') webSpeechOwner = null;
+            if (sessionId !== currentSessionId) return;
+            post({ type: 'AC_CHUNK_ENDED', sessionId, chunkIndex, isLast });
+        },
+        onError: (error, fatal) => {
+            if (webSpeechOwner === 'playback') webSpeechOwner = null;
+            if (sessionId !== currentSessionId) return;
+            post({ type: 'AC_CHUNK_ERROR', sessionId, chunkIndex, error, fatal });
+        }
+    });
+}
+
 async function synthAndPlay(msg) {
     const { sessionId, chunkIndex, isLast, text, voice, rate, pitch } = msg;
 
@@ -165,6 +221,12 @@ async function synthAndPlay(msg) {
             if (!key.startsWith(`${sessionId}:`)) audioCache.delete(key);
         }
         currentSessionId = sessionId;
+    }
+    currentEngine = msg.engine === 'webspeech' ? 'webspeech' : 'neural';
+
+    if (currentEngine === 'webspeech') {
+        speakWithWebSpeech(msg);
+        return;
     }
 
     let base64;
@@ -189,6 +251,7 @@ async function synthAndPlay(msg) {
 }
 
 function prefetch(msg) {
+    if (msg.engine === 'webspeech') return;
     const { sessionId, chunkIndex, text, voice, rate, pitch } = msg;
     getOrSynthesize(sessionId, chunkIndex, text, voice, rate, pitch).catch(() => {
         // Errors surface when the chunk is actually played.
@@ -206,6 +269,7 @@ function doStop() {
 function stopPreview() {
     // Invalidate any preview still being synthesized so it never starts playing.
     previewToken++;
+    cancelWebSpeech('preview');
     releaseAudio(previewAudio);
     previewAudio = null;
     if (previewAudioUrl) {
@@ -217,6 +281,27 @@ function stopPreview() {
 async function playPreview(msg) {
     stopPreview();
     const token = ++previewToken;
+
+    if (msg.engine === 'webspeech') {
+        webSpeechOwner = 'preview';
+        WebSpeech.speak({
+            text: msg.text,
+            voice: msg.voice,
+            rate: msg.rate,
+            pitch: msg.pitch,
+            onEnd: () => {
+                if (webSpeechOwner === 'preview') webSpeechOwner = null;
+                if (token !== previewToken) return;
+                post({ type: 'AC_PREVIEW_ENDED' });
+            },
+            onError: (error) => {
+                if (webSpeechOwner === 'preview') webSpeechOwner = null;
+                if (token !== previewToken) return;
+                post({ type: 'AC_PREVIEW_ERROR', error });
+            }
+        });
+        return;
+    }
 
     let base64;
     try {
@@ -250,10 +335,12 @@ async function playPreview(msg) {
 
 // ── Full Audio Export ─────────────────────────────────────────────────────────
 
+// Chrome's Web Speech voices cannot be recorded, so exporting one falls back to
+// the cloud voice for its language — same as an OS voice does.
 async function exportAudio(msg) {
-    const { requestId, text, voice, rate, pitch } = msg;
+    const { requestId, text, voice, lang, rate, pitch } = msg;
     try {
-        const isNeural = voice && voice.includes('Neural');
+        const isNeural = msg.engine ? msg.engine === 'neural' : Boolean(voice && voice.includes('Neural'));
         let chunks;
         if (typeof Chunk !== 'undefined' && Chunk.chunkText) {
             chunks = Chunk.chunkText(text);
@@ -268,7 +355,7 @@ async function exportAudio(msg) {
             if (isNeural) {
                 base64 = await synthesizeWithRetry(chunk.text, voice, rate, pitch);
             } else {
-                const langMatch = voice.match(/^[a-z]{2,3}/);
+                const langMatch = (lang || voice || '').match(/^[a-z]{2,3}/);
                 const langCode = langMatch ? langMatch[0] : 'en';
                 const res = await CloudTTS.synthesizeCloudAudio(chunk.text, langCode);
                 base64 = res.base64;
@@ -322,10 +409,12 @@ chrome.runtime.onMessage.addListener((message) => {
             prefetch(message);
             break;
         case 'AC_PAUSE':
-            if (currentAudio) currentAudio.pause();
+            if (currentEngine === 'webspeech') WebSpeech.pause();
+            else if (currentAudio) currentAudio.pause();
             break;
         case 'AC_RESUME':
-            if (currentAudio) currentAudio.play().catch(() => {});
+            if (currentEngine === 'webspeech') WebSpeech.resume();
+            else if (currentAudio) currentAudio.play().catch(() => {});
             break;
         case 'AC_STOP':
             doStop();

@@ -167,6 +167,51 @@ document.addEventListener('DOMContentLoaded', () => {
         return systemVoices[0].voiceName;
     }
 
+    function describeLocation(langCode) {
+        return COUNTRY_MAP[langCode] || {
+            name: langCode || 'System',
+            flag: '💻',
+            lang: langCode ? langCode.split('-')[0].toUpperCase() : 'System'
+        };
+    }
+
+    function guessGender(voiceName) {
+        const n = voiceName.toLowerCase();
+        if (n.includes('female') || n.includes('zira') || n.includes('jenny')) return 'Female';
+        if (n.includes('male') || n.includes('david') || n.includes('guy')) return 'Male';
+        return null;
+    }
+
+    // Chrome's own voices, read from window.speechSynthesis. This is a different
+    // list from chrome.tts.getVoices(): it also carries the bundled "Google …"
+    // voices, which chrome.tts does not report on desktop Chrome.
+    function formatChromeVoices(chromeVoices) {
+        return chromeVoices.map(v => {
+            const loc = describeLocation(v.lang);
+            const clean = v.name
+                .replace(/^Microsoft /, '')
+                .replace(/ Online \(Natural\)/, '')
+                .replace(/ - [A-Za-z]+ \([^)]+\)/, '')
+                .replace(/ Desktop/, '');
+
+            return {
+                name: v.name,
+                cleanName: clean,
+                displayName: v.name,
+                friendlyName: v.name,
+                country: loc.name,
+                flag: loc.flag,
+                lang: v.lang || 'en-US',
+                languageName: loc.lang,
+                gender: guessGender(v.name) || 'Chrome',
+                isNeural: false,
+                engine: 'webspeech',
+                // What speechSynthesis matches on when the voice is spoken.
+                voiceURI: v.voiceURI || v.name
+            };
+        });
+    }
+
     async function loadAllVoices() {
         let neuralVoices = [];
         try {
@@ -183,14 +228,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        const chromeVoices = await WebSpeech.listVoices();
+
         chrome.tts.getVoices((localVoices) => {
             systemVoicesList = (localVoices || []).filter(v => v.voiceName);
 
             const formattedLocal = systemVoicesList.map(v => {
                 const isOnline = v.voiceName.toLowerCase().includes('natural') || v.voiceName.toLowerCase().includes('online');
-                const isFemale = v.voiceName.toLowerCase().includes('female') || v.voiceName.toLowerCase().includes('zira');
-                const isMale = v.voiceName.toLowerCase().includes('male') || v.voiceName.toLowerCase().includes('david');
-                const gender = isFemale ? 'Female' : (isMale ? 'Male' : 'Local');
+                const gender = guessGender(v.voiceName) || 'Local';
 
                 const clean = v.voiceName
                     .replace(/^Microsoft /, '')
@@ -198,11 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     .replace(/ - English \([^)]+\)/, '')
                     .replace(/ Desktop/, '');
 
-                const loc = COUNTRY_MAP[v.lang] || {
-                    name: v.lang || 'System',
-                    flag: '💻',
-                    lang: v.lang ? v.lang.split('-')[0].toUpperCase() : 'System'
-                };
+                const loc = describeLocation(v.lang);
 
                 return {
                     name: v.voiceName,
@@ -215,17 +256,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     languageName: loc.lang,
                     gender,
                     isNeural: isOnline,
+                    engine: 'local',
                     voiceURI: v.voiceName
                 };
             });
 
+            // Neural first, then Chrome's own voices, and finally anything only
+            // chrome.tts knows about.
+            //
+            // Chrome ranks above chrome.tts on purpose: the two lists overlap
+            // heavily, reporting most voices under identical names. Adding Chrome
+            // last behind a "name not seen yet" guard meant every shared voice was
+            // claimed as `local` and the Chrome list came out empty.
             const map = new Map();
-            neuralVoices.forEach(v => map.set(v.name, v));
+            neuralVoices.forEach(v => map.set(v.name, { engine: 'neural', ...v }));
+            formatChromeVoices(chromeVoices).forEach(v => {
+                if (!map.has(v.name)) map.set(v.name, v);
+            });
             formattedLocal.forEach(v => {
                 if (!map.has(v.name)) map.set(v.name, v);
             });
 
             allVoices = Array.from(map.values());
+            console.info(
+                `Audio Cursor voices — neural ${neuralVoices.length}, ` +
+                `Chrome ${chromeVoices.length}, chrome.tts ${formattedLocal.length}, ` +
+                `listed ${allVoices.length}`
+            );
             if (voiceCountMeta) voiceCountMeta.textContent = `${allVoices.length} voices`;
 
             chrome.storage.sync.get(['voice'], (data) => {
@@ -243,7 +300,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 country: 'Operating System',
                 flag: '💻',
                 gender: 'Local',
-                isNeural: false
+                isNeural: false,
+                engine: 'local'
             };
         }
         const found = allVoices.find(v => v.name === voiceName || v.voiceURI === voiceName);
@@ -255,8 +313,16 @@ document.addEventListener('DOMContentLoaded', () => {
             country: 'Natural Voice',
             flag: '✨',
             gender: 'AI',
-            isNeural: true
+            isNeural: true,
+            engine: 'neural'
         };
+    }
+
+    // Badge shown next to a voice: which engine will actually speak it.
+    function engineBadge(v) {
+        if (v.engine === 'webspeech') return { label: 'Chrome', className: 'badge-chrome' };
+        if (v.isNeural) return { label: 'Natural AI', className: 'badge-ai' };
+        return { label: 'Local', className: '' };
     }
 
     function updateVoiceCardUI() {
@@ -269,8 +335,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentVoiceGender) currentVoiceGender.textContent = v.gender || (v.isNeural ? 'Natural' : 'Local');
 
         if (currentVoiceBadge) {
-            currentVoiceBadge.textContent = v.isNeural ? 'Natural AI' : 'Local';
-            currentVoiceBadge.className = 'pill-badge ' + (v.isNeural ? 'badge-ai' : '');
+            const badge = engineBadge(v);
+            currentVoiceBadge.textContent = badge.label;
+            currentVoiceBadge.className = 'pill-badge ' + badge.className;
         }
     }
 
@@ -326,7 +393,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (activeTypeFilter === 'neural' && !v.isNeural) return false;
-            if (activeTypeFilter === 'local' && v.isNeural) return false;
+            if (activeTypeFilter === 'local' && (v.isNeural || v.engine === 'webspeech')) return false;
+            if (activeTypeFilter === 'chrome' && v.engine !== 'webspeech') return false;
 
             return true;
         });
@@ -340,10 +408,16 @@ document.addEventListener('DOMContentLoaded', () => {
         voiceModalList.innerHTML = '';
 
         if (filtered.length === 0) {
+            const noChromeVoices = activeTypeFilter === 'chrome' &&
+                !allVoices.some(v => v.engine === 'webspeech');
+            const hint = noChromeVoices
+                ? 'Chrome is not reporting any built-in voices on this system. Reopening the popup usually loads them.'
+                : 'Try searching for a different language, country, or accent.';
+
             voiceModalList.innerHTML = `
                 <div style="text-align: center; padding: 36px 12px; color: var(--text-muted);">
                     <div style="font-weight: 700; font-size: 13px; color: var(--text-primary);">No matching voices</div>
-                    <div style="font-size: 12px; margin-top: 5px;">Try searching for a different language, country, or accent.</div>
+                    <div style="font-size: 12px; margin-top: 5px;">${hint}</div>
                 </div>
             `;
             return;
@@ -357,8 +431,11 @@ document.addEventListener('DOMContentLoaded', () => {
             itemEl.className = 'voice-item' + (isSelected ? ' selected' : '');
 
             const genderClass = v.gender === 'Female' ? 'badge-female' : (v.gender === 'Male' ? 'badge-male' : '');
-            const typeBadge = v.isNeural ? '<span class="pill-badge badge-ai">Natural AI</span>' : '<span class="pill-badge">Local</span>';
-            const genderBadge = v.gender ? `<span class="pill-badge ${genderClass}">${v.gender}</span>` : '';
+            const badge = engineBadge(v);
+            const typeBadge = `<span class="pill-badge ${badge.className}">${badge.label}</span>`;
+            // Only a real gender adds information — 'Local'/'Chrome' would just
+            // repeat the engine badge sitting next to it.
+            const genderBadge = genderClass ? `<span class="pill-badge ${genderClass}">${v.gender}</span>` : '';
 
             itemEl.innerHTML = `
                 <div class="voice-item-left">
@@ -400,7 +477,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function selectVoice(voiceName) {
         currentVoice = voiceName;
-        chrome.storage.sync.set({ voice: voiceName });
+        const v = getVoiceInfo(voiceName);
+        // The background worker cannot tell a Chrome voice from an OS one by name
+        // alone, so record which engine has to speak it.
+        chrome.storage.sync.set({
+            voice: voiceName,
+            voiceEngine: v.engine || 'neural',
+            voiceLang: v.lang || ''
+        });
         updateVoiceCardUI();
         closeVoiceModal();
     }
@@ -435,12 +519,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function speakPreview(voice, sampleText, onStart, onEnd) {
-        const isNeural = voice.isNeural !== false && /Neural$/.test(voice.name || '');
+        const isNeural = voice.engine
+            ? voice.engine === 'neural'
+            : (voice.isNeural !== false && /Neural$/.test(voice.name || ''));
 
-        if (isNeural) {
+        // Neural and Chrome voices are both spoken by the offscreen document, so
+        // the preview keeps playing even after this popup closes.
+        if (isNeural || voice.engine === 'webspeech') {
             pendingPreviewOnEnd = onEnd || null;
             chrome.runtime.sendMessage({
                 type: 'PREVIEW_VOICE',
+                engine: isNeural ? 'neural' : 'webspeech',
                 text: sampleText,
                 voice: voice.name,
                 rate: parseFloat(rateRange ? rateRange.value : 1.0) || 1.0,
@@ -910,11 +999,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateVoiceCardUI();
             }
 
+            const resetInfo = getVoiceInfo(currentVoice);
             chrome.storage.sync.set({
                 rate: '1.0',
                 pitch: '1.0',
                 repeat: false,
-                voice: currentVoice
+                voice: currentVoice,
+                voiceEngine: resetInfo.engine || 'neural',
+                voiceLang: resetInfo.lang || ''
             });
 
             const originalText = keybindResetBtn.textContent;

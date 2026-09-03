@@ -277,7 +277,9 @@ class AudioCursorController {
       case 'requireGesture':
         if (this._session && !this._session.isStale(msg.sessionId)) {
           log.info('Audio playback ready. Waiting for user activation on sidebar player.');
-          vscode.commands.executeCommand('audioCursor.player.focus');
+          // Show the player so it can be clicked, but leave the caret alone —
+          // the notification below is what asks for the click.
+          this._revealPlayer({ preserveFocus: true });
           // Only prompt once per session; the webview may re-request per chunk.
           if (this._gesturePromptedSession === msg.sessionId) return;
           this._gesturePromptedSession = msg.sessionId;
@@ -300,7 +302,7 @@ class AudioCursorController {
             text.includes('not-allowed');
           if (isGesture) {
             log.info('Audio playback waiting for user gesture.');
-            vscode.commands.executeCommand('audioCursor.player.focus');
+            this._revealPlayer({ preserveFocus: true });
             return;
           }
           log.error('Webview speech engine error:', text);
@@ -458,21 +460,79 @@ class AudioCursorController {
     this._progressTracker.reset();
   }
 
+  /**
+   * Remember where the user is working, so a reveal of the player can hand
+   * focus straight back.
+   */
+  _captureFocusTarget() {
+    const editor = vscode.window.activeTextEditor;
+    if (editor) {
+      return { kind: 'editor', editor };
+    }
+    if (this._lastSource === 'terminal' && vscode.window.activeTerminal) {
+      return { kind: 'terminal', terminal: vscode.window.activeTerminal };
+    }
+    return null;
+  }
+
+  async _restoreFocus(target) {
+    if (!target) return;
+    try {
+      if (target.kind === 'editor') {
+        await vscode.window.showTextDocument(target.editor.document, {
+          viewColumn: target.editor.viewColumn,
+          // Re-assert the caret so revealing the sidebar cannot move it.
+          selection: target.editor.selection,
+          preserveFocus: false
+        });
+      } else if (target.kind === 'terminal') {
+        target.terminal.show(false);
+      }
+    } catch (err) {
+      log.warn('Could not restore focus after revealing the player:', err);
+    }
+  }
+
+  /**
+   * Make the player visible enough to run the audio engine.
+   *
+   * Audio can only play inside the sidebar webview, and VS Code does not
+   * resolve a view provider until the view is shown at least once — so the
+   * first playback of a window unavoidably opens the Audio Cursor container.
+   * After that the webview is retained (see registerWebviewViewProvider in
+   * extension.js) and `show()` can reveal it without touching focus, so
+   * playback never steals the caret again.
+   *
+   * @param {{ preserveFocus?: boolean }} [options]
+   */
+  async _revealPlayer({ preserveFocus = true } = {}) {
+    if (this._viewProvider.show(preserveFocus)) {
+      return;
+    }
+
+    // No resolved view yet: the generated focus command is the only way to make
+    // VS Code create one, and it always takes keyboard focus with it.
+    const focusTarget = preserveFocus ? this._captureFocusTarget() : null;
+    try {
+      await vscode.commands.executeCommand('audioCursor.player.focus');
+    } catch (err) {
+      log.warn('Could not focus audio cursor webview:', err);
+      return;
+    }
+    await this._restoreFocus(focusTarget);
+  }
+
   async _ensureWebviewReady() {
     if (this._viewProvider.isReady()) {
       return true;
     }
 
     if (this._config.get('autoRevealPanel')) {
-      try {
-        await vscode.commands.executeCommand('audioCursor.player.focus');
-        // Give up to 1.5 seconds for webview to load
-        for (let i = 0; i < 15; i++) {
-          if (this._viewProvider.isReady()) return true;
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-      } catch (err) {
-        log.warn('Could not focus audio cursor webview:', err);
+      await this._revealPlayer({ preserveFocus: true });
+      // Give up to 1.5 seconds for webview to load
+      for (let i = 0; i < 15; i++) {
+        if (this._viewProvider.isReady()) return true;
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
 
@@ -1002,6 +1062,7 @@ class AudioCursorController {
     vscode.commands.executeCommand('workbench.action.openGlobalKeybindings', 'audioCursor');
   }
 
+  /** Explicit user command, so this one is allowed to take focus. */
   openPanel() {
     vscode.commands.executeCommand('audioCursor.player.focus');
   }

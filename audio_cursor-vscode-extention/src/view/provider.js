@@ -28,11 +28,12 @@ class AudioCursorViewProvider {
     this._view = webviewView;
     this._isReady = false;
 
+    // Note: retainContextWhenHidden is NOT a WebviewOptions property — for a
+    // view it belongs to the `webviewOptions` passed to
+    // registerWebviewViewProvider, which extension.js already does. Setting it
+    // here would be silently ignored.
     webviewView.webview.options = {
       enableScripts: true,
-      // Keep the audio engine alive while the sidebar view is hidden;
-      // without this the webview is torn down mid-playback.
-      retainContextWhenHidden: true,
       localResourceRoots: [
         vscode.Uri.joinPath(this._extensionUri, 'src', 'view'),
         vscode.Uri.joinPath(this._extensionUri, 'media')
@@ -92,6 +93,32 @@ class AudioCursorViewProvider {
    */
   isResolved() {
     return this._view !== null;
+  }
+
+  /**
+   * Reveal an already-resolved view. Unlike the generated
+   * `audioCursor.player.focus` command this can leave keyboard focus where it
+   * is, so starting playback never pulls the caret out of the editor.
+   * @param {boolean} preserveFocus
+   * @returns {boolean} false when there is no resolved view to show
+   */
+  show(preserveFocus = true) {
+    if (!this._view) return false;
+    try {
+      this._view.show(preserveFocus);
+      return true;
+    } catch (err) {
+      log.warn('Could not show Audio Cursor player view:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Whether the sidebar is currently showing the player.
+   * @returns {boolean}
+   */
+  isVisible() {
+    return this._view !== null && this._view.visible === true;
   }
 
   /**

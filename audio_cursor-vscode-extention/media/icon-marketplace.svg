@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!--
+    Marketplace listing icon. The activity-bar icon (icon.svg) is a monochrome
+    glyph tinted by the theme, which reads as a smudge on a Marketplace card, so
+    this is a standalone version: the same I-beam-and-waveform mark on the Audio
+    Cursor squircle, sharing the palette with the browser extension's icon.
+  -->
+  <defs>
+    <linearGradient id="acGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+  </defs>
+
+  <rect width="256" height="256" rx="64" fill="#141724" />
+
+  <!-- The 24x24 source glyph, scaled 8x and centred with a 32px margin. -->
+  <g transform="translate(32 32) scale(8)" fill="url(#acGrad)">
+    <!-- Text cursor I-beam -->
+    <path d="M4 4h4v1.75H6.75v12.5H8V20H4v-1.75h1.25V5.75H4V4z" />
+    <!-- Audio sound waves emanating from the cursor -->
+    <rect x="9.5" y="8.5" width="2" height="7" rx="1" />
+    <rect x="13" y="5" width="2" height="14" rx="1" />
+    <rect x="16.5" y="3" width="2" height="18" rx="1" />
+    <rect x="20" y="7" width="2" height="10" rx="1" />
+  </g>
+</svg>

@@ -46,7 +46,7 @@ And when a page won't let you select cleanly, `Alt+S` drops a real caret into it
 | | |
 |---|---|
 | 🖱️ **Select-to-play** | Highlight text and the player appears. Deselect and playback stops automatically. |
-| 🌐 **340+ Natural AI Voices** | Access neural cloud voices across dozens of languages and accents, plus all offline system voices. |
+| 🌐 **340+ Natural AI Voices** | Access neural cloud voices across dozens of languages and accents, plus all offline system voices and Chrome's own built-in voices (including the bundled “Google …” ones). |
 | ⚡ **Auto-play on select** | Hold `Ctrl+Alt` while selecting text to automatically start playing it instantly. |
 | 💾 **Download MP3** | Press `Alt+D` or click export to synthesize and download selected text as high-quality MP3 audio. |
 | 📋 **Read Clipboard** | Quick action in the popup to read copied text from your clipboard immediately. |
@@ -110,6 +110,8 @@ Settings are synced to your Chrome profile with `chrome.storage.sync`:
 |---|---|---|---|
 | `enabled` | `boolean` | `true` | Master on/off switch |
 | `voice` | `string` | `"en-US-JennyNeural"` | Selected voice identifier |
+| `voiceEngine` | `string` | `"neural"` | Engine that speaks it: `neural`, `webspeech` (Chrome's own voices), or `local` |
+| `voiceLang` | `string` | `"en-US"` | BCP-47 tag of the selected voice, used to pick a cloud voice for MP3 export |
 | `rate` | `number` | `1.0` | Speech rate (0.5×–2.0×) |
 | `pitch` | `number` | `1.0` | Voice pitch (0.5–1.5) |
 | `repeat` | `boolean` | `false` | Loop playback continuously |
@@ -167,7 +169,7 @@ audio_cursor/
 │   │   └── icon128.png        # Web Store 128x128 icon
 │   ├── offscreen/
 │   │   ├── offscreen.html     # Offscreen audio synthesis document
-│   │   └── offscreen.js       # WebSocket neural audio client
+│   │   └── offscreen.js       # WebSocket neural audio client + Web Speech playback
 │   ├── popup/
 │   │   ├── popup.html         # Settings popup UI
 │   │   ├── popup.js           # Voice library, sliders, shortcuts
@@ -176,6 +178,7 @@ audio_cursor/
 │       ├── chunk.js           # Text chunking logic
 │       ├── cloudTts.js        # Cloud synthesis & MP3 download
 │       ├── edgeTts.js         # Neural TTS client
+│       ├── webSpeech.js       # Chrome's built-in speechSynthesis voices
 │       ├── theme.css          # Shared design tokens
 │       └── voices.json        # 340+ voice catalog
 └── dist/                      # Bundled build output loaded by Chrome
@@ -189,7 +192,7 @@ audio_cursor/
 |---|---|
 | `storage` | Save voice, rate, pitch, and playback preferences |
 | `tts` | Synthesize speech using offline system voices |
-| `offscreen` | Host neural TTS WebSocket connections and audio playback |
+| `offscreen` | Host neural TTS WebSocket connections, Chrome voice playback, and audio output |
 | `declarativeNetRequest` | Secure synthesis request headers |
 | `downloads` | Save exported MP3 audio files directly to your machine |
 | `clipboardRead` | Read copied text when using the clipboard reader action |

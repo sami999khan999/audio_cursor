@@ -13,7 +13,7 @@ lerna-debug.log*
 logs/
 
 # VS Code Extension Packaging & Testing
-*.vsix
+# *.vsix
 .vscode-test/
 
 # Scratch & Spike Experiments

@@ -82,7 +82,7 @@ Configure Audio Cursor via **Settings** (`Ctrl+,` / `Cmd+,`) under `audioCursor`
 | `audioCursor.followCursor` | boolean | `true` | Automatically scroll editor to keep spoken word in viewport. |
 | `audioCursor.readFromCursorWhenNoSelection` | boolean | `true` | When no text is selected, read from cursor to EOF. |
 | `audioCursor.statusBar` | string | `"auto"` | Status bar visibility: `auto`, `always`, or `never`. |
-| `audioCursor.autoRevealPanel` | boolean | `true` | Automatically reveal sidebar panel when playback starts. |
+| `audioCursor.autoRevealPanel` | boolean | `true` | Reveal the sidebar player the first time playback needs to start the audio engine. Never takes keyboard focus, and never fires again once the player is initialized. |
 | `audioCursor.stopOnDocumentChange` | boolean | `false` | Stop playback if document is modified during reading. |
 | `audioCursor.readMarkdownAsProse` | boolean | `true` | Speak Markdown as prose without reciting markdown syntax. |
 | `audioCursor.chunkSize` | number | `300` | Target character length per speech chunk. |
