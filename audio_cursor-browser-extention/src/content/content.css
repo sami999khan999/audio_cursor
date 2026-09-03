@@ -155,6 +155,52 @@
     display: block;
 }
 
+/* ── Buffering: waiting on the voice API ─────────────── */
+
+/* The transport is armed but silent, so the button shows a spinner instead of
+   a transport icon and the fill breathes in place rather than advancing. */
+#audio-cursor-player .ac-spin {
+    display: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(16, 18, 26, 0.25);
+    border-top-color: #10121a;
+    border-radius: 50%;
+    animation: acPlayerSpin 0.65s linear infinite;
+    pointer-events: none;
+}
+
+#audio-cursor-player.ac-loading .ac-toggle svg {
+    display: none;
+}
+
+#audio-cursor-player.ac-loading .ac-spin {
+    display: block;
+}
+
+@keyframes acPlayerSpin {
+    to { transform: rotate(360deg); }
+}
+
+#audio-cursor-player.ac-loading .ac-fill {
+    animation: acFillBreathe 1.1s ease-in-out infinite;
+}
+
+@keyframes acFillBreathe {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #audio-cursor-player .ac-spin,
+    #audio-cursor-player.ac-loading .ac-fill {
+        animation: none;
+    }
+    #audio-cursor-player.ac-loading .ac-spin {
+        border-top-color: rgba(16, 18, 26, 0.55);
+    }
+}
+
 /* ── Word ticker ─────────────────────────────────────── */
 
 #audio-cursor-player .ac-ticker {

@@ -45,6 +45,7 @@
   let pendingAudioChunk = null;
   let pendingLocalChunk = null;
   let hasUserGesture = false;
+  let startingWatchdog = null;
 
   // DOM Elements
   const elEmptyState = document.getElementById('empty-state');
@@ -62,7 +63,7 @@
   const elNextBtn = document.getElementById('btn-next');
 
   const elReadTerminalBtn = document.getElementById('btn-read-terminal');
-  const elPlayerNotice = document.getElementById('player-notice');
+  const elPlayerNoticeSlot = document.getElementById('player-notice-slot');
   const elPlayerNoticeText = document.getElementById('player-notice-text');
   const elSourceIcon = document.getElementById('source-icon');
   const elSourceName = document.getElementById('source-name');
@@ -112,6 +113,9 @@
   const SVG_PREVIEW = '<svg viewBox="0 0 16 16"><path d="M8 3C4.5 3 1.7 5.2 1 8c.7 2.8 3.5 5 7 5s6.3-2.2 7-5c-.7-2.8-3.5-5-7-5zm0 8.5A3.5 3.5 0 1 1 8 4.5a3.5 3.5 0 0 1 0 7zm0-5.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>';
   const SVG_PLAY = '<svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5-9-5.5z"/></svg>';
   const SVG_PAUSE = '<svg viewBox="0 0 16 16"><path d="M3.5 2h3v12h-3V2zm6 0h3v12h-3V2z"/></svg>';
+  // Not a transport glyph: it fills the icon slot while the first chunk is being
+  // synthesized, so the button never shows "Pause" before anything is audible.
+  const HTML_SPINNER = '<span class="btn-spin"></span>';
 
   // --- Voice Discovery & Helper Functions ---
 
@@ -432,6 +436,26 @@
     vscode.postMessage(msg);
   }
 
+  // The webview has its own console that nothing outside it can see, so a script
+  // error in here reads as "the player is stuck" with no trace anywhere. Send it
+  // to the Audio Cursor output channel instead.
+  window.addEventListener('error', (e) => {
+    post({
+      type: 'clientError',
+      message: (e && e.message) || 'Unknown player error',
+      stack: e && e.error && e.error.stack
+    });
+  });
+
+  window.addEventListener('unhandledrejection', (e) => {
+    const reason = e && e.reason;
+    post({
+      type: 'clientError',
+      message: 'Unhandled rejection: ' + ((reason && reason.message) || String(reason)),
+      stack: reason && reason.stack
+    });
+  });
+
   function showGestureBanner() {
     if (elGestureBanner) {
       elGestureBanner.style.display = 'flex';
@@ -483,10 +507,12 @@
     if (pendingAudioChunk) {
       const { chunk, audioBase64 } = pendingAudioChunk;
       pendingAudioChunk = null;
+      updateStatusUI('starting');
       startNeuralAudioChunk(chunk, audioBase64);
     } else if (pendingLocalChunk) {
       const chunk = pendingLocalChunk;
       pendingLocalChunk = null;
+      updateStatusUI('starting');
       playLocalUtterance(chunk);
     }
   }
@@ -644,6 +670,27 @@
   }
 
   elPlayPauseBtn.addEventListener('click', () => {
+    // Nothing is playing yet — either the first chunk is still being prepared,
+    // or Chromium is holding audio back until this document sees a gesture.
+    // This click IS that gesture (the capture-phase listener has already used
+    // it), so start playback rather than sending a transport command the host
+    // would ignore or, worse, act on while audio is coming up.
+    if (currentStatus === 'starting' || currentStatus === 'blocked') {
+      // This click is the user gesture Chromium is waiting for. If a chunk is
+      // parked on it, releasing it is all that is needed. If nothing is parked
+      // then the pipeline stalled somewhere upstream, so ask the host to start
+      // over — never leave the button doing nothing at all.
+      const hasParkedChunk = Boolean(pendingAudioChunk || pendingLocalChunk);
+      triggerGestureUnlock();
+      if (!hasParkedChunk) {
+        post({
+          type: 'command',
+          action: 'play',
+          source: currentSnapshot ? currentSnapshot.source : undefined
+        });
+      }
+      return;
+    }
     if (currentStatus === 'playing') {
       post({ type: 'command', action: 'pause' });
     } else if (currentStatus === 'paused') {
@@ -831,13 +878,15 @@
   }
 
   function showNotice(text) {
-    if (!elPlayerNotice || !elPlayerNoticeText) return;
+    if (!elPlayerNoticeSlot || !elPlayerNoticeText) return;
     if (!text) {
-      elPlayerNotice.style.display = 'none';
+      // Keep the text in place while the slot collapses — clearing it would
+      // make the notice blank out a frame before it finishes animating.
+      elPlayerNoticeSlot.classList.remove('open');
       return;
     }
     elPlayerNoticeText.textContent = text;
-    elPlayerNotice.style.display = 'flex';
+    elPlayerNoticeSlot.classList.add('open');
   }
 
   function estimateSeconds(wordCount) {
@@ -894,11 +943,47 @@
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   }
 
+  // Neural chunks are synthesized over the network, so a second or two on the
+  // spinner is normal. A stall that outlasts this must not strand the user on a
+  // spinner, so it drops to a state whose button actually starts something.
+  const STARTING_TIMEOUT = 6000;
+
   function updateStatusUI(status) {
     currentStatus = status;
+    if (startingWatchdog) {
+      clearTimeout(startingWatchdog);
+      startingWatchdog = null;
+    }
     if (elVisualizerBars) {
       elVisualizerBars.classList.toggle('active', status === 'playing');
     }
+    if (status === 'starting') {
+      // Requested, but silent: the first chunk is still being synthesized and
+      // decoded. Claiming 'playing' here is what made the button read "Pause"
+      // on the very first Alt+P of a session.
+      elPlayPauseIcon.innerHTML = HTML_SPINNER;
+      elPlayPauseText.textContent = 'Loading';
+      elStopBtn.disabled = false;
+      elStatusBadge.className = 'status-badge starting';
+      elStatusText.textContent = 'Loading';
+      startingWatchdog = setTimeout(() => {
+        if (currentStatus === 'starting') updateStatusUI('blocked');
+      }, STARTING_TIMEOUT);
+      return;
+    }
+
+    if (status === 'blocked') {
+      // Chromium will not let a webview start audio until the document has had
+      // a user gesture, and Alt+P is handled by VS Code, so this document never
+      // sees one. The audio is ready and parked; a single click releases it.
+      elPlayPauseIcon.innerHTML = SVG_PLAY;
+      elPlayPauseText.textContent = 'Play';
+      elStopBtn.disabled = false;
+      elStatusBadge.className = 'status-badge blocked';
+      elStatusText.textContent = 'Tap to play';
+      return;
+    }
+
     if (status === 'playing') {
       elPlayPauseIcon.innerHTML = SVG_PAUSE;
       elPlayPauseText.textContent = 'Pause';
@@ -1086,6 +1171,7 @@
         hasUserGesture = false;
         pendingAudioChunk = { chunk, audioBase64 };
         showGestureBanner();
+        updateStatusUI('blocked');
         post({ type: 'requireGesture', sessionId: sid });
         return;
       }
@@ -1107,6 +1193,7 @@
 
       hideGestureBanner();
       hasUserGesture = true;
+      if (currentStatus !== 'playing') updateStatusUI('playing');
       post({ type: 'started', sessionId: sid, chunkIndex: chunk.index });
 
       startTimeTracking(sid, chunk, chunkDuration);
@@ -1150,6 +1237,7 @@
 
     utterance.onstart = () => {
       if (sid !== currentSessionId) return;
+      if (currentStatus !== 'playing') updateStatusUI('playing');
       post({ type: 'started', sessionId: sid, chunkIndex: chunk.index });
     };
 
@@ -1182,6 +1270,7 @@
         hasUserGesture = false;
         pendingLocalChunk = chunk;
         showGestureBanner();
+        updateStatusUI('blocked');
         post({ type: 'requireGesture', sessionId: sid });
         return;
       }
@@ -1296,7 +1385,7 @@
         stopSynthesis();
         isSpeaking = true;
         chunkQueue = [...(msg.chunks || [])];
-        updateStatusUI('playing');
+        updateStatusUI('starting');
         playNextChunk();
         break;
       }

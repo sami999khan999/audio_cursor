@@ -25,6 +25,7 @@
 //   { type: 'AC_PREVIEW_STOP' }
 //
 // Protocol (messages to background):
+//   { type: 'AC_CHUNK_STARTED',  sessionId, chunkIndex }
 //   { type: 'AC_CHUNK_PROGRESS', sessionId, chunkIndex, fraction }
 //   { type: 'AC_CHUNK_ENDED',    sessionId, chunkIndex, isLast }
 //   { type: 'AC_CHUNK_ERROR',    sessionId, chunkIndex, error, fatal }
@@ -35,6 +36,12 @@ let currentAudio = null;
 let currentAudioUrl = null;
 let currentSessionId = -1;
 let currentEngine = 'neural';
+let currentChunkIndex = 0;
+
+// Set by AC_PAUSE, cleared by AC_RESUME or by a new AC_SYNTH_PLAY. A pause that
+// lands while a chunk is still being synthesized has no audio element to act on
+// yet, so it is remembered here and honoured when the audio finally arrives.
+let pausedState = false;
 
 let previewAudio = null;
 let previewAudioUrl = null;
@@ -103,6 +110,7 @@ function getOrSynthesize(sessionId, chunkIndex, text, voice, rate, pitch) {
 // if the handlers were still attached that would be reported as a real failure.
 function releaseAudio(audio) {
     if (!audio) return;
+    audio.onplaying = null;
     audio.ontimeupdate = null;
     audio.onended = null;
     audio.onerror = null;
@@ -139,6 +147,14 @@ function playMp3(base64, sessionId, chunkIndex, isLast) {
     const audio = new Audio(currentAudioUrl);
     currentAudio = audio;
 
+    // The only honest "sound is coming out now" signal: everything before it is
+    // network and decode time. Reporting playback during that would run the
+    // player's progress ahead of the audio.
+    audio.onplaying = () => {
+        if (sessionId !== currentSessionId) return;
+        post({ type: 'AC_CHUNK_STARTED', sessionId, chunkIndex });
+    };
+
     audio.ontimeupdate = () => {
         if (sessionId !== currentSessionId) return;
         const duration = audio.duration;
@@ -170,6 +186,8 @@ function playMp3(base64, sessionId, chunkIndex, isLast) {
         }
     };
 
+    if (pausedState) return; // paused while this chunk was still synthesizing
+
     audio.play().catch((err) => {
         if (sessionId === currentSessionId) {
             post({ type: 'AC_CHUNK_ERROR', sessionId, chunkIndex, error: err.message, fatal: false });
@@ -194,6 +212,10 @@ function speakWithWebSpeech(msg) {
         voice,
         rate,
         pitch,
+        onStart: () => {
+            if (sessionId !== currentSessionId) return;
+            post({ type: 'AC_CHUNK_STARTED', sessionId, chunkIndex });
+        },
         onBoundary: (charIndex) => {
             if (sessionId !== currentSessionId) return;
             const fraction = Math.min(1, Math.max(0, charIndex / length));
@@ -223,6 +245,8 @@ async function synthAndPlay(msg) {
         currentSessionId = sessionId;
     }
     currentEngine = msg.engine === 'webspeech' ? 'webspeech' : 'neural';
+    currentChunkIndex = chunkIndex;
+    pausedState = false;
 
     if (currentEngine === 'webspeech') {
         speakWithWebSpeech(msg);
@@ -260,6 +284,7 @@ function prefetch(msg) {
 
 function doStop() {
     currentSessionId = -1;
+    pausedState = false;
     audioCache.clear();
     stopCurrent();
 }
@@ -409,12 +434,23 @@ chrome.runtime.onMessage.addListener((message) => {
             prefetch(message);
             break;
         case 'AC_PAUSE':
+            pausedState = true;
             if (currentEngine === 'webspeech') WebSpeech.pause();
             else if (currentAudio) currentAudio.pause();
             break;
         case 'AC_RESUME':
-            if (currentEngine === 'webspeech') WebSpeech.resume();
-            else if (currentAudio) currentAudio.play().catch(() => {});
+            pausedState = false;
+            if (currentEngine === 'webspeech') {
+                // speechSynthesis has no "resumed" event, and an utterance only
+                // fires onstart once — so confirm playback here instead. The
+                // neural path gets its confirmation from the audio element.
+                WebSpeech.resume();
+                if (currentSessionId !== -1) {
+                    post({ type: 'AC_CHUNK_STARTED', sessionId: currentSessionId, chunkIndex: currentChunkIndex });
+                }
+            } else if (currentAudio) {
+                currentAudio.play().catch(() => {});
+            }
             break;
         case 'AC_STOP':
             doStop();

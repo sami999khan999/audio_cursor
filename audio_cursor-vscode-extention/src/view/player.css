@@ -148,6 +148,62 @@ body {
   fill: currentColor;
 }
 
+/* Width reservation
+   ------------------
+   Labels that swap between states (Play / Pause / Resume, Ready / Playing 42%)
+   change width, and a plain textContent swap reflows everything around them.
+   Both children share one grid cell, so the slot is always as wide as the
+   hidden sizer holding the longest label — the visible text just changes. */
+.width-slot {
+  display: inline-grid;
+  align-items: center;
+  justify-items: start;
+}
+
+.width-slot > * {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+.width-slot-sizer {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Collapsible notice
+   ------------------
+   Pressing Play clears the notice. Removing it outright made the source card,
+   scrub bar and transport jump up by its full height, so the slot animates from
+   0fr to 1fr instead. The negative margin cancels the parent's 10px flex gap
+   while collapsed, so a hidden notice contributes exactly nothing. */
+.notice-slot {
+  display: grid;
+  grid-template-rows: 0fr;
+  margin-bottom: -10px;
+  transition:
+    grid-template-rows var(--transition-normal),
+    margin-bottom var(--transition-normal),
+    opacity var(--transition-normal);
+  opacity: 0;
+}
+
+.notice-slot.open {
+  grid-template-rows: 1fr;
+  margin-bottom: 0;
+  opacity: 1;
+}
+
+.notice-clip {
+  overflow: hidden;
+  min-height: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notice-slot {
+    transition: none;
+  }
+}
+
 /* Status Badges */
 .status-badge {
   display: inline-flex;
@@ -161,6 +217,8 @@ body {
   text-transform: uppercase;
   background-color: var(--vscode-badge-background, rgba(128, 128, 128, 0.15));
   color: var(--vscode-badge-foreground, var(--vscode-foreground));
+  border: 1px solid transparent;
+  font-variant-numeric: tabular-nums;
   transition: all var(--transition-fast);
 }
 
@@ -169,10 +227,22 @@ body {
   color: var(--vscode-activityBarBadge-foreground, var(--vscode-button-foreground, #ffffff));
 }
 
+/* Audio requested, nothing audible yet. */
+.status-badge.starting .status-dot {
+  animation: pulseDot 1.4s infinite;
+}
+
+/* Chromium is holding audio back until this document sees a click. */
+.status-badge.blocked {
+  background-color: var(--vscode-inputValidation-warningBackground, rgba(255, 170, 0, 0.15));
+  color: var(--vscode-inputValidation-warningForeground, var(--vscode-foreground));
+  border-color: var(--vscode-inputValidation-warningBorder, rgba(255, 170, 0, 0.5));
+}
+
 .status-badge.paused {
   background-color: var(--vscode-badge-background, rgba(128, 128, 128, 0.25));
   color: var(--vscode-badge-foreground, var(--vscode-foreground));
-  border: 1px solid var(--vscode-focusBorder, rgba(128, 128, 128, 0.4));
+  border-color: var(--vscode-focusBorder, rgba(128, 128, 128, 0.4));
 }
 
 .status-dot {
@@ -566,6 +636,27 @@ body {
   width: 14px;
   height: 14px;
   fill: currentColor;
+}
+
+.btn-hero-play .btn-icon .btn-spin {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  opacity: 0.9;
+  animation: acBtnSpin 0.65s linear infinite;
+}
+
+@keyframes acBtnSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-hero-play .btn-icon .btn-spin {
+    animation: none;
+  }
 }
 
 .btn-wide {
@@ -1419,7 +1510,7 @@ kbd {
     min-width: 0;
     padding: 5px 10px;
   }
-  .btn-hero-play #text-play-pause {
+  .btn-hero-play #play-label-slot {
     display: none;
   }
   .source-card .tag {

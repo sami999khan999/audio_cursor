@@ -274,6 +274,11 @@ class AudioCursorController {
         }
         break;
 
+      case 'clientError':
+        log.error('Webview player: ' + (msg.message || 'unknown') +
+          (msg.stack ? '\n' + msg.stack : ''));
+        break;
+
       case 'requireGesture':
         if (this._session && !this._session.isStale(msg.sessionId)) {
           log.info('Audio playback ready. Waiting for user activation on sidebar player.');

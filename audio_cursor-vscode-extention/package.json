@@ -2,7 +2,7 @@
   "name": "audio-cursor",
   "displayName": "Audio Cursor",
   "description": "Text-to-speech reading with word highlighting directly in your editor",
-  "version": "0.7.1",
+  "version": "0.7.4",
   "publisher": "ProdigyCorp",
   "icon": "media/icon.png",
   "license": "MIT",

@@ -17,7 +17,7 @@
     let wordMap = [];
     let totalLength = 0;
 
-    let status = 'idle'; // idle | playing | paused
+    let status = 'idle'; // idle | loading | playing | paused
     let currentCharIndex = 0;
     let lastWordIndex = -1;
     let playbackRate = 1;
@@ -30,6 +30,8 @@
     let emaEventGap = 0;   // EMA of ms between real word events
     let estimatorTimer = null;
     let keepAliveTimer = null;
+    let bufferTimer = null;   // delays the spinner so chunk handoffs don't flicker
+    let loadingTimer = null;  // gives up if an engine never reports playback
 
     let scrubbing = false;
     let awaitingSeek = false; // ignore stale progress between a seek and the restarted playback
@@ -341,6 +343,7 @@
                         <rect x="6.5" y="5" width="4" height="14" rx="1.4" fill="currentColor"/>
                         <rect x="13.5" y="5" width="4" height="14" rx="1.4" fill="currentColor"/>
                     </svg>
+                    <span class="ac-spin" aria-hidden="true"></span>
                 </button>
                 <div class="ac-ticker"><div class="ac-strip"></div></div>
                 <div class="ac-pct">0%</div>
@@ -450,11 +453,22 @@
     function playFrom(charIndex) {
         if (!selectedText) return;
         const clamped = Math.max(0, Math.min(charIndex, totalLength - 1));
+
+        // Nothing is audible yet — the voice still has to be synthesized. Park
+        // the bar on the requested position and enter 'loading' so neither the
+        // estimator nor a late event from the previous session can move it
+        // before the audio actually starts.
+        renderChar(clamped);
+        anchorChar = clamped;
+        anchorTime = performance.now();
+        lastRealEvent = anchorTime;
+        setStatus('loading');
+
         sendMessage({ type: 'PLAY_TEXT', text: selectedText, offset: clamped });
     }
 
     function togglePlayback() {
-        if (status === 'playing') {
+        if (status === 'playing' || status === 'loading') {
             sendMessage({ type: 'PAUSE_TTS' });
         } else if (status === 'paused') {
             sendMessage({ type: 'RESUME_TTS' });
@@ -465,15 +479,24 @@
 
     function setStatus(next) {
         status = next;
+
+        if (next === 'loading') showBuffering();
+        else hideBuffering();
+
         if (!player) return;
 
         player.classList.toggle('ac-playing', next === 'playing');
         player.classList.toggle('ac-paused', next === 'paused');
         player.classList.toggle('ac-active', next !== 'idle');
-        toggleBtn.setAttribute('aria-label', next === 'playing' ? 'Pause' : 'Play');
+        toggleBtn.setAttribute('aria-label',
+            next === 'loading' ? 'Loading audio' : (next === 'playing' ? 'Pause' : 'Play'));
 
         if (next === 'playing') {
             startEstimator();
+            startKeepAlive();
+        } else if (next === 'loading') {
+            // Hold the bar exactly where it is until real audio starts.
+            stopEstimator();
             startKeepAlive();
         } else {
             stopEstimator();
@@ -484,6 +507,37 @@
                 renderChar(0);
             }
         }
+    }
+
+    // ── Buffering indicator ────────────────────────────────────────
+
+    // The spinner is deliberately late: with the next chunk pre-fetched, a
+    // chunk-to-chunk handoff is over in a few tens of milliseconds and flashing
+    // a spinner for that would read as a glitch. A real API wait outlasts it.
+    const BUFFER_SPINNER_DELAY = 220;
+    const LOADING_TIMEOUT = 20000;
+
+    function showBuffering() {
+        clearTimeout(bufferTimer);
+        bufferTimer = setTimeout(() => {
+            if (status === 'loading' && player) player.classList.add('ac-loading');
+        }, BUFFER_SPINNER_DELAY);
+
+        // Nothing ever reported playback — don't leave the player stuck spinning.
+        clearTimeout(loadingTimer);
+        loadingTimer = setTimeout(() => {
+            if (status !== 'loading') return;
+            sendMessage({ type: 'STOP_TTS' });
+            setStatus('idle');
+        }, LOADING_TIMEOUT);
+    }
+
+    function hideBuffering() {
+        clearTimeout(bufferTimer);
+        bufferTimer = null;
+        clearTimeout(loadingTimer);
+        loadingTimer = null;
+        if (player) player.classList.remove('ac-loading');
     }
 
     // ── Word ticker ────────────────────────────────────────────────
@@ -1369,7 +1423,7 @@
                 if (isAutoPlay) {
                     playFrom(0);
                 }
-            } else if (isAutoPlay && status !== 'playing') {
+            } else if (isAutoPlay && status !== 'playing' && status !== 'loading') {
                 playFrom(0);
             }
         } else if (selectedText) {
@@ -1433,6 +1487,20 @@
                     anchorTime = performance.now();
                 }
                 setStatus('playing');
+            } else if (message.status === 'loading') {
+                // Audio has been requested but no sound has started yet. Anchor
+                // at the reported offset and freeze — see setStatus('loading').
+                if (typeof message.offset === 'number') {
+                    awaitingSeek = false;
+                    clearTimeout(seekGuardTimer);
+                    lastRealEvent = performance.now();
+                    anchorChar = message.offset;
+                    anchorTime = lastRealEvent;
+                    if (!scrubbing && message.offset > currentCharIndex) {
+                        renderChar(message.offset);
+                    }
+                }
+                if (status !== 'paused') setStatus('loading');
             } else if (message.status === 'paused') {
                 setStatus('paused');
             } else {

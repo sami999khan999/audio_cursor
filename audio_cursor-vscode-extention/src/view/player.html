@@ -18,7 +18,13 @@
       </div>
       <div class="status-badge" id="status-badge">
         <span class="status-dot"></span>
-        <span id="status-text">Ready</span>
+        <!-- The sizer is invisible but still measured, so the badge stays the
+             width of its longest state and never resizes as the label changes. -->
+        <span class="width-slot">
+          <span class="width-slot-sizer" aria-hidden="true">Playing 100%</span>
+          <span class="width-slot-sizer" aria-hidden="true">Tap to play</span>
+          <span id="status-text">Ready</span>
+        </span>
       </div>
     </div>
     <div class="section-content">
@@ -49,10 +55,16 @@
           <button class="btn btn-primary-play btn-gesture-btn" id="btn-gesture-activate">Play ▶</button>
         </div>
 
-        <!-- Why playback stopped / what will be read next -->
-        <div class="notice" id="player-notice" style="display: none;">
-          <svg class="notice-icon" viewBox="0 0 16 16"><path d="M8 1.5A6.5 6.5 0 1 0 14.5 8 6.51 6.51 0 0 0 8 1.5zm0 12A5.5 5.5 0 1 1 13.5 8 5.51 5.51 0 0 1 8 13.5zM7.5 4h1v5h-1V4zm0 6h1v1.5h-1V10z"/></svg>
-          <span id="player-notice-text"></span>
+        <!-- Why playback stopped / what will be read next. The outer slot
+             animates its own height so showing or hiding the notice glides the
+             controls instead of snapping them. -->
+        <div class="notice-slot" id="player-notice-slot">
+          <div class="notice-clip">
+            <div class="notice" id="player-notice">
+              <svg class="notice-icon" viewBox="0 0 16 16"><path d="M8 1.5A6.5 6.5 0 1 0 14.5 8 6.51 6.51 0 0 0 8 1.5zm0 12A5.5 5.5 0 1 1 13.5 8 5.51 5.51 0 0 1 8 13.5zM7.5 4h1v5h-1V4zm0 6h1v1.5h-1V10z"/></svg>
+              <span id="player-notice-text"></span>
+            </div>
+          </div>
         </div>
 
         <!-- Source Card & Visualizer -->
@@ -94,7 +106,11 @@
             <span class="btn-icon" id="icon-play-pause">
               <svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5-9-5.5z"/></svg>
             </span>
-            <span id="text-play-pause">Play</span>
+            <span class="width-slot" id="play-label-slot">
+              <span class="width-slot-sizer" aria-hidden="true">Resume</span>
+              <span class="width-slot-sizer" aria-hidden="true">Loading</span>
+              <span id="text-play-pause">Play</span>
+            </span>
           </button>
           <button class="btn btn-icon btn-secondary" id="btn-stop" title="Stop Playback" disabled>
             <svg viewBox="0 0 16 16"><path d="M3.5 3.5h9v9h-9v-9z"/></svg>

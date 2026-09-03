@@ -2,6 +2,44 @@
 
 All notable changes to the "audio-cursor" extension will be documented in this file.
 
+## [0.7.4]
+
+### Fixed
+- **The transport button can no longer become a dead end.** 0.7.3 gave the player an honest `starting`
+  state, but its button only released a chunk parked on a user gesture — so if the neural pipeline stalled
+  before any audio arrived, the panel sat on the spinner with a button that did nothing. Prior to 0.7.3 an
+  unrecognised status fell through to a plain **Play** button whose click restarted the session, which was
+  the manual workaround this state was meant to remove. Clicking now releases a parked chunk if there is
+  one and otherwise asks the host to start over, so the button always does something.
+- **The spinner now times out.** If nothing confirms playback within six seconds the player drops to
+  **Tap to play** rather than spinning indefinitely.
+
+### Added
+- Script errors and unhandled rejections inside the player webview are reported to the **Audio Cursor**
+  output channel. The webview has its own console that nothing outside it can read, so a failure in there
+  previously showed up only as a player that looked stuck, with no trace anywhere.
+
+## [0.7.3]
+
+### Fixed
+- **The player no longer claims to be playing before any sound comes out.** Pressing `Alt+P` for the first
+  time in a window put the button straight into its "Pause" state, while Chromium was in fact holding the
+  audio back until the webview had seen a user gesture — one that `Alt+P` cannot provide, because VS Code
+  handles the shortcut, not the panel. Clicking the button then unblocked the audio through a capture-phase
+  listener while the button itself sent a `pause` the host ignored, so the panel appeared to start playing
+  *because* you pressed Pause. The webview now reports two honest pre-playback states: **Loading** (spinner,
+  chunk still being synthesized) and **Tap to play** (audio ready, waiting on the click), and it only says
+  "Playing" once an audio source has actually started. In either waiting state the button starts playback
+  instead of sending a transport command.
+
+  The single click itself cannot be removed: a webview may not begin audio until its document has had a user
+  gesture, and this is per document, so it is needed once per VS Code window rather than once per read.
+
+## [0.7.2]
+
+### Fixed
+- **The player no longer shifts around when you play and pause.** Three things moved on every toggle: the `paused` status badge was the only state carrying a border, so pausing grew it by 2px and pushed the whole panel down; the badge and the Play/Pause/Resume button resized as their labels were swapped, sliding the transport buttons sideways; and the notice above the source card was removed outright on Play, snapping everything below it upward. Labels now sit in a fixed-width slot sized by an invisible copy of their longest state, the border is reserved in every badge state, and the notice collapses through an animated height instead of disappearing.
+
 ## [0.7.1]
 
 ### Fixed
