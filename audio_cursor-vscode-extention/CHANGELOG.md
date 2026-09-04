@@ -2,6 +2,96 @@
 
 All notable changes to the "audio-cursor" extension will be documented in this file.
 
+## [0.8.0]
+
+### Fixed
+- **Sentences were being skipped, in every kind of text.** At each chunk boundary the player briefly
+  had no audio source, and any message from the extension host arriving in that window — a queue
+  top-up, or a second copy of a chunk's audio — started a *second* chunk. One chunk was then never
+  heard while two others played over each other. A 30-chunk read with the host answering promptly
+  lost chunks 4, 8 and 12 outright and played 2, 6, 10 and 14 twice. The player now latches a chunk
+  start until it has actually begun, never asks for the same chunk's audio twice, and refuses to lay
+  a second audio source over one that is already starting.
+- **Markdown lost whole paragraphs.** The rule that strips YAML front matter was applied to each
+  chunk in isolation, and it anchors to the start of what it is given — so any chunk that happened to
+  begin at a `---` horizontal rule silently deleted everything up to the next one. Markdown is now
+  scanned as a whole document first: front matter, fenced code and HTML comments are located across
+  the full text and kept in chunks of their own, and the per-chunk rewriting no longer contains any
+  rule that needs whole-document context.
+- **Code blocks were read out as code.** A fenced block longer than one chunk was announced as
+  "Code block." and then had its contents spelled out anyway, because the fence regex could only
+  match a pair inside a single chunk. A block of any length is now one chunk, announced once.
+- **The button said "Pause" while nothing was playing.** The default voice was unset, which
+  selected the *offline* Web Speech engine while the sidebar advertised "Jenny · Natural AI".
+  Inside a panel that engine reports an utterance as started even when Chromium has only queued it,
+  so the button flipped to Pause over silence — and pressing Pause appeared to start playback,
+  because the click was itself the interaction Chromium was waiting for. The neural engine is now
+  the default and the player only says "Playing" once audio is confirmed. The offline engine is
+  still available, chosen explicitly as **System default** in the voice picker or by setting
+  `audioCursor.voice` to `system`.
+- **The first read of a window plays without clicking anything (Windows).** VS Code creates its
+  window with Chromium's `autoplayPolicy` set to `user-gesture-required`, so no panel may make a
+  sound until that panel's document has been clicked — and Alt+P, handled by the workbench, never
+  counts. Nothing inside the panel can lift that. So on Windows the audio no longer plays inside the
+  panel at all: the extension host runs a small PowerShell process hosting a WPF `MediaPlayer`,
+  started once at activation and kept alive, and hands it each synthesized chunk. Two players are
+  used so the next chunk is opened while the current one speaks, which keeps the gap between chunks
+  under about 70 ms. The panel is still where the highlight, scrub bar and transport live; it just
+  no longer owns the speaker. Pause, resume, stop, seek and word highlighting all work as before.
+  Turn it off with `audioCursor.hostAudio` to go back to playing in the panel. Other platforms keep
+  the panel engine and its one click per window — the panel now raises its own banner as soon as
+  it is opened so that click is usually spent long before Alt+P, and the modal notification that
+  used to nag about it is gone.
+- **"The terminal has no selection to copy" over text that then played.** Reading the terminal from
+  the sidebar re-ran VS Code's terminal copy command, but that command needs the terminal to have
+  keyboard focus — and by then focus was in the panel, so it always failed. VS Code raised the
+  notice, which no extension can suppress, and Audio Cursor went on to read the remembered text
+  anyway. The copy command is now only ever run from somewhere the terminal really is focused: the
+  `Alt+P` keybinding and the terminal context menu. Clicking in the panel plays what the panel is
+  showing, and when there is nothing captured it says what to do instead of running a command that
+  is certain to fail. With `terminal.integrated.copyOnSelection` on, the command is never run at
+  all: VS Code has already copied the selection the moment it was made, so it is read straight from
+  the clipboard — which also copes with a full-screen terminal program that redraws and drops the
+  selection before a copy command could reach it.
+- Silence is no longer mistaken for a failure. A chunk with nothing speakable in it made the
+  synthesizer return an empty payload, which was cached as a miss and re-requested forever, and if
+  it reached the decoder it threw — ending the whole read with an error dialog. Such chunks are now
+  folded into their neighbours before playback, and an empty payload simply moves on.
+- **Auto-scroll switched itself off.** Following the spoken word calls `revealRange`, which raises a
+  visible-range change — which was read as the user scrolling, so auto-scroll disabled itself for
+  five seconds every time it scrolled. It now ignores the echo of its own reveal.
+- The spoken-word highlight had no border: it was specified with a CSS custom property, which does
+  not resolve inside decoration styles.
+- `audioCursor.watchTerminalSelection`, `audioCursor.watchPreviewSelection` and
+  `audioCursor.readMarkdownAsProse` were missing from the settings sent to the player.
+- The Natural Neural voice list could never refresh, because the bundled list was treated as a
+  populated cache and short-circuited the fetch.
+- Seeking claimed playback had resumed before any audio existed, and a fallback replay of terminal
+  text could read one terminal's output while a different one was in front of you.
+
+- **A terminal that keeps redrawing no longer stops the read.** With `terminal.integrated.copyOnSelection`
+  on, a full-screen terminal program re-copies the selection on every redraw, and each re-copy was
+  taken for a brand-new selection — which stopped the first read within a second of it starting.
+  A terminal selection made during playback is now remembered for the next Alt+P and playback continues.
+- **Alt+P no longer opens the sidebar** when the host engine is speaking; the editor highlight
+  works without it, and the panel catches up on the read if you open it yourself.
+- **Pausing from the status bar left the pause icon showing.** A position tick already on its way
+  when Pause was pressed painted the status bar back to "playing". Ticks are now ignored unless the
+  read is actually playing.
+
+### Added
+- A first read that stalls now says where it stopped. The player traces its start-up handshake —
+  chunks queued, synthesis requested, bytes received, decoded, started — to the **Audio Cursor**
+  output channel, and the extension host gives up on a session that never reports back instead of
+  leaving the status bar spinning indefinitely.
+- A test suite (`npm test`), covering the chunker directly and the player's queue through a stubbed
+  webview. The queue tests fail against 0.7.4, which is how the skipping above was pinned down.
+
+### Changed
+- `audioCursor.voice` now defaults to `en-US-JennyNeural` rather than an empty string.
+- The queue is topped up when it runs low rather than on every chunk end, so `queueAhead` means
+  what it says beyond the first window.
+
 ## [0.7.4]
 
 ### Fixed

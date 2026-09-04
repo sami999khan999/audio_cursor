@@ -46,12 +46,36 @@
   let pendingLocalChunk = null;
   let hasUserGesture = false;
   let startingWatchdog = null;
+  // Which engine owns the chunk being played, so a transport command is never
+  // routed to the other one (a neural voice preview leaves `audioCtx` set even
+  // while the offline engine is what is speaking).
+  let currentEngine = null; // 'neural' | 'local' | null
+  // A chunk start is asynchronous — synthesis, then decode — and during it
+  // `currentSourceNode` is still null. Without this flag an `enqueue` arriving
+  // in that window started a *second* chunk, so one was skipped and two
+  // overlapped. It is the queue's "a start is already coming up" latch.
+  let chunkStartInFlight = false;
+  let localStartConfirm = null;
+  // Which chunk a start is already underway for, so a duplicate audio payload
+  // cannot start the same chunk on top of itself.
+  let startingChunkIndex = null;
+  // The extension host can play audio itself (see hostPlayer.js). When it
+  // does, this document is only a display: no engine of its own, no click
+  // needed, no gesture banner.
+  let hostAudioAvailable = false;
+  let hostDriven = false;
+  // Chunks whose synthesis has been asked for but not yet answered. Without
+  // this the pre-fetch and the chunk's own request both went out, two payloads
+  // came back, and both started it.
+  const pendingRequests = new Set();
 
   // DOM Elements
   const elEmptyState = document.getElementById('empty-state');
   const elPlayerContent = document.getElementById('player-content');
   const elGestureBanner = document.getElementById('gesture-banner');
   const elGestureBtn = document.getElementById('btn-gesture-activate');
+  const elGestureTitle = document.getElementById('gesture-title');
+  const elGestureSubtitle = document.getElementById('gesture-subtitle');
   const elStatusBadge = document.getElementById('status-badge');
   const elStatusText = document.getElementById('status-text');
 
@@ -148,25 +172,53 @@
     };
   }
 
+  // The neural engine is the default one. The offline Web Speech engine is
+  // still available but has to be asked for by name, because inside a webview
+  // it is the unreliable one: Chromium queues `speak()` until the document has
+  // been interacted with — which Alt+P cannot do, since VS Code handles the
+  // key — and pause/resume is unreliable on Windows. Web Audio has no such
+  // problem here, because VS Code grants webview iframes `allow="autoplay"`.
+  const DEFAULT_NEURAL_VOICE = 'en-US-JennyNeural';
+  const SYSTEM_VOICE = 'system';
+
+  const SYSTEM_VOICE_ENTRY = {
+    name: SYSTEM_VOICE,
+    cleanName: 'System default',
+    country: 'Offline',
+    languageName: 'Your operating system voice',
+    lang: '',
+    gender: '',
+    isNeural: false,
+    countryCode: 'OS'
+  };
+
+  function isSystemVoice(voiceName) {
+    return voiceName === SYSTEM_VOICE;
+  }
+
+  /** The voice name to actually synthesize with. */
+  function effectiveVoice() {
+    return currentSettings.voice || DEFAULT_NEURAL_VOICE;
+  }
+
   function isNeuralVoice(voiceName) {
-    if (!voiceName) return false;
+    if (isSystemVoice(voiceName)) return false;
+    // Unset means "not configured", which is the neural default — not the
+    // offline engine. Defaulting the other way is what made a fresh install
+    // speak through Web Speech while the sidebar advertised "Natural AI".
+    if (!voiceName) return true;
     const v = allVoices.find(x => x.name === voiceName || x.voiceURI === voiceName);
     return v ? Boolean(v.isNeural) : voiceName.includes('Neural');
   }
 
   function getVoiceInfo(voiceName) {
-    if (!voiceName) {
-      return {
-        name: '',
-        cleanName: 'Jenny (US)',
-        country: 'United States',
-        languageName: 'English',
-        countryCode: 'US',
-        flag: 'US',
-        gender: 'Female',
-        isNeural: true
-      };
+    if (isSystemVoice(voiceName)) {
+      return { ...SYSTEM_VOICE_ENTRY, flag: 'OS', gender: 'System' };
     }
+    // Unset resolves to the neural default and is described from the real voice
+    // list, rather than by a hardcoded card that claimed "Natural AI" while the
+    // offline engine was the one speaking.
+    if (!voiceName) return getVoiceInfo(DEFAULT_NEURAL_VOICE);
     const found = allVoices.find(v => v.name === voiceName || v.voiceURI === voiceName);
     if (found) return found;
 
@@ -223,7 +275,9 @@
   }
 
   function getFilteredVoices() {
-    return allVoices.filter(v => {
+    // The offline engine is no longer the default, so the picker has to offer a
+    // way back to it.
+    return [SYSTEM_VOICE_ENTRY, ...allVoices].filter(v => {
       // 1. Search Query
       if (voiceSearchQuery) {
         const q = voiceSearchQuery.toLowerCase();
@@ -271,7 +325,7 @@
   function renderVoiceModalList() {
     if (!elVoiceModalList) return;
     const filtered = getFilteredVoices();
-    if (elModalVoiceCount) elModalVoiceCount.textContent = `${filtered.length} of ${allVoices.length || 325}`;
+    if (elModalVoiceCount) elModalVoiceCount.textContent = `${filtered.length} of ${allVoices.length + 1}`;
 
     elVoiceModalList.innerHTML = '';
 
@@ -288,7 +342,8 @@
     const fragment = document.createDocumentFragment();
 
     filtered.forEach(v => {
-      const isSelected = v.name === currentSettings.voice || (v.name === '' && !currentSettings.voice);
+      const isSelected = v.name === currentSettings.voice ||
+        (v.name === DEFAULT_NEURAL_VOICE && !currentSettings.voice);
       const itemEl = document.createElement('div');
       itemEl.className = 'voice-list-item' + (isSelected ? ' selected' : '');
 
@@ -436,6 +491,16 @@
     vscode.postMessage(msg);
   }
 
+  // The webview's console is unreadable from outside, which made a stalled
+  // first play impossible to diagnose. Trace the handshake for the first chunk
+  // of each session into the Audio Cursor output channel — enough to see where
+  // it stopped, quiet enough not to flood a long read.
+  let traced = null;
+  function trace(message) {
+    if (traced !== currentSessionId) return;
+    post({ type: 'clientLog', sessionId: currentSessionId, message });
+  }
+
   // The webview has its own console that nothing outside it can see, so a script
   // error in here reads as "the player is stuck" with no trace anywhere. Send it
   // to the Audio Cursor output channel instead.
@@ -456,10 +521,49 @@
     });
   });
 
-  function showGestureBanner() {
-    if (elGestureBanner) {
-      elGestureBanner.style.display = 'flex';
+  /**
+   * VS Code creates its window with Chromium's `autoplayPolicy` set to
+   * `user-gesture-required`, so nothing in a panel may make a sound until that
+   * panel's document has been clicked or typed in. No extension can lift that,
+   * and revealing or focusing the panel does not count — so the one click is
+   * structural. It is per document, and the view is retained when hidden, so it
+   * is once per window rather than once per read.
+   *
+   * @param {'waiting' | 'blocked'} [mode] `waiting` is the standing invitation
+   *   shown before anything is queued; `blocked` is audio held up right now.
+   */
+  function showGestureBanner(mode = 'blocked') {
+    if (!elGestureBanner) return;
+    if (elGestureTitle && elGestureSubtitle) {
+      if (mode === 'waiting') {
+        elGestureTitle.textContent = 'Click once to enable audio';
+        elGestureSubtitle.textContent =
+          'VS Code blocks sound in side panels until you interact with one. Once per window.';
+      } else {
+        elGestureTitle.textContent = 'Audio ready — click to play';
+        elGestureSubtitle.textContent =
+          'This panel has not been clicked yet, so VS Code is holding the sound back.';
+      }
     }
+    if (elGestureBtn) {
+      elGestureBtn.textContent = mode === 'waiting' ? 'Enable' : 'Play ▶';
+    }
+    elGestureBanner.style.display = 'flex';
+  }
+
+  /**
+   * Show the invitation as soon as the panel is opened, rather than waiting for
+   * a read to be blocked by it. By the time the user reaches for Alt+P they
+   * have usually clicked something in here already, and the click is spent.
+   */
+  function armGestureBannerIfLocked() {
+    if (hasUserGesture) return;
+    const ctx = getAudioContext();
+    if (!ctx || ctx.state === 'running') {
+      hasUserGesture = Boolean(ctx);
+      return;
+    }
+    showGestureBanner('waiting');
   }
 
   function hideGestureBanner() {
@@ -467,6 +571,8 @@
       elGestureBanner.style.display = 'none';
     }
   }
+
+  const RESUME_TIMEOUT = 1500;
 
   /**
    * Resume the AudioContext and report whether it is actually running.
@@ -480,7 +586,14 @@
     if (!ctx) return false;
     if (ctx.state === 'running') return true;
     try {
-      await ctx.resume();
+      // Chromium can leave this promise pending indefinitely rather than
+      // rejecting it when the document has had no user activation. Awaiting it
+      // bare used to hang the chunk start: nothing parked, no banner, no
+      // `requireGesture` — just a spinner until the watchdog fired.
+      await Promise.race([
+        ctx.resume(),
+        new Promise(resolve => setTimeout(resolve, RESUME_TIMEOUT))
+      ]);
     } catch (_) {}
     return ctx.state === 'running';
   }
@@ -502,6 +615,10 @@
     hasUserGesture = running;
     if (running) {
       primeAudioOutput(audioCtx);
+    } else if (!pendingAudioChunk && !pendingLocalChunk) {
+      // The click did not unlock it after all — put the invitation back rather
+      // than leaving a panel that silently refuses to make a sound.
+      showGestureBanner('waiting');
     }
 
     if (pendingAudioChunk) {
@@ -675,14 +792,23 @@
     // This click IS that gesture (the capture-phase listener has already used
     // it), so start playback rather than sending a transport command the host
     // would ignore or, worse, act on while audio is coming up.
+    if (hostDriven && currentStatus === 'starting') {
+      // Still synthesizing on the host; a click here has nothing to unlock and
+      // must not restart the read.
+      return;
+    }
     if (currentStatus === 'starting' || currentStatus === 'blocked') {
       // This click is the user gesture Chromium is waiting for. If a chunk is
       // parked on it, releasing it is all that is needed. If nothing is parked
       // then the pipeline stalled somewhere upstream, so ask the host to start
       // over — never leave the button doing nothing at all.
-      const hasParkedChunk = Boolean(pendingAudioChunk || pendingLocalChunk);
+      // Read this before `triggerGestureUnlock`, which clears it — the
+      // capture-phase listener has already started on the same click, but it
+      // awaits, so nothing is consumed until after this handler returns.
+      const busy = Boolean(pendingAudioChunk || pendingLocalChunk) ||
+        chunkStartInFlight || pendingRequests.size > 0;
       triggerGestureUnlock();
-      if (!hasParkedChunk) {
+      if (!busy) {
         post({
           type: 'command',
           action: 'play',
@@ -967,7 +1093,10 @@
       elStatusBadge.className = 'status-badge starting';
       elStatusText.textContent = 'Loading';
       startingWatchdog = setTimeout(() => {
-        if (currentStatus === 'starting') updateStatusUI('blocked');
+        if (currentStatus !== 'starting') return;
+        if (hostDriven) return; // the host has its own watchdog and needs no click
+        trace(`nothing confirmed playback within ${STARTING_TIMEOUT}ms; falling back to "Tap to play"`);
+        updateStatusUI('blocked');
       }, STARTING_TIMEOUT);
       return;
     }
@@ -1027,6 +1156,30 @@
     return bytes.buffer;
   }
 
+  /** The pending chunk start is over, one way or another. */
+  function chunkStartSettled() {
+    chunkStartInFlight = false;
+    startingChunkIndex = null;
+  }
+
+  /**
+   * Move to the next chunk without recursing inside the current call.
+   * A chunk with nothing to say finishes synchronously, and advancing from
+   * inside `playNextChunk` re-entered it mid-way — leaving the caller to run
+   * its pre-fetch against a queue that had already moved on.
+   */
+  function advanceToNextChunk() {
+    chunkStartSettled();
+    setTimeout(playNextChunk, 0);
+  }
+
+  function clearLocalStartConfirm() {
+    if (localStartConfirm) {
+      clearTimeout(localStartConfirm);
+      localStartConfirm = null;
+    }
+  }
+
   function stopTimeTracking() {
     if (timeUpdateInterval) {
       clearInterval(timeUpdateInterval);
@@ -1073,9 +1226,14 @@
 
   function stopSynthesis() {
     stopCurrentAudioSource();
+    clearLocalStartConfirm();
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
+    chunkStartInFlight = false;
+    startingChunkIndex = null;
+    pendingRequests.clear();
+    currentEngine = null;
     chunkQueue = [];
     neuralAudioCache.clear();
     currentPlayingChunk = null;
@@ -1087,7 +1245,21 @@
     totalPausedDuration = 0;
   }
 
+  /** A chunk is waiting on a click and must not be stepped over. */
+  function isParked() {
+    return Boolean(pendingAudioChunk || pendingLocalChunk);
+  }
+
   function playNextChunk() {
+    // Re-entrancy guard. A start is asynchronous, so without this an `enqueue`
+    // (or a stray event) arriving mid-start pulled a second chunk off the queue
+    // and one was never heard.
+    if (chunkStartInFlight) return;
+    // A parked chunk looks idle — no source node, no start in flight — so
+    // without this the queue would walk straight past the chunk that is
+    // waiting for the click, and play it later out of order.
+    if (isParked()) return;
+
     if (chunkQueue.length === 0 || !isSpeaking) {
       if (isSpeaking && !currentSourceNode) {
         post({ type: 'ended', sessionId: currentSessionId });
@@ -1099,21 +1271,30 @@
 
     const chunk = chunkQueue.shift();
     currentPlayingChunk = chunk;
+    chunkStartInFlight = true;
 
     const useNeural = isNeuralVoice(currentSettings.voice);
+    currentEngine = useNeural ? 'neural' : 'local';
 
     if (useNeural) {
       playNeuralChunk(chunk);
-      // Pre-fetch next chunk
+      // Pre-fetch the next chunk, but never ask the synthesizer for silence:
+      // it answers with an empty payload, which was cached as '' — falsy, so
+      // it read as a cache miss and was requested again forever, and if it did
+      // reach the decoder it threw and killed the whole read.
       if (chunkQueue.length > 0) {
         const nextChunk = chunkQueue[0];
-        if (!neuralAudioCache.has(nextChunk.index)) {
+        const nextText = nextChunk.spokenText || nextChunk.text;
+        if (nextText && nextText.trim() &&
+            !neuralAudioCache.has(nextChunk.index) &&
+            !pendingRequests.has(nextChunk.index)) {
+          pendingRequests.add(nextChunk.index);
           post({
             type: 'requestNeuralAudio',
             sessionId: currentSessionId,
             chunkIndex: nextChunk.index,
-            text: nextChunk.spokenText || nextChunk.text,
-            voice: currentSettings.voice || 'en-US-JennyNeural',
+            text: nextText,
+            voice: effectiveVoice(),
             rate: currentSettings.rate || 1.0,
             pitch: currentSettings.pitch || 1.0
           });
@@ -1130,20 +1311,28 @@
 
     if (!textToSpeak || !textToSpeak.trim()) {
       post({ type: 'chunkEnded', sessionId: sid, chunkIndex: chunk.index });
-      playNextChunk();
+      advanceToNextChunk();
       return;
     }
 
-    const cachedBase64 = neuralAudioCache.get(chunk.index);
-    if (cachedBase64) {
-      startNeuralAudioChunk(chunk, cachedBase64);
+    // `has`, not a truthiness check: a cached empty payload is a real answer
+    // ("this chunk is silent"), not a miss.
+    if (neuralAudioCache.has(chunk.index)) {
+      startNeuralAudioChunk(chunk, neuralAudioCache.get(chunk.index));
+    } else if (pendingRequests.has(chunk.index)) {
+      // The pre-fetch already asked for this one. Asking again would bring back
+      // a second payload and start the chunk twice; the reply handler will
+      // start it as soon as it lands.
+      trace(`chunk ${chunk.index} is already being synthesized; waiting for it`);
     } else {
+      trace(`requesting synthesis for chunk ${chunk.index} (${textToSpeak.length} chars)`);
+      pendingRequests.add(chunk.index);
       post({
         type: 'requestNeuralAudio',
         sessionId: sid,
         chunkIndex: chunk.index,
         text: textToSpeak,
-        voice: currentSettings.voice || 'en-US-JennyNeural',
+        voice: effectiveVoice(),
         rate: currentSettings.rate || 1.0,
         pitch: currentSettings.pitch || 1.0
       });
@@ -1152,8 +1341,22 @@
 
   async function startNeuralAudioChunk(chunk, audioBase64) {
     const sid = currentSessionId;
-    if (sid !== currentSessionId) return;
 
+    // A start for this chunk is already in progress — a late or duplicate
+    // payload must not lay a second source over the first.
+    if (startingChunkIndex === chunk.index) return;
+
+    // The host answers with an empty payload when a chunk has nothing
+    // speakable in it. Decoding a zero-byte buffer throws, and the host's error
+    // handler ends the whole read — so treat silence as "chunk done" instead.
+    if (!audioBase64) {
+      neuralAudioCache.delete(chunk.index);
+      post({ type: 'chunkEnded', sessionId: sid, chunkIndex: chunk.index });
+      advanceToNextChunk();
+      return;
+    }
+
+    startingChunkIndex = chunk.index;
     stopCurrentAudioSource();
 
     try {
@@ -1170,12 +1373,16 @@
       if (!running) {
         hasUserGesture = false;
         pendingAudioChunk = { chunk, audioBase64 };
+        chunkStartSettled();
+        trace('audio context would not start; parking the chunk for a click');
         showGestureBanner();
         updateStatusUI('blocked');
         post({ type: 'requireGesture', sessionId: sid });
         return;
       }
 
+      trace(`audio received for chunk ${chunk.index}: ${audioBase64.length} base64 chars, ` +
+        `context ${ctx.state}`);
       const arrayBuffer = base64ToArrayBuffer(audioBase64);
       const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
 
@@ -1193,6 +1400,10 @@
 
       hideGestureBanner();
       hasUserGesture = true;
+      currentEngine = 'neural';
+      chunkStartSettled();
+      trace(`chunk ${chunk.index} decoded (${chunkDuration.toFixed(2)}s) and started`);
+      traced = null;
       if (currentStatus !== 'playing') updateStatusUI('playing');
       post({ type: 'started', sessionId: sid, chunkIndex: chunk.index });
 
@@ -1212,18 +1423,26 @@
 
       source.start(0);
     } catch (err) {
+      chunkStartSettled();
       if (sid === currentSessionId) {
         post({ type: 'error', sessionId: sid, message: 'Audio playback error: ' + err.message });
       }
     }
   }
 
+  // Chromium fires `onstart` for an utterance it has merely accepted, so that
+  // event alone is not proof anything is audible — trusting it is what put the
+  // button into its Pause state over silence. Real audio is confirmed by a
+  // boundary event, or by the engine still reporting itself as speaking a
+  // moment later.
+  const LOCAL_START_CONFIRM_MS = 1200;
+
   function playLocalUtterance(chunk) {
     const sid = currentSessionId;
     const textToSpeak = chunk.spokenText || chunk.text;
     if (!textToSpeak || !textToSpeak.trim()) {
       post({ type: 'chunkEnded', sessionId: sid, chunkIndex: chunk.index });
-      playNextChunk();
+      advanceToNextChunk();
       return;
     }
 
@@ -1235,14 +1454,47 @@
     utterance.rate = currentSettings.rate || 1.0;
     utterance.pitch = currentSettings.pitch || 1.0;
 
-    utterance.onstart = () => {
-      if (sid !== currentSessionId) return;
+    let confirmed = false;
+    const confirmPlaying = () => {
+      if (confirmed || sid !== currentSessionId) return;
+      confirmed = true;
+      clearLocalStartConfirm();
+      chunkStartSettled();
+      currentEngine = 'local';
+      hideGestureBanner();
+      trace(`chunk ${chunk.index} confirmed speaking on the offline engine`);
+      traced = null;
       if (currentStatus !== 'playing') updateStatusUI('playing');
       post({ type: 'started', sessionId: sid, chunkIndex: chunk.index });
     };
 
+    utterance.onstart = () => {
+      if (sid !== currentSessionId) return;
+      clearLocalStartConfirm();
+      localStartConfirm = setTimeout(() => {
+        localStartConfirm = null;
+        if (sid !== currentSessionId || confirmed) return;
+        if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+          confirmPlaying();
+          return;
+        }
+        // Accepted but never spoken: Chromium is holding the utterance back
+        // until the document has been interacted with. Park it and say so,
+        // rather than showing a Pause button over silence.
+        hasUserGesture = false;
+        pendingLocalChunk = chunk;
+        chunkStartSettled();
+        trace('offline engine accepted the utterance but never spoke it; ' +
+          'parking it for a click');
+        showGestureBanner();
+        updateStatusUI('blocked');
+        post({ type: 'requireGesture', sessionId: sid });
+      }, LOCAL_START_CONFIRM_MS);
+    };
+
     utterance.onboundary = (e) => {
       if (sid !== currentSessionId) return;
+      confirmPlaying();
       const globalChar = chunk.start + (e.charIndex || 0);
       post({
         type: 'progress',
@@ -1258,12 +1510,16 @@
     };
 
     utterance.onend = () => {
+      clearLocalStartConfirm();
+      chunkStartSettled();
       if (sid !== currentSessionId) return;
       post({ type: 'chunkEnded', sessionId: sid, chunkIndex: chunk.index });
       playNextChunk();
     };
 
     utterance.onerror = (e) => {
+      clearLocalStartConfirm();
+      chunkStartSettled();
       if (sid !== currentSessionId) return;
       if (e.error === 'interrupted' || e.error === 'canceled') return;
       if (e.error === 'not-allowed') {
@@ -1320,12 +1576,19 @@
           currentSnapshot = msg.snapshot;
           renderTextPane(currentSnapshot);
         }
+        hostAudioAvailable = Boolean(msg.capabilities && msg.capabilities.hostAudio);
+        if (!hostAudioAvailable) armGestureBannerIfLocked();
         break;
       }
 
       case 'allVoices': {
         allVoices = msg.voices || [];
         updateVoiceCardUI();
+        break;
+      }
+
+      case 'notice': {
+        showNotice(msg.message || '');
         break;
       }
 
@@ -1379,12 +1642,36 @@
         break;
       }
 
+      case 'hostSession': {
+        // The host is speaking this one. Drop anything this document was
+        // doing and just mirror what it reports.
+        showNotice('');
+        hostDriven = true;
+        currentSessionId = msg.sessionId;
+        stopSynthesis();
+        hideGestureBanner();
+        updateProgressUI(0, 0);
+        updateStatusUI('starting');
+        break;
+      }
+
+      case 'hostProgress': {
+        if (!hostDriven) return;
+        highlightWordInTextPane(msg.charIndex);
+        updateProgressUI(typeof msg.percent === 'number' ? msg.percent : currentPercent, msg.charIndex);
+        break;
+      }
+
       case 'speak': {
         showNotice('');
+        hostDriven = false;
         currentSessionId = msg.sessionId;
         stopSynthesis();
         isSpeaking = true;
         chunkQueue = [...(msg.chunks || [])];
+        traced = msg.sessionId;
+        trace(`speak received: ${chunkQueue.length} chunks queued, voice="${effectiveVoice()}" ` +
+          `engine=${isNeuralVoice(currentSettings.voice) ? 'neural' : 'local'}`);
         updateStatusUI('starting');
         playNextChunk();
         break;
@@ -1418,8 +1705,13 @@
         }
 
         if (msg.sessionId !== currentSessionId) return;
+        pendingRequests.delete(msg.chunkIndex);
         neuralAudioCache.set(msg.chunkIndex, msg.audioBase64);
-        if (currentPlayingChunk && currentPlayingChunk.index === msg.chunkIndex && !currentSourceNode) {
+        // Start only if this is the audio the current chunk is still waiting
+        // on. Without the in-flight check a late duplicate response could start
+        // the same chunk a second time, on top of itself.
+        if (chunkStartInFlight && currentPlayingChunk &&
+            currentPlayingChunk.index === msg.chunkIndex && !currentSourceNode) {
           startNeuralAudioChunk(currentPlayingChunk, msg.audioBase64);
         }
         break;
@@ -1430,6 +1722,7 @@
           return;
         }
         if (msg.sessionId !== currentSessionId) return;
+        pendingRequests.delete(msg.chunkIndex);
         stopSynthesis();
         updateStatusUI('stopped');
         post({ type: 'error', sessionId: msg.sessionId, message: msg.message });
@@ -1439,7 +1732,11 @@
       case 'enqueue': {
         if (msg.sessionId !== currentSessionId) return;
         chunkQueue.push(...(msg.chunks || []));
-        if (isSpeaking && !currentSourceNode && (!('speechSynthesis' in window) || !window.speechSynthesis.speaking)) {
+        // Only kick the queue when it is genuinely idle. `playNextChunk`
+        // latches too, so this is belt and braces for the boundary window
+        // where one chunk has ended and the next has not started yet.
+        if (isSpeaking && !chunkStartInFlight && !isParked() && !currentSourceNode &&
+            (!('speechSynthesis' in window) || !window.speechSynthesis.speaking)) {
           playNextChunk();
         }
         break;
@@ -1447,11 +1744,14 @@
 
       case 'pause': {
         if (msg.sessionId && msg.sessionId !== currentSessionId) return;
-        if (audioCtx && currentSourceNode && !isAudioPaused) {
+        // Branch on the engine that owns the current chunk, not on whether an
+        // AudioContext happens to exist — a neural voice preview leaves one
+        // behind even while the offline engine is the one speaking.
+        if (currentEngine === 'neural' && audioCtx && currentSourceNode && !isAudioPaused) {
           pauseTimestamp = audioCtx.currentTime;
           audioCtx.suspend();
           isAudioPaused = true;
-        } else if ('speechSynthesis' in window) {
+        } else if (currentEngine === 'local' && 'speechSynthesis' in window) {
           window.speechSynthesis.pause();
         }
         updateStatusUI('paused');
@@ -1460,11 +1760,11 @@
 
       case 'resume': {
         if (msg.sessionId && msg.sessionId !== currentSessionId) return;
-        if (audioCtx && currentSourceNode && isAudioPaused) {
+        if (currentEngine === 'neural' && audioCtx && currentSourceNode && isAudioPaused) {
           totalPausedDuration += (audioCtx.currentTime - pauseTimestamp);
           audioCtx.resume();
           isAudioPaused = false;
-        } else if ('speechSynthesis' in window) {
+        } else if (currentEngine === 'local' && 'speechSynthesis' in window) {
           window.speechSynthesis.resume();
         }
         updateStatusUI('playing');

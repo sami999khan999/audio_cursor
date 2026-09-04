@@ -3,7 +3,10 @@ const vscode = require('vscode');
 const CONFIG_SECTION = 'audioCursor';
 
 const DEFAULTS = {
-  voice: '',
+  // The neural engine is the default. An unset value means "not configured"
+  // and resolves to this; the offline Web Speech engine is selected explicitly
+  // by the sentinel 'system'.
+  voice: 'en-US-JennyNeural',
   rate: 1.0,
   pitch: 1.0,
   highlightWord: true,
@@ -17,7 +20,8 @@ const DEFAULTS = {
   sanitizeCode: false,
   watchTerminalSelection: true,
   watchPreviewSelection: true,
-  readMarkdownAsProse: true
+  readMarkdownAsProse: true,
+  hostAudio: true
 };
 
 function clamp(val, min, max) {
@@ -93,6 +97,22 @@ class ConfigManager {
         const val = config.get('sanitizeCode', DEFAULTS.sanitizeCode);
         return Boolean(val);
       }
+      case 'watchTerminalSelection': {
+        const val = config.get('watchTerminalSelection', DEFAULTS.watchTerminalSelection);
+        return Boolean(val);
+      }
+      case 'watchPreviewSelection': {
+        const val = config.get('watchPreviewSelection', DEFAULTS.watchPreviewSelection);
+        return Boolean(val);
+      }
+      case 'readMarkdownAsProse': {
+        const val = config.get('readMarkdownAsProse', DEFAULTS.readMarkdownAsProse);
+        return Boolean(val);
+      }
+      case 'hostAudio': {
+        const val = config.get('hostAudio', DEFAULTS.hostAudio);
+        return Boolean(val);
+      }
       default:
         return config.get(key);
     }
@@ -111,7 +131,11 @@ class ConfigManager {
       stopOnDocumentChange: this.get('stopOnDocumentChange'),
       chunkSize: this.get('chunkSize'),
       queueAhead: this.get('queueAhead'),
-      sanitizeCode: this.get('sanitizeCode')
+      sanitizeCode: this.get('sanitizeCode'),
+      watchTerminalSelection: this.get('watchTerminalSelection'),
+      watchPreviewSelection: this.get('watchPreviewSelection'),
+      readMarkdownAsProse: this.get('readMarkdownAsProse'),
+      hostAudio: this.get('hostAudio')
     };
   }
 

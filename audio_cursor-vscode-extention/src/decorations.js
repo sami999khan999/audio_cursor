@@ -1,5 +1,9 @@
 const vscode = require('vscode');
 
+// How long after our own `revealRange` a visible-range change is still assumed
+// to be its echo rather than the user scrolling.
+const SELF_REVEAL_ECHO_MS = 250;
+
 class DecorationController {
   /**
    * @param {import('./config').config} config
@@ -10,7 +14,11 @@ class DecorationController {
     this._wordDecorationType = vscode.window.createTextEditorDecorationType({
       backgroundColor: new vscode.ThemeColor('editor.findMatchHighlightBackground'),
       borderRadius: '3px',
-      border: '1px solid var(--vscode-editor-findMatchHighlightBorder, rgba(234, 92, 0, 0.4))'
+      // A CSS custom property does not resolve inside decoration styles, so the
+      // border was never drawn. ThemeColor is the supported way to say this.
+      borderColor: new vscode.ThemeColor('editor.findMatchHighlightBorder'),
+      borderStyle: 'solid',
+      borderWidth: '1px'
     });
 
     this._sentenceDecorationType = vscode.window.createTextEditorDecorationType({
@@ -20,11 +28,16 @@ class DecorationController {
 
     this._lastRevealTime = 0;
     this._userInteractedUntil = 0;
+    // `revealRange` raises a visible-range change of its own, which used to be
+    // read as the user scrolling — so auto-scroll switched itself off for five
+    // seconds every time it scrolled. Ignore the echo of our own reveal.
+    this._selfRevealUntil = 0;
     this._disposables = [];
 
     // Detect user manual scroll or selection changes to back off auto-scrolling
     this._disposables.push(
       vscode.window.onDidChangeTextEditorVisibleRanges(() => {
+        if (Date.now() < this._selfRevealUntil) return;
         this._userInteractedUntil = Date.now() + 5000;
       }),
       vscode.window.onDidChangeTextEditorSelection(e => {
@@ -82,6 +95,7 @@ class DecorationController {
       const now = Date.now();
       if (now > this._userInteractedUntil && now - this._lastRevealTime > 1000) {
         this._lastRevealTime = now;
+        this._selfRevealUntil = now + SELF_REVEAL_ECHO_MS;
         editor.revealRange(wordRange, vscode.TextEditorRevealType.InCenterIfOutsideViewport);
       }
     }

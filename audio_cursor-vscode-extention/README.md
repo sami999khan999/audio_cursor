@@ -75,7 +75,8 @@ Configure Audio Cursor via **Settings** (`Ctrl+,` / `Cmd+,`) under `audioCursor`
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `audioCursor.voice` | string | `""` | Preferred TTS voice name or URI (empty for system default). |
+| `audioCursor.hostAudio` | boolean | `true` | Play audio from the extension host (Windows) so the first read of a window needs no click in the panel. Natural Neural voices only. |
+| `audioCursor.voice` | string | `"en-US-JennyNeural"` | Preferred TTS voice. A Natural Neural voice name (needs a network connection), one of your operating system's offline voice names, or `system` for the OS default voice. |
 | `audioCursor.rate` | number | `1.0` | Speech rate multiplier (0.5 to 2.0). |
 | `audioCursor.pitch` | number | `1.0` | Speech pitch multiplier (0.0 to 2.0). |
 | `audioCursor.highlightWord` | boolean | `true` | Highlight the currently spoken word in the active editor. |

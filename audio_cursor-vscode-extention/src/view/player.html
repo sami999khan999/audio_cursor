@@ -28,6 +28,18 @@
       </div>
     </div>
     <div class="section-content">
+      <!-- User Gesture Activation Banner. Outside #player-content on purpose:
+           it has to be reachable before there is anything queued, because a
+           click here is what allows audio at all. -->
+      <div class="gesture-banner" id="gesture-banner" style="display: none;">
+        <div class="gesture-icon">&#128266;</div>
+        <div class="gesture-info">
+          <div class="gesture-title" id="gesture-title">Click once to enable audio</div>
+          <div class="gesture-subtitle" id="gesture-subtitle">VS Code blocks sound in side panels until you interact with one.</div>
+        </div>
+        <button class="btn btn-primary-play btn-gesture-btn" id="btn-gesture-activate">Enable</button>
+      </div>
+
       <!-- Empty State -->
       <div class="empty-state" id="empty-state">
         <div class="empty-state-icon-wrapper">
@@ -45,16 +57,6 @@
 
       <!-- Active Controls -->
       <div class="controls-container" id="player-content" style="display: none;">
-        <!-- User Gesture Activation Banner -->
-        <div class="gesture-banner" id="gesture-banner" style="display: none;">
-          <div class="gesture-icon">🔊</div>
-          <div class="gesture-info">
-            <div class="gesture-title">Audio Ready — Click to Start</div>
-            <div class="gesture-subtitle">Browser requires a single click to allow speech</div>
-          </div>
-          <button class="btn btn-primary-play btn-gesture-btn" id="btn-gesture-activate">Play ▶</button>
-        </div>
-
         <!-- Why playback stopped / what will be read next. The outer slot
              animates its own height so showing or hiding the notice glides the
              controls instead of snapping them. -->

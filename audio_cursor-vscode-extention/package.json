@@ -2,7 +2,7 @@
   "name": "audio-cursor",
   "displayName": "Audio Cursor",
   "description": "Text-to-speech reading with word highlighting directly in your editor",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "publisher": "ProdigyCorp",
   "icon": "media/icon.png",
   "license": "MIT",
@@ -226,8 +226,8 @@
       "properties": {
         "audioCursor.voice": {
           "type": "string",
-          "default": "",
-          "markdownDescription": "Preferred TTS voice name or URI (leave empty for system default)."
+          "default": "en-US-JennyNeural",
+          "markdownDescription": "Preferred TTS voice. Use a Natural Neural voice name such as `en-US-JennyNeural` (synthesized by the Edge TTS service, needs a network connection), the name of one of your operating system's offline voices, or `system` for the OS default voice. Pick one from the sidebar or with *Audio Cursor: Select Voice* rather than typing it."
         },
         "audioCursor.rate": {
           "type": "number",
@@ -307,6 +307,11 @@
           "default": true,
           "markdownDescription": "Speak Markdown as prose: headings, emphasis, list bullets, link syntax and code fences are not read out literally. Applies to Markdown documents and to Markdown previews."
         },
+        "audioCursor.hostAudio": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Play audio from the extension host instead of inside the sidebar panel (Windows). VS Code does not let a panel make a sound until it has been clicked, so with this off the first read of every window waits for a click in the player. Natural Neural voices only; the offline system voice always plays in the panel."
+        },
         "audioCursor.sanitizeCode": {
           "type": "boolean",
           "default": false,
@@ -314,6 +319,9 @@
         }
       }
     }
+  },
+  "scripts": {
+    "test": "node --test test/chunk.test.js test/player-queue.test.js test/extension.test.js test/host-engine.test.js"
   },
   "devDependencies": {
     "@types/vscode": "^1.80.0",

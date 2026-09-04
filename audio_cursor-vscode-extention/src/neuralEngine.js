@@ -20,7 +20,12 @@ function escapeXml(text) {
 class NeuralSpeechEngine {
   constructor() {
     this._tts = new MsEdgeTTS();
+    // Seeded with the bundled list so the picker is populated instantly. It is
+    // still the *bundled* list though, so `getVoices()` must be allowed to go
+    // and fetch the live one — treating this as a warm cache is what made that
+    // fetch dead code.
     this._voicesCache = defaultVoices;
+    this._fetchedLive = false;
     this._voicesPromise = null;
   }
 
@@ -37,7 +42,7 @@ class NeuralSpeechEngine {
    * @returns {Promise<Array<Object>>}
    */
   async getVoices() {
-    if (this._voicesCache && this._voicesCache.length > 0) {
+    if (this._fetchedLive && this._voicesCache && this._voicesCache.length > 0) {
       return this._voicesCache;
     }
 
@@ -100,6 +105,7 @@ class NeuralSpeechEngine {
         });
 
         this._voicesCache = formatted;
+        this._fetchedLive = true;
         log.info(`Loaded ${formatted.length} Natural Neural voices from Edge TTS engine`);
         return formatted;
       } catch (err) {

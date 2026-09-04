@@ -5,6 +5,20 @@ const { ProgressTracker } = require('./progress');
 const { getSnapshot, createTextSnapshot, getActivePreviewTarget, resolvePreviewSnapshot } = require('./selection');
 const { ClipboardSelectionWatcher } = require('./clipboardWatcher');
 const { neuralEngine } = require('./neuralEngine');
+const { HostAudioPlayer } = require('./hostPlayer');
+const { HostSpeechEngine } = require('./hostEngine');
+
+// How long a session may sit in `starting` before the host gives up on it.
+// Longer than the player's own 6s watchdog, so the player gets to explain
+// itself first.
+const START_TIMEOUT_MS = 12000;
+// The host engine's first sound waits on a network synthesis with retries, so
+// it gets longer before being declared stuck.
+const HOST_START_TIMEOUT_MS = 30000;
+// The offline Web Speech engine is opt-in and has to be named, because an unset
+// voice means "not configured" and resolves to the neural default. Kept in step
+// with SYSTEM_VOICE in view/player.js.
+const SYSTEM_VOICE = 'system';
 
 class AudioCursorController {
   /**
@@ -15,8 +29,10 @@ class AudioCursorController {
    * @param {import('./decorations').DecorationController} params.decorations
    * @param {import('./view/provider').AudioCursorViewProvider} params.viewProvider
    * @param {vscode.Memento} [params.memento]
+   * @param {import('./hostPlayer').HostAudioPlayer | null} [params.hostPlayer]
+   *   Override for tests; by default one is created where the platform supports it.
    */
-  constructor({ config, selectionTracker, statusBar, decorations, viewProvider, memento }) {
+  constructor({ config, selectionTracker, statusBar, decorations, viewProvider, memento, hostPlayer }) {
     this._config = config;
     this._memento = memento || null;
     this._selectionTracker = selectionTracker;
@@ -33,6 +49,8 @@ class AudioCursorController {
     this._lastSource = 'editor';
     /** @type {Object | null} */
     this._lastTerminalSnapshot = null;
+    /** Guards against a session that never reports back from the webview. */
+    this._startWatchdog = null;
     /** @type {{ key: string, snapshot: Object } | null} */
     this._lastPreviewSelection = null;
     this._clipboardWatcher = new ClipboardSelectionWatcher(config);
@@ -42,6 +60,27 @@ class AudioCursorController {
     this._localVoices = [];
     this._availableVoices = [...this._neuralVoices];
     this._disposables = [];
+
+    // Where the sound comes out. The host engine plays through a process the
+    // extension owns, so it needs no click in the panel — the panel stays the
+    // UI. Where the platform has no host player, the panel's own engine is used
+    // and the one click VS Code demands stays.
+    /** @type {'panel' | 'host'} */
+    this._engine = 'panel';
+    this._hostPlayer = hostPlayer !== undefined
+      ? hostPlayer
+      : (HostAudioPlayer.isSupported() ? new HostAudioPlayer() : null);
+    this._hostEngine = this._hostPlayer ? new HostSpeechEngine(this._hostPlayer, neuralEngine) : null;
+    if (this._hostEngine) {
+      this._hostEngine.sweepStale();
+      this._wireHostEngine();
+      // Bring the player process up now rather than on the first Alt+P: it
+      // takes about a second to start, and that second used to sit between
+      // the keypress and the first sound.
+      if (this._config.get('hostAudio')) {
+        this._hostPlayer.ensureStarted().catch(() => {});
+      }
+    }
 
     this._initNeuralVoices();
     this._checkTerminalKeybinding();
@@ -140,8 +179,19 @@ class AudioCursorController {
         const isActive = this._status === 'playing' || this._status === 'paused' || this._status === 'starting';
         if (isActive && !this._isDifferentSelection(snapshot)) return;
 
+        if (isActive && snapshot.source === 'terminal') {
+          // A terminal running a full-screen program redraws constantly, and
+          // with `copyOnSelection` on every redraw re-copies the (slightly
+          // changed) selection. Treating each of those as a new selection
+          // stopped the first read within a second of it starting. So a
+          // terminal change only updates what the *next* Alt+P will read.
+          log.info('Terminal selection changed during playback; remembered for the next read, playback continues.');
+          this._lastTerminalSnapshot = snapshot;
+          return;
+        }
+
         if (isActive) {
-          log.info(`${snapshot.source === 'preview' ? 'Preview' : 'Terminal'} selection changed during playback; stopping playback.`);
+          log.info('Preview selection changed during playback; stopping playback.');
           this.stop();
         }
 
@@ -168,10 +218,16 @@ class AudioCursorController {
           type: 'init',
           settings: this._config.getAll(),
           snapshot,
-          voices: this._availableVoices
+          voices: this._availableVoices,
+          capabilities: { hostAudio: this._hostAudioEnabled() }
         });
         this._publishTerminalState();
         if (this._session) {
+          if (this._engine === 'host') {
+            // Opened during a host read: show the text being read and mirror.
+            this._publishSnapshot(this._session.snapshot);
+            this._viewProvider.postMessage({ type: 'hostSession', sessionId: this._session.id });
+          }
           this._viewProvider.postMessage({
             type: 'state',
             status: this._status,
@@ -220,57 +276,51 @@ class AudioCursorController {
         break;
 
       case 'started':
-        if (this._session && !this._session.isStale(msg.sessionId)) {
+        if (this._engine === 'panel' && this._session && !this._session.isStale(msg.sessionId)) {
+          this._clearStartWatchdog();
           this._setStatus('playing');
         }
         break;
 
       case 'progress':
-        if (this._session && !this._session.isStale(msg.sessionId)) {
-          this._session.cursorChar = msg.charIndex;
-          this._session.cursorChunk = msg.chunkIndex;
-          this._progressTracker.onEvent(msg.charIndex);
-
-          const editor = vscode.window.activeTextEditor;
-          const { docChanged } = this._decorations.highlight(
-            editor,
-            this._session.snapshot,
-            msg.charIndex,
-            msg.charLength
-          );
-
-          if (docChanged && this._config.get('stopOnDocumentChange')) {
-            log.warn('Document changed during playback; stopping playback as per configuration');
-            this.stop();
-            vscode.window.showInformationMessage('Audio Cursor: Playback stopped because document was edited.');
-            return;
-          }
-
-          this._statusBar.update({
-            status: 'playing',
-            percent: this._session.percent()
-          });
+        if (this._engine === 'panel' && this._session && !this._session.isStale(msg.sessionId)) {
+          this._onProgress(msg.charIndex, msg.chunkIndex, msg.charLength);
         }
         break;
 
       case 'chunkEnded':
         if (this._session && !this._session.isStale(msg.sessionId)) {
+          // Top the queue up only when it is actually running low. Pulling a
+          // whole fresh window on *every* chunk end raced the player far ahead
+          // of playback and made `queueAhead` meaningless after the first
+          // window; each of those messages was also a chance to double-start a
+          // chunk in the player.
           const queueAhead = this._config.get('queueAhead') || 12;
-          const nextChunks = this._session.nextWindow(queueAhead);
-          if (nextChunks.length > 0) {
-            this._viewProvider.postMessage({
-              type: 'enqueue',
-              sessionId: this._session.id,
-              chunks: nextChunks
-            });
+          const played = typeof msg.chunkIndex === 'number' ? msg.chunkIndex + 1 : 0;
+          const outstanding = this._session.queueHead - played;
+          if (outstanding <= Math.ceil(queueAhead / 2)) {
+            const nextChunks = this._session.nextWindow(queueAhead);
+            if (nextChunks.length > 0) {
+              this._viewProvider.postMessage({
+                type: 'enqueue',
+                sessionId: this._session.id,
+                chunks: nextChunks
+              });
+            }
           }
         }
         break;
 
       case 'ended':
-        if (this._session && !this._session.isStale(msg.sessionId)) {
+        if (this._engine === 'panel' && this._session && !this._session.isStale(msg.sessionId)) {
           log.info('Playback completed successfully');
           this._finishSession();
+        }
+        break;
+
+      case 'clientLog':
+        if (!this._session || !this._session.isStale(msg.sessionId)) {
+          log.info('Player: ' + (msg.message || ''));
         }
         break;
 
@@ -282,20 +332,18 @@ class AudioCursorController {
       case 'requireGesture':
         if (this._session && !this._session.isStale(msg.sessionId)) {
           log.info('Audio playback ready. Waiting for user activation on sidebar player.');
-          // Show the player so it can be clicked, but leave the caret alone —
-          // the notification below is what asks for the click.
+          // Show the player: its own banner is the thing to click, and it is
+          // right there. A modal notification on top of it was pure noise —
+          // it interrupted, it had to be dismissed, and it said nothing the
+          // panel was not already saying.
           this._revealPlayer({ preserveFocus: true });
-          // Only prompt once per session; the webview may re-request per chunk.
+          // Only nudge once per session; the webview may re-request per chunk.
           if (this._gesturePromptedSession === msg.sessionId) return;
           this._gesturePromptedSession = msg.sessionId;
-          vscode.window.showInformationMessage(
-            'Audio Cursor: Click the sidebar player panel once to allow audio playback.',
-            'Focus Player'
-          ).then(choice => {
-            if (choice === 'Focus Player') {
-              this.openPanel();
-            }
-          });
+          vscode.window.setStatusBarMessage(
+            '$(unmute) Audio Cursor: click the player panel once to allow audio',
+            6000
+          );
         }
         break;
 
@@ -338,11 +386,16 @@ class AudioCursorController {
   _handleCommandAction(action, payload = {}) {
     switch (action) {
       case 'play':
-        // The player is showing terminal output: re-read the live terminal
-        // selection rather than whatever the editor is pointed at.
-        if (payload.source === 'terminal' && vscode.window.activeTerminal) {
-          // Play exactly what the preview is showing; only re-capture if the
-          // watcher never saw a selection.
+        // The player is showing terminal output. Play exactly what the preview
+        // is showing — do NOT re-capture. Re-capturing from here ran VS Code's
+        // terminal copy command with focus already in the sidebar, so VS Code
+        // announced "The terminal has no selection to copy" and the extension
+        // then replayed the remembered text anyway: a wrong message over
+        // correct audio.
+        if (payload.source === 'terminal' && this._lastTerminalSnapshot) {
+          this._lastSource = 'terminal';
+          this.play(this._lastTerminalSnapshot);
+        } else if (payload.source === 'terminal' && vscode.window.activeTerminal) {
           this.togglePlaybackTerminal();
         } else {
           this.play();
@@ -369,7 +422,8 @@ class AudioCursorController {
         this.previousSentence();
         break;
       case 'readTerminal':
-        this.readTerminalSelection();
+        // Clicked in the sidebar, so the terminal no longer has focus.
+        this.readTerminalSelection({ live: false });
         break;
       case 'openKeybindings':
         this.openKeybindings();
@@ -457,7 +511,128 @@ class AudioCursorController {
     vscode.commands.executeCommand('setContext', 'audioCursor.paused', this._status === 'paused');
   }
 
+  _hostAudioEnabled() {
+    return Boolean(this._hostEngine) && this._config.get('hostAudio');
+  }
+
+  /**
+   * Whether this read should be spoken by the host engine. The offline system
+   * voice only exists inside the panel, so it always goes there.
+   * @returns {Promise<boolean>}
+   */
+  async _shouldUseHostEngine() {
+    if (!this._hostAudioEnabled()) return false;
+    if (this._config.get('voice') === SYSTEM_VOICE) return false;
+    const ok = await this._hostPlayer.ensureStarted();
+    if (!ok) log.warn('Host audio player unavailable; falling back to the panel engine for this read.');
+    return ok;
+  }
+
+  _wireHostEngine() {
+    const engine = this._hostEngine;
+    const live = () => this._engine === 'host' && this._session;
+
+    engine.on('started', () => {
+      if (!live()) return;
+      this._clearStartWatchdog();
+      this._setStatus('playing');
+      this._viewProvider.postMessage({ type: 'state', status: 'playing', percent: this._session.percent() });
+    });
+
+    engine.on('progress', ({ charIndex, chunkIndex }) => {
+      if (!live()) return;
+      this._onProgress(charIndex, chunkIndex);
+      if (!this._session) return; // stopOnDocumentChange may have ended it
+      // ~25 ticks a second: never queue these for a panel that is not open.
+      if (this._viewProvider.isReady()) {
+        this._viewProvider.postMessage({ type: 'hostProgress', charIndex, percent: this._session.percent() });
+      }
+    });
+
+    engine.on('ended', () => {
+      if (!live()) return;
+      log.info('Playback completed successfully (host engine).');
+      this._finishSession();
+      this._viewProvider.postMessage({ type: 'state', status: 'stopped', percent: 0 });
+    });
+
+    engine.on('failure', ({ message }) => {
+      if (!live()) return;
+      log.error('Host engine error:', message);
+      this._finishSession();
+      this._viewProvider.postMessage({ type: 'state', status: 'stopped', percent: 0 });
+      vscode.window.showErrorMessage(
+        `Audio Cursor TTS error: ${message || 'Unknown error'}`,
+        'Show Logs'
+      ).then(choice => {
+        if (choice === 'Show Logs') this.showLogs();
+      });
+    });
+  }
+
+  /**
+   * A spoken-position update from whichever engine is speaking: move the
+   * editor highlight, keep the status bar and session cursor in step.
+   * @param {number} charIndex
+   * @param {number} chunkIndex
+   * @param {number} [charLength]
+   */
+  _onProgress(charIndex, chunkIndex, charLength) {
+    const session = this._session;
+    if (!session) return;
+    // A tick that was already on its way when Pause was pressed must not
+    // paint the status bar back to "playing" — that is what left the pause
+    // icon showing over a paused read.
+    if (this._status !== 'playing') return;
+    session.cursorChar = charIndex;
+    session.cursorChunk = chunkIndex;
+    this._progressTracker.onEvent(charIndex);
+
+    const editor = vscode.window.activeTextEditor;
+    const { docChanged } = this._decorations.highlight(editor, session.snapshot, charIndex, charLength);
+
+    if (docChanged && this._config.get('stopOnDocumentChange')) {
+      log.warn('Document changed during playback; stopping playback as per configuration');
+      this.stop();
+      vscode.window.showInformationMessage('Audio Cursor: Playback stopped because document was edited.');
+      return;
+    }
+
+    this._statusBar.update({ status: this._status, percent: session.percent() });
+  }
+
+  _clearStartWatchdog() {
+    if (this._startWatchdog) {
+      clearTimeout(this._startWatchdog);
+      this._startWatchdog = null;
+    }
+  }
+
+  /**
+   * A session that never reports back used to leave the status bar spinning on
+   * `starting` forever, with `audioCursor.playing` false so the Stop command
+   * stayed hidden. Give up after a while and say so.
+   * @param {string} sessionId
+   */
+  _armStartWatchdog(sessionId, timeoutMs = START_TIMEOUT_MS) {
+    this._clearStartWatchdog();
+    this._startWatchdog = setTimeout(() => {
+      this._startWatchdog = null;
+      if (!this._session || this._session.isStale(sessionId)) return;
+      if (this._status !== 'starting') return;
+      log.warn(
+        `Session ${sessionId} never confirmed playback within ${timeoutMs}ms; ` +
+        'see the entries above for where it stopped.'
+      );
+      if (this._hostEngine && this._hostEngine.isActive) this._hostEngine.stop();
+      this._setStatus('stopped');
+      this._viewProvider.postMessage({ type: 'state', status: 'stopped', percent: 0 });
+    }, timeoutMs);
+  }
+
   _finishSession() {
+    this._clearStartWatchdog();
+    if (this._hostEngine && this._hostEngine.isActive) this._hostEngine.stop();
     this._setStatus('idle');
     this._decorations.clear();
     this._session = null;
@@ -617,8 +792,10 @@ class AudioCursorController {
       snapshot = await this._selectionTracker.getSnapshotAsync();
     }
     // Nothing in any editor: fall back to whatever is selected in the terminal.
+    // Whatever brought us here, it was not the terminal keybinding, so prefer
+    // the selection the watcher already holds over running the copy command.
     if (!snapshot && !customSnapshot && vscode.window.activeTerminal) {
-      snapshot = await this._captureTerminalSelection();
+      snapshot = await this._captureTerminalSelection({ live: false });
     }
 
     if (!snapshot || !snapshot.text || !snapshot.text.trim()) {
@@ -626,7 +803,12 @@ class AudioCursorController {
       return;
     }
 
-    const isReady = await this._ensureWebviewReady();
+    const useHost = await this._shouldUseHostEngine();
+
+    // Only the panel engine needs the panel — it is where its sound comes
+    // from. Host audio must not open it: the editor highlight works without
+    // it, and having Alt+P yank the sidebar open was itself a complaint.
+    const isReady = useHost ? true : await this._ensureWebviewReady();
     if (!isReady) {
       vscode.window.showWarningMessage(
         'Audio Cursor player view is not initialized. Please open the Audio Cursor sidebar tab to begin.',
@@ -641,6 +823,7 @@ class AudioCursorController {
 
     // Stop current session if any
     if (this._session) {
+      if (this._hostEngine && this._hostEngine.isActive) this._hostEngine.stop();
       this._viewProvider.postMessage({ type: 'stop', sessionId: this._session.id });
     }
 
@@ -660,10 +843,25 @@ class AudioCursorController {
     // (terminal text and cursor-to-end reads never come from a selection event).
     this._publishSnapshot(snapshot);
 
+    log.info(`Starting speech session ${this._session.id} (${snapshot.wordCount} words, ` +
+      `${this._session.chunks.length} chunks, ${useHost ? 'host' : 'panel'} engine)`);
+
+    this._engine = useHost ? 'host' : 'panel';
+    this._armStartWatchdog(this._session.id, useHost ? HOST_START_TIMEOUT_MS : START_TIMEOUT_MS);
+
+    if (useHost) {
+      // The panel only mirrors state from here on; it must not start its own
+      // engine for this session.
+      this._viewProvider.postMessage({ type: 'hostSession', sessionId: this._session.id });
+      this._hostEngine.start(this._session, () => ({
+        voice: this._config.get('voice') || 'en-US-JennyNeural',
+        rate: this._config.get('rate'),
+        pitch: this._config.get('pitch')
+      }));
+      return;
+    }
+
     const firstBatch = this._session.nextWindow(queueAhead);
-
-    log.info(`Starting speech session ${this._session.id} (${snapshot.wordCount} words, ${this._session.chunks.length} chunks)`);
-
     this._viewProvider.postMessage({
       type: 'speak',
       sessionId: this._session.id,
@@ -679,6 +877,11 @@ class AudioCursorController {
     if (this._status !== 'playing' || !this._session) return;
     this._setStatus('paused');
     this._progressTracker.pause();
+    if (this._engine === 'host') {
+      this._hostEngine.pause();
+      this._viewProvider.postMessage({ type: 'state', status: 'paused', percent: this._session.percent() });
+      return;
+    }
     this._viewProvider.postMessage({
       type: 'pause',
       sessionId: this._session.id
@@ -689,6 +892,11 @@ class AudioCursorController {
     if (this._status !== 'paused' || !this._session) return;
     this._setStatus('playing');
     this._progressTracker.resume();
+    if (this._engine === 'host') {
+      this._hostEngine.resume();
+      this._viewProvider.postMessage({ type: 'state', status: 'playing', percent: this._session.percent() });
+      return;
+    }
     this._viewProvider.postMessage({
       type: 'resume',
       sessionId: this._session.id
@@ -697,6 +905,7 @@ class AudioCursorController {
 
   stop() {
     if (this._session) {
+      if (this._hostEngine && this._hostEngine.isActive) this._hostEngine.stop();
       this._viewProvider.postMessage({
         type: 'stop',
         sessionId: this._session.id
@@ -714,11 +923,23 @@ class AudioCursorController {
       return;
     }
 
+    if (this._engine === 'host') {
+      // The host engine does its own re-positioning; the session id stays.
+      this._setStatus('starting');
+      this._armStartWatchdog(this._session.id, HOST_START_TIMEOUT_MS);
+      this._viewProvider.postMessage({ type: 'state', status: 'starting', percent: this._session.percent() });
+      this._hostEngine.seek(charIndex);
+      return;
+    }
+
     const { chunkIndex, newSessionId } = this._session.seekTo(charIndex);
     const queueAhead = this._config.get('queueAhead');
     const chunks = this._session.nextWindow(queueAhead);
 
-    this._setStatus('playing');
+    // Seeking re-synthesizes from the new position, so nothing is audible yet.
+    // Claiming 'playing' here is the same lie the 0.7.3 work removed elsewhere.
+    this._setStatus('starting');
+    this._armStartWatchdog(newSessionId);
     this._viewProvider.postMessage({
       type: 'speak',
       sessionId: newSessionId,
@@ -731,15 +952,81 @@ class AudioCursorController {
   }
 
   /**
+   * What `terminal.integrated.copyOnSelection` left on the clipboard, as a
+   * terminal snapshot — or null if it is empty or is really the editor's own
+   * selection (a copy made in the editor is the one false positive that
+   * matters, and it is excluded by value, the same way the watcher does it).
+   * @param {vscode.Terminal} terminal
+   * @returns {Promise<Object | null>}
+   */
+  async _terminalSelectionFromClipboard(terminal) {
+    let text;
+    try {
+      text = await vscode.env.clipboard.readText();
+    } catch (_) {
+      return null;
+    }
+    if (!text || !text.trim()) return null;
+    if (this._clipboardWatcher.matchesEditorSelection(text)) return null;
+    const snapshot = createTextSnapshot(text, {
+      label: terminal.name ? `Terminal: ${terminal.name}` : 'Terminal',
+      source: 'terminal'
+    });
+    if (snapshot) snapshot.terminalName = terminal.name || '';
+    return snapshot;
+  }
+
+  /**
    * Read the active terminal's selection. VS Code has no stable API for
    * terminal selections, so the text is lifted via the terminal's own copy
    * command with the user's clipboard saved and restored around it.
+   *
+   * That command only works while the terminal has keyboard focus, and when it
+   * finds nothing VS Code itself announces "The terminal has no selection to
+   * copy" — a notice this extension cannot suppress. So it is only ever run
+   * from a path where the terminal really does have focus, which means the
+   * Alt+P keybinding and the terminal context menu.
+   *
+   * Pass `live: false` from anything the user reached by clicking in the
+   * sidebar. Focus is in the panel by then, so the command would always fail
+   * and always complain; only the selection the clipboard watcher already
+   * holds is used, and if there is none the caller is told so.
+   *
+   * @param {{ live?: boolean }} [options]
    * @returns {Promise<Object | null>}
    */
-  async _captureTerminalSelection() {
+  async _captureTerminalSelection({ live = true } = {}) {
     const terminal = vscode.window.activeTerminal || vscode.window.terminals[0];
     if (!terminal) {
       log.warn('Terminal capture skipped: no terminal is open.');
+      return null;
+    }
+
+    // With `copyOnSelection` on, VS Code has already put the selection on the
+    // clipboard at the moment it was made — so read it from there, and never
+    // run the copy command at all. The command needs the terminal to still
+    // hold both focus and its selection, and a terminal running a full-screen
+    // program (a TUI redraws constantly) drops the selection almost at once;
+    // that is how a plainly highlighted selection still produced "The terminal
+    // has no selection to copy".
+    if (vscode.workspace.getConfiguration('terminal.integrated').get('copyOnSelection')) {
+      const fromClipboard = await this._terminalSelectionFromClipboard(terminal);
+      if (fromClipboard) {
+        log.info(`Terminal selection taken from the clipboard (${fromClipboard.wordCount} words).`);
+        return fromClipboard;
+      }
+      if (this._lastTerminalSnapshot) return this._lastTerminalSnapshot;
+      return null;
+    }
+
+    // Reached by a click, so focus is in the panel and the copy command could
+    // only fail — noisily. Use what the watcher has, or nothing.
+    if (!live) {
+      if (this._lastTerminalSnapshot) {
+        log.info('Using the terminal selection the watcher already captured; not running the copy command.');
+        return this._lastTerminalSnapshot;
+      }
+      log.info('No terminal selection has been captured, and the copy command needs terminal focus.');
       return null;
     }
 
@@ -773,10 +1060,14 @@ class AudioCursorController {
 
     log.info(`Terminal capture succeeded (${copied.length} chars from "${terminal.name}").`);
 
-    return createTextSnapshot(copied, {
+    const snapshot = createTextSnapshot(copied, {
       label: terminal.name ? `Terminal: ${terminal.name}` : 'Terminal',
       source: 'terminal'
     });
+    // Remember which terminal it came from, so a fallback replay cannot read
+    // one terminal's output while a different one is in front of the user.
+    if (snapshot) snapshot.terminalName = terminal.name || '';
+    return snapshot;
   }
 
   /**
@@ -828,8 +1119,12 @@ class AudioCursorController {
     return snapshot;
   }
 
-  async readTerminalSelection() {
-    log.info('Read terminal selection requested.');
+  /**
+   * @param {{ live?: boolean }} [options] `live: false` when the user got here
+   *   by clicking in the sidebar, so keyboard focus is no longer in the terminal.
+   */
+  async readTerminalSelection({ live = true } = {}) {
+    log.info(`Read terminal selection requested (${live ? 'live capture' : 'from the player preview'}).`);
     this._offerTerminalKeybinding();
     this._offerCopyOnSelection();
 
@@ -839,18 +1134,30 @@ class AudioCursorController {
       return;
     }
 
-    const snapshot = await this._captureTerminalSelection();
+    const snapshot = await this._captureTerminalSelection({ live });
     if (!snapshot) {
-      // Nothing selected right now: read whatever the preview is showing.
-      if (this._lastTerminalSnapshot) {
+      // Nothing selected right now: fall back to what the player is showing,
+      // but only if it came from the terminal that is actually in front of the
+      // user — otherwise a second terminal would replay the first one's output.
+      const active = vscode.window.activeTerminal;
+      const remembered = this._lastTerminalSnapshot;
+      const sameTerminal = remembered && (
+        !remembered.terminalName || !active || remembered.terminalName === active.name
+      );
+
+      if (remembered && sameTerminal) {
         log.info('No live terminal selection; replaying the previewed terminal text.');
         this._lastSource = 'terminal';
-        await this.play(this._lastTerminalSnapshot);
+        await this.play(remembered);
+        // After `play`, not before: starting a read posts `selection` and
+        // `speak`, and both clear the notice slot.
+        this._viewProvider.postMessage({
+          type: 'notice',
+          message: 'No live terminal selection — replaying the last one.'
+        });
         return;
       }
-      vscode.window.showInformationMessage(
-        'Audio Cursor: Select some text in the terminal first, then read it again.'
-      );
+      await this._explainNoTerminalSelection(live);
       return;
     }
 
@@ -858,6 +1165,42 @@ class AudioCursorController {
     this._lastSource = 'terminal';
     this._lastTerminalSnapshot = snapshot;
     await this.play(snapshot);
+  }
+
+  /**
+   * Nothing to read from the terminal. Which advice is useful depends on why:
+   * a live capture that came back empty means there really is no selection,
+   * whereas a click in the sidebar never got to look — the copy command needs
+   * terminal focus, so Alt+P is the thing that works from there.
+   * @param {boolean} live
+   */
+  async _explainNoTerminalSelection(live) {
+    if (live) {
+      vscode.window.showInformationMessage(
+        'Audio Cursor: Select some text in the terminal first, then read it again.'
+      );
+      return;
+    }
+
+    const cfg = vscode.workspace.getConfiguration('terminal.integrated');
+    if (cfg.get('copyOnSelection')) {
+      vscode.window.showInformationMessage(
+        'Audio Cursor: Select some text in the terminal and it will appear here ready to read.'
+      );
+      return;
+    }
+
+    const choice = await vscode.window.showInformationMessage(
+      'Audio Cursor: reading the terminal from this panel needs `terminal.integrated.copyOnSelection`, ' +
+      'because VS Code exposes no terminal-selection API. With it on, selecting text in a terminal ' +
+      'puts it straight into the player. Otherwise press Alt+P with the terminal focused.',
+      'Enable',
+      'Not now'
+    );
+    if (choice === 'Enable') {
+      await cfg.update('copyOnSelection', true, vscode.ConfigurationTarget.Global);
+      log.info('Enabled terminal.integrated.copyOnSelection from the player panel.');
+    }
   }
 
   /**
@@ -963,9 +1306,9 @@ class AudioCursorController {
     const items = [
       {
         label: '$(device-desktop) System Default Voice',
-        description: 'Use the operating system default voice',
-        value: '',
-        picked: currentVoice === ''
+        description: 'Offline · the operating system voice, no network needed',
+        value: SYSTEM_VOICE,
+        picked: currentVoice === SYSTEM_VOICE
       }
     ];
 
@@ -1077,8 +1420,11 @@ class AudioCursorController {
   }
 
   dispose() {
+    this._clearStartWatchdog();
     this._clipboardWatcher.dispose();
     this.stop();
+    if (this._hostEngine) this._hostEngine.dispose();
+    if (this._hostPlayer) this._hostPlayer.dispose();
     for (const d of this._disposables) {
       d.dispose();
     }
