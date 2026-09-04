@@ -1,6 +1,6 @@
 {
   "name": "audio-cursor-browser-extension",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "private": true,
   "description": "Audio Cursor — Chrome extension. No dependencies; these scripts only build and test.",
   "scripts": {

@@ -130,12 +130,23 @@
   const elHighlightWord = document.getElementById('setting-highlight-word');
   const elFollowCursor = document.getElementById('setting-follow-cursor');
   const elSettingsLink = document.getElementById('link-more-settings');
+  const elKeybindList = document.getElementById('keybind-list');
+
+  /** Escape text bound for innerHTML, attribute values included. */
+  function esc(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 
   // SVG Icons
   const SVG_FILE = '<svg viewBox="0 0 16 16"><path d="M9 1H3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6l-5-5zm0 1.5L12.5 6H9V2.5zM3 14V2h5v5h5v7H3z"/></svg>';
   const SVG_TERMINAL = '<svg viewBox="0 0 16 16"><path d="M1.5 2h13a.5.5 0 0 1 .5.5v11a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5zM2 13h12V3H2v10zm1.35-7.85l.7-.7L7.2 7.6a.5.5 0 0 1 0 .7l-3.15 3.16-.7-.71L6.15 8 3.35 5.15zM8 10.5h4v1H8v-1z"/></svg>';
   const SVG_PREVIEW = '<svg viewBox="0 0 16 16"><path d="M8 3C4.5 3 1.7 5.2 1 8c.7 2.8 3.5 5 7 5s6.3-2.2 7-5c-.7-2.8-3.5-5-7-5zm0 8.5A3.5 3.5 0 1 1 8 4.5a3.5 3.5 0 0 1 0 7zm0-5.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>';
-  const SVG_PLAY = '<svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5-9-5.5z"/></svg>';
+  const SVG_PLAY = '<svg class="glyph-play" viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5-9-5.5z"/></svg>';
   const SVG_PAUSE = '<svg viewBox="0 0 16 16"><path d="M3.5 2h3v12h-3V2zm6 0h3v12h-3V2z"/></svg>';
   // Not a transport glyph: it fills the icon slot while the first chunk is being
   // synthesized, so the button never shows "Pause" before anything is audible.
@@ -250,7 +261,8 @@
     }
 
     if (elVoiceCountSummary) {
-      elVoiceCountSummary.textContent = `${allVoices.length || 325} voices`;
+      const count = allVoices.length || 325;
+      elVoiceCountSummary.textContent = `${count} voice${count === 1 ? '' : 's'}`;
     }
   }
 
@@ -347,29 +359,26 @@
       const itemEl = document.createElement('div');
       itemEl.className = 'voice-list-item' + (isSelected ? ' selected' : '');
 
-      const genderClass = v.gender === 'Female' ? 'tag-female' : (v.gender === 'Male' ? 'tag-male' : '');
       const typeBadge = v.isNeural ? '<span class="tag tag-neural">Natural AI</span>' : '<span class="tag tag-offline">Offline</span>';
-      const genderBadge = v.gender ? `<span class="tag ${genderClass}">${v.gender}</span>` : '';
-      const checkmark = isSelected ? '<span class="selected-checkmark" title="Active Voice">✓ Selected</span>' : '';
+      const checkmark = isSelected ? '<span class="selected-checkmark" title="Active Voice">✓</span>' : '';
+      const subText = esc([v.country, v.languageName || v.lang, v.gender].filter(Boolean).join(' • '));
+      const fullName = esc(v.cleanName || v.name);
       const cCode = v.countryCode || (v.lang ? (v.lang.split('-')[1] || v.lang.substring(0,2)).toUpperCase() : 'AI');
 
       itemEl.innerHTML = `
         <div class="voice-item-left">
-          <div class="voice-avatar-mini"><span class="avatar-code">${cCode}</span></div>
+          <div class="voice-avatar-mini"><span class="avatar-code">${esc(cCode)}</span></div>
           <div class="voice-item-details">
             <div class="voice-item-name">
-              <span class="voice-name-title">${v.cleanName || v.name}</span>
+              <span class="voice-name-title" title="${fullName}">${fullName}</span>
               ${typeBadge}
-              ${genderBadge}
               ${checkmark}
             </div>
-            <div class="voice-item-sub">
-              ${v.country || ''} • ${v.languageName || v.lang || ''}
-            </div>
+            <div class="voice-item-sub" title="${subText}">${subText}</div>
           </div>
         </div>
         <div class="voice-item-actions">
-          <button class="btn-preview" data-voice="${v.name}" title="Listen to a voice sample">
+          <button class="btn-preview" data-voice="${esc(v.name)}" aria-label="Preview ${fullName}" title="Preview ${fullName}">
             <svg class="preview-svg" viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5-9-5.5z"/></svg>
             <span>Preview</span>
           </button>
@@ -456,12 +465,24 @@
   // --- Accordion Sections & State Persistence ---
 
   document.querySelectorAll('.section-header').forEach(header => {
-    header.addEventListener('click', () => {
+    const toggle = () => {
       const section = header.closest('.section');
-      if (section) {
-        section.classList.toggle('collapsed');
-        savePersistedState();
-      }
+      if (!section) return;
+      section.classList.toggle('collapsed');
+      header.setAttribute('aria-expanded', String(!section.classList.contains('collapsed')));
+      savePersistedState();
+    };
+
+    header.addEventListener('click', toggle);
+
+    // The header is a div wearing role="button", so it has to bring its own
+    // Enter and Space handling; a real button would get these for free.
+    header.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+      // Buttons in the header (copy preview) have their own handlers.
+      if (e.target !== header && e.target.closest('button')) return;
+      e.preventDefault();
+      toggle();
     });
   });
 
@@ -481,6 +502,10 @@
         if (el) el.classList.add('collapsed');
       }
     }
+    document.querySelectorAll('.section').forEach(section => {
+      const header = section.querySelector('.section-header');
+      if (header) header.setAttribute('aria-expanded', String(!section.classList.contains('collapsed')));
+    });
   }
 
   restorePersistedState();
@@ -654,6 +679,15 @@
 
   if (elVoiceCard) {
     elVoiceCard.addEventListener('click', openVoiceModal);
+    // The card is the control that opens the browser, so it answers the keys a
+    // button answers. It carries role="button" and a focus ring; without this
+    // it was the one control in the panel focus could reach but not operate.
+    elVoiceCard.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        openVoiceModal();
+      }
+    });
   }
   if (elCloseVoiceModal) {
     elCloseVoiceModal.addEventListener('click', closeVoiceModal);
@@ -783,6 +817,8 @@
     document.querySelectorAll('.speed-pill').forEach(p => {
       p.classList.toggle('active', parseFloat(p.dataset.speed) === speedVal);
     });
+    if (currentSnapshot) updateSourceCard(currentSnapshot);
+    updateProgressUI(currentPercent, currentCharIndex);
     post({ type: 'setSetting', key: 'rate', value: speedVal });
   }
 
@@ -888,6 +924,36 @@
     elScrubTrack.classList.remove('scrubbing');
   });
 
+  // The bar announces itself as a slider, so it has to answer the arrow keys.
+  // Seeking was mouse-only, which left the one control that can move a long
+  // read unreachable without a pointer.
+  function seekByFraction(frac) {
+    if (!currentSnapshot || !currentSnapshot.text) return;
+    const clamped = Math.max(0, Math.min(1, frac));
+    const targetChar = Math.round(clamped * currentSnapshot.text.length);
+    updateProgressUI(clamped * 100, targetChar);
+    post({ type: 'command', action: 'seek', charIndex: targetChar });
+  }
+
+  elScrubTrack.addEventListener('keydown', (e) => {
+    const step = e.shiftKey ? 0.1 : 0.02;
+    const current = currentPercent / 100;
+    let target = null;
+
+    switch (e.key) {
+      case 'ArrowRight': case 'ArrowUp': target = current + step; break;
+      case 'ArrowLeft': case 'ArrowDown': target = current - step; break;
+      case 'PageUp': target = current + 0.1; break;
+      case 'PageDown': target = current - 0.1; break;
+      case 'Home': target = 0; break;
+      case 'End': target = 1; break;
+      default: return;
+    }
+
+    e.preventDefault();
+    seekByFraction(target);
+  });
+
   if (elRateSlider) {
     updateRangeFill(elRateSlider);
     elRateSlider.addEventListener('input', () => {
@@ -903,6 +969,8 @@
       const val = parseFloat(elRateSlider.value);
       currentSettings.rate = val;
       updateRangeFill(elRateSlider);
+      if (currentSnapshot) updateSourceCard(currentSnapshot);
+      updateProgressUI(currentPercent, currentCharIndex);
       post({ type: 'setSetting', key: 'rate', value: val });
     });
   }
@@ -946,7 +1014,17 @@
     elPlayerContent.style.display = 'flex';
 
     elTextFileName.textContent = snapshot.fileName || 'Selection';
-    elTextStats.textContent = `${snapshot.wordCount || 0} words · ${snapshot.charCount || snapshot.text.length} chars`;
+    elTextFileName.title = elTextFileName.textContent;
+    const wordCount = snapshot.wordCount || 0;
+    const charCount = snapshot.charCount || snapshot.text.length;
+    elTextStats.replaceChildren();
+    const words = document.createElement('span');
+    words.textContent = `${formatCount(wordCount)} words`;
+    const chars = document.createElement('span');
+    chars.className = 'text-meta-chars';
+    chars.textContent = ` · ${formatCount(charCount)} chars`;
+    elTextStats.append(words, chars);
+    elTextStats.title = `${formatCount(wordCount)} words · ${formatCount(charCount)} characters`;
     updateSourceCard(snapshot);
 
     elTextContainer.innerHTML = '';
@@ -1003,6 +1081,47 @@
     }
   }
 
+  /**
+   * Draw the shortcut list from what the host resolved. Built with DOM calls
+   * rather than innerHTML because the labels and chords are host-supplied
+   * strings and this document runs with a CSP that trusts what it renders.
+   * @param {Array<{label: string, keys: string[], unassigned: boolean}>} rows
+   */
+  function renderKeybindings(rows) {
+    if (!elKeybindList || !Array.isArray(rows) || !rows.length) return;
+
+    const fragment = document.createDocumentFragment();
+    for (const row of rows) {
+      const line = document.createElement('div');
+      line.className = 'keybind-row';
+
+      const label = document.createElement('span');
+      label.textContent = row.label;
+      label.title = row.label;
+      line.appendChild(label);
+
+      if (row.unassigned || !row.keys || !row.keys.length) {
+        const none = document.createElement('span');
+        none.className = 'keybind-unassigned';
+        none.textContent = 'Unassigned';
+        line.appendChild(none);
+      } else {
+        const keys = document.createElement('span');
+        keys.className = 'keybind-keys';
+        for (const key of row.keys) {
+          const kbd = document.createElement('kbd');
+          kbd.textContent = key;
+          keys.appendChild(kbd);
+        }
+        line.appendChild(keys);
+      }
+
+      fragment.appendChild(line);
+    }
+
+    elKeybindList.replaceChildren(fragment);
+  }
+
   function showNotice(text) {
     if (!elPlayerNoticeSlot || !elPlayerNoticeText) return;
     if (!text) {
@@ -1015,9 +1134,20 @@
     elPlayerNoticeSlot.classList.add('open');
   }
 
-  function estimateSeconds(wordCount) {
+  // Five-figure character counts run together without separators.
+  function formatCount(n) {
+    return Number(n || 0).toLocaleString();
+  }
+
+  // One estimator for the whole panel. The source card used to size the read
+  // by word count while the scrub clock sized it by characters, so the same
+  // selection advertised two different durations a few pixels apart.
+  const WORDS_PER_MINUTE = 200;
+  const CHARS_PER_WORD = 5;
+
+  function estimateSeconds(charCount) {
     const rate = currentSettings.rate || 1.0;
-    return Math.max(1, Math.round((wordCount / (200 * rate)) * 60));
+    return Math.max(1, Math.round(((charCount / CHARS_PER_WORD) / (WORDS_PER_MINUTE * rate)) * 60));
   }
 
   function updateSourceCard(snapshot) {
@@ -1034,7 +1164,10 @@
     elSourceName.title = elSourceName.textContent;
 
     if (elSourceSub) {
-      const parts = [`${words} word${words === 1 ? '' : 's'}`, `~${formatTime(estimateSeconds(words))}`];
+      // No duration here: the scrub bar's time row already counts the whole
+      // read down from it, and carrying the same figure twice is what pushed
+      // this line past the width of a side bar.
+      const parts = [`${formatCount(words)} word${words === 1 ? '' : 's'}`];
       if (snapshot && snapshot.fromCursor) parts.push('from cursor');
       elSourceSub.textContent = parts.join(' · ');
     }
@@ -1050,11 +1183,11 @@
     currentCharIndex = charIndex || 0;
     elScrubFill.style.width = `${currentPercent}%`;
     if (elScrubThumb) elScrubThumb.style.left = `${currentPercent}%`;
+    if (elScrubTrack) elScrubTrack.setAttribute('aria-valuenow', String(Math.round(currentPercent)));
 
     if (currentSnapshot && currentSnapshot.text) {
       const totalChars = currentSnapshot.text.length;
-      const rate = currentSettings.rate || 1.0;
-      const totalSeconds = Math.round(((totalChars / 5) / (200 * rate)) * 60);
+      const totalSeconds = estimateSeconds(totalChars);
       const elapsedSeconds = Math.round(((currentCharIndex / Math.max(1, totalChars)) * totalSeconds));
       const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
 
@@ -1589,6 +1722,11 @@
 
       case 'notice': {
         showNotice(msg.message || '');
+        break;
+      }
+
+      case 'keybindings': {
+        renderKeybindings(msg.rows);
         break;
       }
 

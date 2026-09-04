@@ -29,6 +29,7 @@
 //   { type: 'AC_CHUNK_PROGRESS', sessionId, chunkIndex, fraction }
 //   { type: 'AC_CHUNK_ENDED',    sessionId, chunkIndex, isLast }
 //   { type: 'AC_CHUNK_ERROR',    sessionId, chunkIndex, error, fatal }
+//   { type: 'AC_PREVIEW_STARTED' }
 //   { type: 'AC_PREVIEW_ENDED' }
 //   { type: 'AC_PREVIEW_ERROR',  error }
 
@@ -314,6 +315,10 @@ async function playPreview(msg) {
             voice: msg.voice,
             rate: msg.rate,
             pitch: msg.pitch,
+            onStart: () => {
+                if (token !== previewToken) return;
+                post({ type: 'AC_PREVIEW_STARTED' });
+            },
             onEnd: () => {
                 if (webSpeechOwner === 'preview') webSpeechOwner = null;
                 if (token !== previewToken) return;
@@ -344,6 +349,10 @@ async function playPreview(msg) {
     const audio = new Audio(previewAudioUrl);
     previewAudio = audio;
 
+    audio.onplaying = () => {
+        if (token !== previewToken) return;
+        post({ type: 'AC_PREVIEW_STARTED' });
+    };
     audio.onended = () => {
         stopPreview();
         post({ type: 'AC_PREVIEW_ENDED' });

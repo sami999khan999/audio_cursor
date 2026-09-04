@@ -24,7 +24,8 @@ function activate(context) {
     statusBar,
     decorations,
     viewProvider: provider,
-    memento: context.globalState
+    memento: context.globalState,
+    globalStorageUri: context.globalStorageUri
   });
 
   // Register Webview View Provider

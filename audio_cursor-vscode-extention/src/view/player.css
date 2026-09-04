@@ -6,6 +6,68 @@
   --radius-full: 9999px;
   --transition-fast: 0.12s ease;
   --transition-normal: 0.18s ease;
+
+  /* Depth by outline, not by tone.
+     -----------------------------
+     Groups used to sit on a faint grey fill. Grey at low alpha is neutral by
+     definition, and that is the whole problem: over a background that carries
+     a hue — Tokyo Night's blue-black, say — the fill lands as a desaturated
+     slab that belongs to no palette but its own, and the panel reads as a
+     window pasted onto the theme rather than part of it.
+
+     A hairline cannot go wrong that way. It marks where a group starts and
+     stops without painting a surface, so whatever the theme puts behind the
+     side bar stays visible inside every card and there is nothing left to
+     clash. Nesting is then carried by the one line plus the spacing around it.
+
+     The two overlays that float above content — the voice browser dialog and
+     the filter menus — are the exception and stay opaque, on the theme's own
+     dropdown and editor-widget colours, because hiding what is behind them is
+     their job. */
+  --ac-track: var(--vscode-scrollbarSlider-background, rgba(127, 127, 127, 0.24));
+  /* Hairlines are grey at low alpha rather than a theme token, and that is
+     not a stylistic preference: a theme's own `widget.border` is only
+     required to be a colour, not a *visible* one. Plenty of themes set it to
+     within a shade or two of their background — it is a border they never draw
+     — and every rule in this panel then disappeared at once: no divider between
+     sections, none between the two switches, none in the shortcut list. Grey at
+     alpha cannot do that, because it is defined against whatever is behind it.
+
+     These two also have to differ. Chained through `var(--vscode-widget-border,
+     …)` the fallback alphas were dead code whenever the theme defined that
+     token, so "soft" and normal resolved to the same colour and the panel had
+     one line weight instead of two. */
+  --ac-border: rgba(127, 127, 127, 0.3);
+  --ac-border-soft: rgba(127, 127, 127, 0.16);
+  --ac-hover: var(--vscode-toolbar-hoverBackground, var(--vscode-list-hoverBackground, rgba(127, 127, 127, 0.16)));
+  --ac-accent: var(--vscode-button-background, #0e639c);
+
+  /* Vertical rhythm. Three steps only, so nothing in the panel lands on an
+     off-scale gap. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+
+  /* Type scale.
+     -----------
+     There were nine sizes in use between 9px and 13px — 9, 9.5, 10, 10.5, 11,
+     11.5, 12, 12.5, 13 — most of them a half-pixel apart and none of them
+     reading as a different rank. Four steps, each with one job: names and
+     titles, everything you read, secondary detail, and badges. */
+  --fs-title: 13px;   /* file names, voice names, the empty state's headline */
+  --fs-body: 12px;    /* control labels, preview text, buttons */
+  --fs-meta: 11px;    /* counts, descriptions, times, key caps */
+  --fs-badge: 10px;   /* tags, status pill, avatar codes */
+}
+
+body.vscode-light {
+  --ac-border: rgba(0, 0, 0, 0.11);
+  --ac-border-soft: rgba(0, 0, 0, 0.06);
+}
+
+body.vscode-high-contrast {
+  --ac-border: var(--vscode-contrastBorder, rgba(127, 127, 127, 0.8));
+  --ac-border-soft: var(--vscode-contrastBorder, rgba(127, 127, 127, 0.6));
 }
 
 * {
@@ -19,15 +81,42 @@ body {
   font-size: var(--vscode-font-size, 13px);
   color: var(--vscode-foreground);
   background-color: var(--vscode-sideBar-background, var(--vscode-editor-background));
-  padding: 8px;
+  /* No side padding: the rule between two sections is the panel's main piece
+     of structure and it should run the full width, the way every divider in
+     VS Code's own side bar does. The horizontal inset lives on the header and
+     the content instead. */
+  padding: 0 0 var(--space-3);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
   user-select: none;
   min-width: 0;
   overflow-x: hidden;
   line-height: 1.4;
   -webkit-font-smoothing: antialiased;
+}
+
+/* One focus ring for every interactive control. Several of these are custom
+   elements that had none at all, so the panel could not be driven by keyboard
+   without guessing where focus was. */
+.btn:focus-visible,
+.btn-action-icon:focus-visible,
+.speed-pill:focus-visible,
+.voice-card:focus-visible,
+.scrub-bar-track:focus-visible,
+.custom-dropdown-btn:focus-visible,
+.voice-list-item:focus-visible,
+.btn-preview:focus-visible,
+.voice-browser-close:focus-visible,
+.section-header:focus-visible,
+.toggle-switch input:focus-visible + .toggle-slider,
+.voice-search-input:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder, #007acc);
+  outline-offset: 2px;
+}
+
+.scrub-bar-track:focus-visible {
+  outline-offset: 4px;
 }
 
 /* Scrollbar styling matching VS Code */
@@ -49,62 +138,78 @@ body {
   background: var(--vscode-scrollbarSlider-activeBackground, rgba(128, 128, 128, 0.7));
 }
 
-/* Accordion sections */
+/* Accordion sections
+   ------------------
+   A section is its heading and the rule above it — not a box. Three rounded
+   outlines stacked down the panel put a frame around content that is already
+   bounded by the side bar itself, and every card inside then needed its own
+   outline to be told apart from that frame. */
 .section {
   display: flex;
   flex-direction: column;
-  background: var(--vscode-sideBarSectionHeader-background, rgba(128, 128, 128, 0.04));
-  border: 1px solid var(--vscode-sideBarSectionHeader-border, var(--vscode-widget-border, rgba(128, 128, 128, 0.2)));
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  transition: border-color var(--transition-fast);
+  background: none;
+  border: none;
 }
 
-.section:hover {
-  border-color: var(--vscode-focusBorder, rgba(128, 128, 128, 0.4));
+.section + .section {
+  border-top: 1px solid var(--ac-border);
 }
+
 
 .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 7px 10px;
-  background-color: var(--vscode-sideBarSectionHeader-background, rgba(128, 128, 128, 0.08));
+  gap: var(--space-2);
+  /* VS Code's own side bar section headers are a 22px row. This one was half
+     again as tall, which is what made three stacked sections read as three
+     separate panels rather than one view. */
+  padding: 5px var(--space-3) 5px 9px;
+  min-height: 22px;
+  background-color: var(--vscode-sideBarSectionHeader-background, transparent);
   cursor: pointer;
-  font-weight: 600;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--vscode-sideBarSectionHeader-foreground, var(--vscode-foreground));
-  border-bottom: 1px solid transparent;
   transition: background-color var(--transition-fast);
 }
 
 .section-header:hover {
-  background-color: var(--vscode-list-hoverBackground, rgba(128, 128, 128, 0.12));
+  background-color: var(--ac-hover);
 }
 
-.section:not(.collapsed) .section-header {
-  border-bottom-color: var(--vscode-sideBarSectionHeader-border, var(--vscode-widget-border, rgba(128, 128, 128, 0.15)));
-}
 
 .section-title {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  min-width: 0;
+  font-weight: 600;
+  font-size: var(--fs-meta);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--vscode-sideBarSectionHeader-foreground, var(--vscode-foreground));
 }
 
+/* The glyph is a right-pointing chevron, so it needs +90deg to point down at
+   the content an open section is showing. It used to be rotated the other way
+   while collapsed, which left an open section pointing right and a closed one
+   pointing up — the reverse of every twistie in VS Code. */
 .section-chevron {
   transition: transform var(--transition-normal);
-  width: 13px;
-  height: 13px;
+  width: 12px;
+  height: 12px;
   fill: currentColor;
-  opacity: 0.8;
+  opacity: 0.75;
   flex-shrink: 0;
+  transform: rotate(90deg);
 }
 
 .section.collapsed .section-chevron {
-  transform: rotate(-90deg);
+  transform: rotate(0deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-chevron {
+    transition: none;
+  }
 }
 
 .section.collapsed .section-content {
@@ -112,7 +217,10 @@ body {
 }
 
 .section-content {
-  padding: 10px;
+  /* Content clears its heading by more than the heading clears the rule above
+     it, so a heading reads as belonging to what follows rather than floating
+     between two groups. */
+  padding: 5px var(--space-3) var(--space-3);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -146,28 +254,6 @@ body {
   width: 14px;
   height: 14px;
   fill: currentColor;
-}
-
-/* Width reservation
-   ------------------
-   Labels that swap between states (Play / Pause / Resume, Ready / Playing 42%)
-   change width, and a plain textContent swap reflows everything around them.
-   Both children share one grid cell, so the slot is always as wide as the
-   hidden sizer holding the longest label — the visible text just changes. */
-.width-slot {
-  display: inline-grid;
-  align-items: center;
-  justify-items: start;
-}
-
-.width-slot > * {
-  grid-area: 1 / 1;
-  white-space: nowrap;
-}
-
-.width-slot-sizer {
-  visibility: hidden;
-  pointer-events: none;
 }
 
 /* Collapsible notice
@@ -209,8 +295,9 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 10px;
-  padding: 2px 7px;
+  flex: 0 0 auto;
+  font-size: var(--fs-badge);
+  padding: 2.5px 8px;
   border-radius: var(--radius-full);
   font-weight: 600;
   letter-spacing: 0.3px;
@@ -246,10 +333,11 @@ body {
 }
 
 .status-dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background-color: currentColor;
+  flex: 0 0 auto;
 }
 
 .status-badge.playing .status-dot {
@@ -269,9 +357,9 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 16px 8px;
+  padding: 18px 6px 14px;
   color: var(--vscode-descriptionForeground);
-  gap: 6px;
+  gap: 5px;
 }
 
 .empty-state-icon-wrapper {
@@ -279,7 +367,8 @@ body {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: var(--vscode-sideBarSectionHeader-background, rgba(128, 128, 128, 0.1));
+  background: none;
+  border: 1px solid var(--ac-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -293,29 +382,16 @@ body {
   opacity: 0.7;
 }
 
-.empty-state-pulse {
-  position: absolute;
-  inset: -2px;
-  border-radius: 50%;
-  border: 1px dashed var(--vscode-focusBorder, rgba(128, 128, 128, 0.4));
-  opacity: 0.4;
-  animation: rotateSlow 20s linear infinite;
-}
-
-@keyframes rotateSlow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
 .empty-state-title {
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--fs-title);
   color: var(--vscode-foreground);
 }
 
 .empty-state-text {
-  font-size: 11.5px;
-  line-height: 1.5;
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+  max-width: 34ch;
   color: var(--vscode-descriptionForeground);
 }
 
@@ -333,9 +409,10 @@ body {
   justify-content: space-between;
   gap: 10px;
   padding: 8px 10px;
-  background: var(--vscode-inputValidation-infoBackground, rgba(0, 122, 204, 0.15));
-  border: 1px solid var(--vscode-inputValidation-infoBorder, var(--vscode-focusBorder, #007acc));
-  border-radius: var(--radius-xs);
+  background: none;
+  border: 1px solid var(--ac-border);
+  border-left: 2px solid var(--vscode-inputValidation-infoBorder, var(--vscode-focusBorder, #007acc));
+  border-radius: var(--radius-md);
   cursor: pointer;
 }
 
@@ -353,19 +430,19 @@ body {
 }
 
 .gesture-title {
-  font-size: 12px;
+  font-size: var(--fs-body);
   font-weight: 600;
   color: var(--vscode-foreground);
 }
 
 .gesture-subtitle {
-  font-size: 10.5px;
+  font-size: var(--fs-meta);
   color: var(--vscode-descriptionForeground);
 }
 
 .btn-gesture-btn {
   padding: 3px 8px !important;
-  font-size: 11px !important;
+  font-size: var(--fs-meta) !important;
   min-width: auto !important;
 }
 
@@ -374,12 +451,13 @@ body {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  padding: 7px 9px;
-  border-radius: var(--radius-xs);
-  border: 1px solid var(--vscode-inputValidation-infoBorder, rgba(0, 122, 204, 0.4));
-  background: var(--vscode-inputValidation-infoBackground, rgba(0, 122, 204, 0.1));
+  padding: 8px 9px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--ac-border);
+  border-left: 2px solid var(--vscode-inputValidation-infoBorder, rgba(0, 122, 204, 0.4));
+  background: none;
   color: var(--vscode-foreground);
-  font-size: 11.5px;
+  font-size: var(--fs-body);
   line-height: 1.45;
 }
 
@@ -395,25 +473,47 @@ body {
 .source-card {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: var(--radius-xs);
-  border: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.2));
-  background: var(--vscode-editor-background);
+  gap: 9px;
+  padding: 9px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--ac-border);
+  background: none;
   min-width: 0;
   position: relative;
+  overflow: hidden;
+}
+
+/* An accent rail on the card edge, lit only while sound is actually coming
+   out. It gives the panel one unambiguous "this is live" signal that survives
+   at any side bar width, unlike the equalizer bars. */
+.source-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--ac-accent);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+#section-playback:has(.status-badge.playing) .source-card::before {
+  opacity: 1;
 }
 
 .source-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   flex: 0 0 auto;
-  border-radius: var(--radius-xs);
-  background: var(--vscode-badge-background, rgba(128, 128, 128, 0.2));
-  color: var(--vscode-badge-foreground, var(--vscode-foreground));
+  border-radius: var(--radius-sm);
+  background: none;
+  border: 1px solid var(--ac-border-soft);
+  color: var(--vscode-foreground);
+  opacity: 0.85;
 }
 
 .source-icon svg {
@@ -425,13 +525,13 @@ body {
 .source-details {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 3px;
   min-width: 0;
   flex: 1 1 auto;
 }
 
 .source-name {
-  font-size: 12.5px;
+  font-size: var(--fs-title);
   font-weight: 600;
   color: var(--vscode-foreground);
   white-space: nowrap;
@@ -439,10 +539,27 @@ body {
   text-overflow: ellipsis;
 }
 
+/* The source kind sits with the counts rather than in a right-hand column of
+   its own: at side bar widths a trailing pill was the first thing to be
+   clipped, and it took the equalizer with it.
+   The row wraps instead of ellipsizing. A count that does not fit is worse
+   than useless — "1,025 words · fr…" reads as a truncated file name — so a
+   long combination takes a second line and the card grows by 14px. */
+.source-sub-row {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+}
+
 .source-sub {
-  font-size: 11px;
+  font-size: var(--fs-meta);
   color: var(--vscode-descriptionForeground);
   font-variant-numeric: tabular-nums;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Animated Audio Equalizer Visualizer */
@@ -451,8 +568,9 @@ body {
   align-items: flex-end;
   gap: 2px;
   height: 14px;
-  padding: 0 3px;
-  opacity: 0.35;
+  padding: 0;
+  flex: 0 0 auto;
+  opacity: 0;
   transition: opacity var(--transition-normal);
 }
 
@@ -463,9 +581,9 @@ body {
 }
 
 .visualizer-bars .bar {
-  width: 3px;
-  border-radius: 1px;
-  background: var(--vscode-focusBorder, var(--vscode-button-background, currentColor));
+  width: 2.5px;
+  border-radius: var(--radius-full);
+  background: var(--ac-accent);
   height: 3px;
   transition: height var(--transition-fast);
 }
@@ -487,33 +605,47 @@ body {
   100% { height: 4px; }
 }
 
-/* Scrub Bar */
+/* Scrub Bar
+   ---------
+   The track is a thin rule at rest and thickens under the pointer, and the
+   thumb only exists while the bar is being aimed at. A permanently drawn thumb
+   with a hard white fill and a drop shadow was the loudest thing in the panel
+   while sitting still at 0:00.
+   Padding plus `background-clip: content-box` keeps the visible rule thin while
+   the pointer target stays a comfortable 16px; the negative margin cancels the
+   padding so the extra target costs no layout space. */
 .scrub-container {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: var(--space-1);
 }
 
 .scrub-bar-track {
   position: relative;
   width: 100%;
-  height: 6px;
-  background-color: rgba(128, 128, 128, 0.25);
+  height: 4px;
+  background-color: var(--ac-track);
   border-radius: var(--radius-full);
   cursor: pointer;
   padding: 6px 0;
   background-clip: content-box;
   box-sizing: content-box;
   margin: -6px 0;
+  transition: height var(--transition-fast);
+}
+
+.scrub-bar-track:hover,
+.scrub-bar-track.scrubbing {
+  height: 6px;
 }
 
 .scrub-bar-fill {
   position: absolute;
   top: 6px;
+  bottom: 6px;
   left: 0;
-  height: 6px;
   width: 0%;
-  background: var(--vscode-button-background, #007acc);
+  background: var(--ac-accent);
   border-radius: var(--radius-full);
   transition: width 0.08s linear;
 }
@@ -522,39 +654,56 @@ body {
   position: absolute;
   top: 50%;
   left: 0;
-  width: 13px;
-  height: 13px;
-  margin-left: -6.5px;
+  width: 11px;
+  height: 11px;
+  margin-left: -5.5px;
   border-radius: 50%;
-  background: #ffffff;
-  border: 2.5px solid var(--vscode-button-background, #007acc);
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
-  transform: translateY(-50%) scale(1);
-  transition: transform var(--transition-fast), left 0.08s linear, box-shadow var(--transition-fast);
+  background: var(--ac-accent);
+  box-shadow: 0 0 0 2px var(--vscode-sideBar-background, var(--vscode-editor-background));
+  transform: translateY(-50%) scale(0);
+  transition: transform var(--transition-fast), left 0.08s linear;
   pointer-events: none;
 }
 
 .scrub-bar-track:hover .scrub-bar-thumb,
+.scrub-bar-track:focus-visible .scrub-bar-thumb,
+.scrub-bar-track.scrubbing .scrub-bar-thumb {
+  transform: translateY(-50%) scale(1);
+}
+
 .scrub-bar-track.scrubbing .scrub-bar-thumb {
   transform: translateY(-50%) scale(1.15);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrub-bar-track,
+  .scrub-bar-thumb,
+  .scrub-bar-fill {
+    transition: none;
+  }
 }
 
 .scrub-time-row {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: var(--fs-meta);
   color: var(--vscode-descriptionForeground);
   font-variant-numeric: tabular-nums;
-  font-weight: 500;
+  letter-spacing: 0.2px;
 }
 
-/* Button & Transport Bar */
+/* Button & Transport Bar
+   ----------------------
+   Four same-sized rectangles gave the play button no more weight than skip or
+   stop. The secondary transport is now unfilled and the play button is the one
+   solid disc, so the primary action is legible at a glance and the row keeps
+   its shape at every side bar width instead of shedding its label below 280px. */
 .button-bar {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
+  padding: 2px 0;
 }
 
 .btn {
@@ -567,7 +716,7 @@ body {
   border: 1px solid transparent;
   background-color: var(--vscode-button-background);
   color: var(--vscode-button-foreground);
-  font-size: 12px;
+  font-size: var(--fs-body);
   font-family: inherit;
   font-weight: 500;
   cursor: pointer;
@@ -587,21 +736,25 @@ body {
   cursor: not-allowed;
 }
 
+/* Outlined rather than filled. `button.secondaryBackground` is a light grey
+   slab on most dark themes, and a slab is the loudest thing in a panel that
+   draws everything else in hairlines: Remap sat under the shortcut list it
+   belongs to and outshone every key cap in it. */
 .btn-secondary {
-  background-color: var(--vscode-button-secondaryBackground, rgba(128, 128, 128, 0.15));
+  background-color: transparent;
   color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
-  border: 1px solid var(--vscode-widget-border, transparent);
+  border: 1px solid var(--ac-border);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: var(--vscode-button-secondaryHoverBackground, rgba(128, 128, 128, 0.25));
+  background-color: var(--ac-hover);
 }
 
 .btn-icon {
-  padding: 6px;
+  padding: 0;
   width: 30px;
   height: 30px;
-  border-radius: var(--radius-xs);
+  border-radius: 50%;
   flex-shrink: 0;
 }
 
@@ -611,13 +764,29 @@ body {
   fill: currentColor;
 }
 
+/* Ghost transport: no fill until the pointer is on it. */
+.button-bar .btn-secondary {
+  background-color: transparent;
+  border-color: transparent;
+  color: var(--vscode-foreground);
+  opacity: 0.72;
+}
+
+.button-bar .btn-secondary:hover:not(:disabled) {
+  background-color: var(--ac-hover);
+  opacity: 1;
+}
+
 .btn-hero-play {
-  padding: 6px 16px;
-  min-width: 90px;
-  font-weight: 600;
-  font-size: 12.5px;
-  border-radius: var(--radius-xs);
-  background-color: var(--vscode-button-background);
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  min-width: 0;
+  flex-shrink: 0;
+  margin: 0 4px;
+  gap: 0;
+  border-radius: 50%;
+  background-color: var(--ac-accent);
   color: var(--vscode-button-foreground);
 }
 
@@ -625,23 +794,41 @@ body {
   background-color: var(--vscode-button-hoverBackground);
 }
 
+/* The label still swaps between Play / Pause / Resume / Loading for assistive
+   tech; the disc carries the glyph, so the text is measured but never seen. */
+.btn-hero-play .sr-label {
+  flex: 0 0 0;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .btn-hero-play .btn-icon {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   padding: 0;
+  border-radius: 0;
   background: transparent;
 }
 
 .btn-hero-play .btn-icon svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   fill: currentColor;
+}
+
+/* A triangle's centre of area sits left of its bounding box, so it needs a
+   nudge to look centred inside a circle. The pause bars do not. */
+.btn-hero-play .btn-icon .glyph-play {
+  transform: translateX(1px);
 }
 
 .btn-hero-play .btn-icon .btn-spin {
   display: block;
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   border: 2px solid currentColor;
   border-top-color: transparent;
   border-radius: 50%;
@@ -663,9 +850,13 @@ body {
   width: 100%;
   justify-content: center;
   gap: 7px;
-  padding: 6px 12px;
-  font-size: 11.5px;
-  border-radius: var(--radius-xs);
+  padding: 7px 12px;
+  font-size: var(--fs-body);
+  border-radius: var(--radius-sm);
+}
+
+.btn-wide svg {
+  opacity: 0.8;
 }
 
 .btn-wide svg {
@@ -678,17 +869,19 @@ body {
 .text-meta {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  font-size: 11px;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--fs-meta);
   color: var(--vscode-descriptionForeground);
-  padding-bottom: 5px;
-  border-bottom: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.15));
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--ac-border-soft);
 }
 
 .text-meta-file {
   display: flex;
   align-items: center;
   gap: 5px;
+  min-width: 0;
   font-weight: 600;
   color: var(--vscode-foreground);
   overflow: hidden;
@@ -696,27 +889,50 @@ body {
   white-space: nowrap;
 }
 
-.tag-stats {
+.text-meta-file svg {
+  opacity: 0.7;
+}
+
+/* Plain figures, not a badge. As a filled pill the counts were the widest and
+   heaviest thing in the row and pushed the file name they annotate into an
+   ellipsis. */
+.text-meta-stats {
+  flex: 0 0 auto;
+  font-size: var(--fs-meta);
   font-variant-numeric: tabular-nums;
-  font-size: 10.5px;
+  color: var(--vscode-descriptionForeground);
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+.text-meta-file > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .text-container {
-  max-height: 180px;
+  max-height: 190px;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 8px;
+  padding: 9px 10px;
   font-family: var(--vscode-editor-font-family, 'Cascadia Code', Consolas, 'Courier New', monospace);
-  font-size: 12px;
-  line-height: 1.6;
+  font-size: var(--fs-body);
+  line-height: 1.65;
   white-space: pre-wrap;
   word-break: break-word;
   user-select: text;
-  background-color: var(--vscode-editor-background);
-  border: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.18));
-  border-radius: var(--radius-xs);
+  background: none;
+  border: 1px solid var(--ac-border);
+  border-radius: var(--radius-md);
   color: var(--vscode-foreground);
   scroll-behavior: smooth;
+}
+
+.text-container:empty::after,
+.text-container.is-placeholder {
+  color: var(--vscode-descriptionForeground);
 }
 
 .word {
@@ -742,7 +958,7 @@ body {
 .settings-form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .setting-item {
@@ -758,13 +974,17 @@ body {
 }
 
 .setting-label {
-  font-size: 11.5px;
+  font-size: var(--fs-body);
   font-weight: 600;
   color: var(--vscode-foreground);
 }
 
+.setting-label-row .btn {
+  flex: 0 0 auto;
+}
+
 .setting-val {
-  font-size: 11px;
+  font-size: var(--fs-meta);
   color: var(--vscode-descriptionForeground);
   font-variant-numeric: tabular-nums;
 }
@@ -800,29 +1020,29 @@ input[type="range"].setting-range::-webkit-slider-runnable-track {
   border: none;
 }
 
+/* The thumb takes its colour from the theme's button and is ringed in the
+   panel background rather than drawn in hard white with a drop shadow, which
+   was the one element in the panel that looked the same in every theme. */
 input[type="range"].setting-range::-webkit-slider-thumb {
   -webkit-appearance: none !important;
   appearance: none !important;
-  width: 14px;
-  height: 14px;
-  margin-top: -4.5px;
+  width: 12px;
+  height: 12px;
+  margin-top: -3.5px;
   border-radius: 50%;
-  background: #ffffff;
-  border: 2.5px solid var(--vscode-button-background, #007acc);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+  background: var(--ac-accent);
+  border: none;
+  box-shadow: 0 0 0 2px var(--vscode-sideBar-background, var(--vscode-editor-background));
   cursor: pointer;
-  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+  transition: transform 0.12s ease;
 }
 
 input[type="range"].setting-range::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-  border-color: var(--vscode-focusBorder, #38bdf8);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  transform: scale(1.18);
 }
 
 input[type="range"].setting-range:active::-webkit-slider-thumb {
-  transform: scale(1.28);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+  transform: scale(1.25);
 }
 
 input[type="range"].setting-range::-moz-range-track {
@@ -833,75 +1053,101 @@ input[type="range"].setting-range::-moz-range-track {
 }
 
 input[type="range"].setting-range::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: #ffffff;
-  border: 2.5px solid var(--vscode-button-background, #007acc);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+  background: var(--ac-accent);
+  border: none;
+  box-shadow: 0 0 0 2px var(--vscode-sideBar-background, var(--vscode-editor-background));
   cursor: pointer;
 }
 
-/* Speed Pills Segmented Control */
+/* Speed presets
+   -------------
+   These are shortcuts onto the slider directly above them, not a control of
+   their own, so nothing is boxed around them. Framed as a segmented control
+   they read as a second, competing speed setting — and one that contradicts
+   the first, since a slider parked on 1.1x leaves every segment of a segmented
+   control unselected, which is a broken-looking state to reach by dragging.
+
+   Only an exact match lights up, and it lights up filled: one selected figure
+   has to be unmistakable among four unselected ones. */
 .speed-pills-row {
   display: flex;
+  justify-content: space-between;
   gap: 2px;
-  padding: 2px;
-  background: var(--vscode-sideBarSectionHeader-background, rgba(128, 128, 128, 0.08));
-  border: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.15));
-  border-radius: var(--radius-xs);
-  margin-top: 3px;
+  margin-top: 1px;
 }
 
 .speed-pill {
-  flex: 1;
-  padding: 4px 0;
+  flex: 0 0 auto;
+  padding: 2px 6px;
   text-align: center;
-  font-size: 11px;
-  border-radius: 2px;
+  font-size: var(--fs-meta);
+  border-radius: var(--radius-xs);
   background-color: transparent;
-  color: var(--vscode-foreground);
-  border: 1px solid transparent;
+  color: var(--vscode-descriptionForeground);
+  border: none;
   cursor: pointer;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .speed-pill:hover {
-  background-color: var(--vscode-list-hoverBackground, rgba(128, 128, 128, 0.15));
+  background-color: var(--ac-hover);
+  color: var(--vscode-foreground);
 }
 
 .speed-pill.active {
-  background: var(--vscode-button-background);
+  background: var(--ac-accent);
   color: var(--vscode-button-foreground);
   font-weight: 600;
 }
 
 /* Voice Profile Card */
+/* The whole card is the button that opens the voice browser, so it no longer
+   carries a Change button as well. That button was the widest fixed thing in
+   the row and it was taking its space from the line it sat next to — at side
+   bar widths the voice's own country and gender clipped to "United States  Fe…"
+   to make room for a second way to press the card. A chevron says the same
+   thing in 12px. */
 .voice-card {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 10px;
-  background-color: var(--vscode-editor-background);
-  border: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.2));
-  border-radius: var(--radius-xs);
+  column-gap: 9px;
+  padding: 8px 10px;
+  background: none;
+  border: 1px solid var(--ac-border);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast);
 }
 
 .voice-card:hover {
-  border-color: var(--vscode-focusBorder);
-  background-color: var(--vscode-list-hoverBackground, rgba(128, 128, 128, 0.1));
+  background-color: var(--ac-hover);
+}
+
+.voice-card-chevron {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  margin-left: auto;
+  fill: currentColor;
+  opacity: 0.45;
+  transition: opacity var(--transition-fast);
+}
+
+.voice-card:hover .voice-card-chevron {
+  opacity: 0.9;
 }
 
 .voice-avatar-wrapper {
   width: 28px;
   height: 28px;
-  border-radius: var(--radius-xs);
-  background: var(--vscode-badge-background, rgba(128, 128, 128, 0.2));
-  border: 1px solid var(--vscode-widget-border, transparent);
+  border-radius: var(--radius-sm);
+  background: none;
+  border: 1px solid var(--ac-border-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -909,18 +1155,20 @@ input[type="range"].setting-range::-moz-range-thumb {
 }
 
 .avatar-code {
-  font-size: 10.5px;
+  font-size: var(--fs-meta);
   font-weight: 700;
-  color: var(--vscode-badge-foreground, var(--vscode-foreground));
+  color: var(--vscode-foreground);
+  opacity: 0.75;
   letter-spacing: 0.5px;
 }
 
 .voice-avatar-mini {
   width: 24px;
   height: 24px;
-  border-radius: var(--radius-xs);
-  background: var(--vscode-badge-background, rgba(128, 128, 128, 0.15));
-  border: 1px solid var(--vscode-widget-border, transparent);
+  flex: 0 0 auto;
+  border-radius: var(--radius-sm);
+  background: none;
+  border: 1px solid var(--ac-border-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -928,17 +1176,21 @@ input[type="range"].setting-range::-moz-range-thumb {
 }
 
 .voice-avatar-mini .avatar-code {
-  font-size: 9.5px;
+  font-size: var(--fs-badge);
   font-weight: 700;
-  color: var(--vscode-badge-foreground, var(--vscode-foreground));
+  color: var(--vscode-foreground);
+  opacity: 0.75;
 }
 
 .voice-info {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   min-width: 0;
-  flex: 1;
+  /* Narrower than the name it holds is fine — it wraps. Without a basis of 0
+     the flex item refuses to shrink below its content and pushes the button
+     out of the card. */
+  flex: 1 1 0;
 }
 
 .voice-name-row {
@@ -946,26 +1198,46 @@ input[type="range"].setting-range::-moz-range-thumb {
   align-items: center;
   gap: 6px;
   font-weight: 600;
-  font-size: 12px;
+  font-size: var(--fs-body);
   color: var(--vscode-foreground);
+  min-width: 0;
 }
 
+.voice-name-row > span:first-child {
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.voice-name-row .tag {
+  flex: 0 0 auto;
+}
+
+/* Inline flow rather than a flex row, so the separator dots stay attached to
+   the words instead of being laid out as items of their own — then the whole
+   line clips as one run of text. */
 .voice-meta-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
+  font-size: var(--fs-meta);
+  line-height: 1.4;
   color: var(--vscode-descriptionForeground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .meta-dot {
   opacity: 0.5;
+  margin: 0 4px;
 }
 
 .btn-sm {
   padding: 3px 8px !important;
-  font-size: 11px !important;
+  font-size: var(--fs-meta) !important;
   border-radius: var(--radius-xs) !important;
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 /* Switch Items */
@@ -974,23 +1246,29 @@ input[type="range"].setting-range::-moz-range-thumb {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 3px 0;
+  padding: 7px 0;
+}
+
+.setting-switch-item + .setting-switch-item {
+  border-top: 1px solid var(--ac-border-soft);
 }
 
 .switch-label-group {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
+  min-width: 0;
 }
 
 .switch-title {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--fs-body);
+  font-weight: 600;
   color: var(--vscode-foreground);
 }
 
 .switch-desc {
-  font-size: 10.5px;
+  font-size: var(--fs-meta);
+  line-height: 1.45;
   color: var(--vscode-descriptionForeground);
 }
 
@@ -1015,8 +1293,8 @@ input[type="range"].setting-range::-moz-range-thumb {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--vscode-widget-border, rgba(128, 128, 128, 0.35));
-  transition: all var(--transition-fast);
+  background-color: var(--ac-track);
+  transition: background-color var(--transition-fast);
   border-radius: var(--radius-full);
 }
 
@@ -1028,13 +1306,13 @@ input[type="range"].setting-range::-moz-range-thumb {
   left: 2px;
   bottom: 2px;
   background-color: #ffffff;
-  transition: all var(--transition-fast);
+  transition: transform var(--transition-fast);
   border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.14);
 }
 
 .toggle-switch input:checked + .toggle-slider {
-  background-color: var(--vscode-focusBorder, var(--vscode-button-background, #007acc));
+  background-color: var(--ac-accent);
 }
 
 .toggle-switch input:checked + .toggle-slider:before {
@@ -1045,7 +1323,7 @@ input[type="range"].setting-range::-moz-range-thumb {
 .tag {
   display: inline-flex;
   align-items: center;
-  font-size: 10px;
+  font-size: var(--fs-badge);
   padding: 1px 5px;
   border-radius: var(--radius-xs);
   font-weight: 500;
@@ -1058,48 +1336,83 @@ input[type="range"].setting-range::-moz-range-thumb {
 .tag-neural {
   background-color: var(--vscode-badge-background, rgba(128, 128, 128, 0.2));
   color: var(--vscode-badge-foreground, var(--vscode-foreground));
-  border-color: var(--vscode-focusBorder, rgba(128, 128, 128, 0.4));
+  border-color: transparent;
 }
 
-.tag-female,
-.tag-male,
-.tag-offline,
-.tag-terminal,
-.tag-preview,
-.tag-editor {
+.tag-offline {
   background-color: var(--vscode-badge-background, rgba(128, 128, 128, 0.15));
   color: var(--vscode-badge-foreground, var(--vscode-foreground));
 }
 
+/* Where the text is coming from, colour-coded so the three sources are
+   distinguishable without reading the word. Chart colours are part of the
+   theme, so this stays in the user's palette.
+   A bare label rather than a filled pill: inside a 272px side bar the pill's
+   background and padding cost about 20px, which is what pushed the word and
+   duration counts next to it into an ellipsis. */
+.tag-editor,
+.tag-terminal,
+.tag-preview {
+  background: none;
+  border-color: transparent;
+  padding: 0;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  font-size: var(--fs-badge);
+  flex: 0 0 auto;
+}
+
+/* No separator glyph between the kind and the counts. A `·` pinned to the end
+   of the kind is stranded at the end of the line whenever the row wraps, which
+   at side bar widths is most of the time; uppercase accent text next to grey
+   figures already reads as two things. */
+
+.tag-editor {
+  color: var(--vscode-charts-blue, #4fa6ec);
+}
+
+.tag-terminal {
+  color: var(--vscode-charts-green, #4bb37b);
+}
+
+.tag-preview {
+  color: var(--vscode-charts-purple, #b180d7);
+}
+
 .tag-neural-pill {
+  white-space: nowrap;
+  flex: 0 0 auto;
   background: var(--vscode-badge-background, rgba(128, 128, 128, 0.2));
   color: var(--vscode-badge-foreground, var(--vscode-foreground));
   border-radius: var(--radius-full);
   padding: 1px 7px;
   font-weight: 600;
-  font-size: 10.5px;
+  font-size: var(--fs-meta);
 }
 
 /* Settings Footer Link */
 .settings-footer {
-  margin-top: 4px;
-  padding-top: 8px;
-  border-top: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.15));
+  margin-top: 2px;
+  padding-top: 10px;
+  border-top: 1px solid var(--ac-border-soft);
 }
 
 .settings-link {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 5px;
   color: var(--vscode-textLink-foreground);
   text-decoration: none;
-  font-size: 11.5px;
+  font-size: var(--fs-body);
   cursor: pointer;
 }
 
 .settings-link svg {
   width: 13px;
   height: 13px;
+  margin-top: 2px;
+  flex: 0 0 auto;
   fill: currentColor;
 }
 
@@ -1130,7 +1443,7 @@ input[type="range"].setting-range::-moz-range-thumb {
   height: 88vh;
   max-height: 600px;
   background-color: var(--vscode-sideBar-background, var(--vscode-editor-background));
-  border: 1px solid var(--vscode-widget-border, var(--vscode-focusBorder, rgba(128, 128, 128, 0.3)));
+  border: 1px solid var(--ac-border);
   border-radius: var(--radius-md);
   box-shadow: 0 8px 24px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.4));
   display: flex;
@@ -1143,17 +1456,26 @@ input[type="range"].setting-range::-moz-range-thumb {
   align-items: center;
   justify-content: space-between;
   padding: 10px 12px;
-  border-bottom: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.15));
-  background: var(--vscode-sideBarSectionHeader-background, rgba(128, 128, 128, 0.05));
+  border-bottom: 1px solid var(--ac-border-soft);
+  background: none;
+}
+
+.voice-modal-filters-bar {
+  flex-wrap: wrap;
 }
 
 .voice-browser-title {
-  font-size: 13px;
+  font-size: var(--fs-title);
   font-weight: 600;
   color: var(--vscode-foreground);
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+}
+
+.voice-browser-title .title-text {
+  white-space: nowrap;
 }
 
 .voice-browser-close {
@@ -1175,7 +1497,7 @@ input[type="range"].setting-range::-moz-range-thumb {
 
 .voice-search-box {
   padding: 8px 12px;
-  border-bottom: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.12));
+  border-bottom: 1px solid var(--ac-border-soft);
 }
 
 .search-input-wrapper {
@@ -1196,12 +1518,12 @@ input[type="range"].setting-range::-moz-range-thumb {
 .voice-search-input {
   width: 100%;
   padding: 6px 28px 6px 28px;
-  background-color: var(--vscode-input-background);
+  background: none;
   color: var(--vscode-input-foreground);
-  border: 1px solid var(--vscode-input-border, rgba(128, 128, 128, 0.25));
+  border: 1px solid var(--ac-border);
   border-radius: var(--radius-xs);
   font-family: inherit;
-  font-size: 12px;
+  font-size: var(--fs-body);
   outline: none;
   transition: border-color var(--transition-fast);
 }
@@ -1218,7 +1540,7 @@ input[type="range"].setting-range::-moz-range-thumb {
   color: var(--vscode-descriptionForeground);
   cursor: pointer;
   padding: 3px;
-  font-size: 12px;
+  font-size: var(--fs-body);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1233,14 +1555,14 @@ input[type="range"].setting-range::-moz-range-thumb {
   display: flex;
   gap: 6px;
   padding: 6px 10px;
-  background: var(--vscode-sideBarSectionHeader-background, rgba(128, 128, 128, 0.05));
-  border-bottom: 1px solid var(--vscode-widget-border, rgba(128, 128, 128, 0.12));
+  background: none;
+  border-bottom: 1px solid var(--ac-border-soft);
   position: relative;
   z-index: 50;
 }
 
 .custom-dropdown {
-  flex: 1;
+  flex: 1 1 84px;
   min-width: 0;
   position: relative;
 }
@@ -1252,11 +1574,11 @@ input[type="range"].setting-range::-moz-range-thumb {
   justify-content: space-between;
   gap: 4px;
   padding: 5px 8px;
-  background: var(--vscode-dropdown-background, var(--vscode-input-background, rgba(128, 128, 128, 0.1)));
+  background: none;
   color: var(--vscode-dropdown-foreground, var(--vscode-foreground));
-  border: 1px solid var(--vscode-dropdown-border, var(--vscode-widget-border, rgba(128, 128, 128, 0.25)));
+  border: 1px solid var(--ac-border);
   border-radius: var(--radius-xs);
-  font-size: 11px;
+  font-size: var(--fs-meta);
   font-family: inherit;
   font-weight: 500;
   cursor: pointer;
@@ -1306,7 +1628,7 @@ input[type="range"].setting-range::-moz-range-thumb {
   max-height: 200px;
   overflow-y: auto;
   background: var(--vscode-dropdown-background, var(--vscode-sideBar-background, #1e1e1e));
-  border: 1px solid var(--vscode-dropdown-border, var(--vscode-widget-border, rgba(128, 128, 128, 0.3)));
+  border: 1px solid var(--ac-border);
   border-radius: var(--radius-xs);
   padding: 3px;
   box-shadow: 0 6px 18px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.4));
@@ -1325,7 +1647,7 @@ input[type="range"].setting-range::-moz-range-thumb {
   display: flex;
   align-items: center;
   padding: 5px 8px;
-  font-size: 11px;
+  font-size: var(--fs-meta);
   color: var(--vscode-foreground);
   border-radius: 2px;
   cursor: pointer;
@@ -1345,17 +1667,19 @@ input[type="range"].setting-range::-moz-range-thumb {
 
 .chip-code {
   display: inline-block;
-  font-size: 9px;
+  font-size: var(--fs-badge);
   font-weight: 700;
   padding: 1px 3px;
   border-radius: 2px;
-  background: rgba(128, 128, 128, 0.2);
+  background: none;
+  border: 1px solid var(--ac-border-soft);
   margin-right: 4px;
   letter-spacing: 0.3px;
 }
 
 .custom-dropdown-item.active .chip-code {
   background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.35);
   color: var(--vscode-button-foreground);
 }
 
@@ -1369,11 +1693,20 @@ input[type="range"].setting-range::-moz-range-thumb {
   gap: 3px;
 }
 
+/* Two fixed lines per row, both of them single-line and both truncating.
+   Letting the name row wrap made every row a different height and stranded a
+   lone "Male" chip on a line of its own; a name clipped with an ellipsis is
+   tidier and still identifies the voice. */
+/* `flex-wrap` stays on so the narrow-width rule below can give the text column
+   a full-width basis and push Preview onto its own line. Without it that rule
+   silently does nothing and the badge overflows across the button instead. */
 .voice-list-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 10px;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  padding: 7px 10px;
   border-radius: var(--radius-xs);
   border: 1px solid transparent;
   background-color: transparent;
@@ -1397,45 +1730,68 @@ input[type="range"].setting-range::-moz-range-thumb {
   align-items: center;
   gap: 8px;
   min-width: 0;
+  flex: 1 1 0;
 }
 
+/* `min-width: 0` on every link in the chain, or the longest word in a voice
+   name sets the column's floor and everything to its right is pushed out of
+   the row. */
 .voice-item-details {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .voice-item-name {
-  font-size: 12.5px;
+  font-size: var(--fs-title);
   font-weight: 500;
   display: flex;
   align-items: center;
   gap: 5px;
-  flex-wrap: wrap;
+  min-width: 0;
+  overflow: hidden;
 }
 
+/* The name is the only part allowed to give up room; the badge beside it is a
+   fixed handful of characters and stays whole. */
 .voice-name-title {
   color: inherit;
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.voice-item-name .tag,
+.voice-item-name .selected-checkmark {
+  flex: 0 0 auto;
 }
 
 .voice-item-sub {
-  font-size: 11px;
+  font-size: var(--fs-meta);
   color: var(--vscode-descriptionForeground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .voice-item-actions {
   display: flex;
   align-items: center;
   gap: 5px;
+  flex: 0 0 auto;
 }
 
 .btn-preview {
   padding: 3px 8px;
-  font-size: 11px;
+  font-size: var(--fs-meta);
   border-radius: var(--radius-xs);
-  background: var(--vscode-button-secondaryBackground, rgba(128, 128, 128, 0.15));
+  background: transparent;
   color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
-  border: 1px solid var(--vscode-widget-border, transparent);
+  border: 1px solid var(--ac-border);
   cursor: pointer;
   transition: all var(--transition-fast);
   display: inline-flex;
@@ -1444,7 +1800,7 @@ input[type="range"].setting-range::-moz-range-thumb {
 }
 
 .btn-preview:hover {
-  background: var(--vscode-button-secondaryHoverBackground, rgba(128, 128, 128, 0.25));
+  background: var(--ac-hover);
 }
 
 .btn-preview.playing {
@@ -1459,7 +1815,7 @@ input[type="range"].setting-range::-moz-range-thumb {
 }
 
 .selected-checkmark {
-  font-size: 10px;
+  font-size: var(--fs-badge);
   color: var(--vscode-focusBorder, currentColor);
   background: var(--vscode-badge-background, rgba(128, 128, 128, 0.2));
   padding: 1px 5px;
@@ -1472,8 +1828,11 @@ input[type="range"].setting-range::-moz-range-thumb {
 .keybind-list {
   display: flex;
   flex-direction: column;
-  gap: 3px;
   margin-top: 2px;
+  background: none;
+  border: 1px solid var(--ac-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 
 .keybind-row {
@@ -1481,8 +1840,34 @@ input[type="range"].setting-range::-moz-range-thumb {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  font-size: 11px;
+  padding: 5px 8px;
+  font-size: var(--fs-meta);
   color: var(--vscode-descriptionForeground);
+}
+
+.keybind-row + .keybind-row {
+  border-top: 1px solid var(--ac-border-soft);
+}
+
+.keybind-row > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A command can carry more than one chord once the user has added their own. */
+.keybind-keys {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.keybind-unassigned {
+  flex: 0 0 auto;
+  font-style: italic;
+  opacity: 0.7;
 }
 
 .keybind-row kbd {
@@ -1499,24 +1884,148 @@ kbd {
   background: var(--vscode-keybindingLabel-background, rgba(128, 128, 128, 0.15));
   color: var(--vscode-keybindingLabel-foreground, var(--vscode-foreground));
   font-family: var(--vscode-editor-font-family, monospace);
-  font-size: 10.5px;
+  font-size: var(--fs-meta);
   line-height: 1.5;
   white-space: nowrap;
 }
 
-/* Responsive sidebar styling */
-@media (max-width: 280px) {
-  .btn-hero-play {
-    min-width: 0;
-    padding: 5px 10px;
+/* Responsive side bar
+   -------------------
+   The panel is the whole document, so viewport width *is* the side bar width
+   and plain media queries are the right tool. Two steps, each reclaiming
+   horizontal space rather than hiding anything: nothing but the equalizer —
+   pure decoration — is ever dropped.
+
+   Everything that can run out of room wraps instead of ellipsizing. A label
+   cut to "Play / Pause in a ter…" tells the reader less than the same label on
+   two lines, and a panel docked at 190px is a normal way to use this. */
+@media (max-width: 260px) {
+  body {
+    padding-bottom: 10px;
   }
-  .btn-hero-play #play-label-slot {
+
+  .section-content {
+    padding: 2px 9px 10px;
+    gap: 9px;
+  }
+
+  .section-header {
+    padding: 8px 9px 8px 7px;
+  }
+
+  .source-card,
+  .voice-card {
+    padding: 8px;
+  }
+
+  .settings-form {
+    gap: 10px;
+  }
+
+  .btn-wide {
+    padding: 6px 8px;
+  }
+
+  .text-container {
+    padding: 8px;
+    font-size: var(--fs-meta);
+  }
+
+  /* The file name keeps the line. Dropping the character count is what makes
+     room for it — both figures squeezed beside a name clipped to "package.js"
+     had the priority backwards. */
+  .text-meta-chars {
     display: none;
   }
-  .source-card .tag {
+
+  .empty-state {
+    padding: 14px 2px 12px;
+  }
+
+  /* Same in the voice browser: name and country on their own lines, Preview
+     underneath, indented to sit under the text rather than the avatar. */
+  .voice-item-left {
+    flex: 1 1 100%;
+  }
+
+  .voice-item-actions {
+    margin-left: 32px;
+  }
+
+  /* Once the button has a line to itself the label fits again, so it comes
+     back — a lone glyph under the text reads as unfinished. Higher specificity
+     than the icon-only rule below, so ordering cannot decide this. */
+  .voice-item-actions .btn-preview span {
+    display: inline;
+  }
+
+  .voice-item-actions .btn-preview {
+    padding: 3px 9px;
+  }
+
+  .voice-list-container {
+    padding: 6px;
+  }
+
+  .voice-browser-header,
+  .voice-search-box,
+  .voice-modal-filters-bar {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+/* Below this the Preview label costs more than it explains: dropping it to the
+   play glyph alone hands ~45px back to the voice names, which is the text a
+   reader is actually scanning. The button keeps its tooltip. */
+@media (max-width: 300px) {
+  .btn-preview {
+    padding: 4px 7px;
+  }
+
+  .btn-preview span {
     display: none;
   }
+
+  .preview-svg {
+    width: 11px;
+    height: 11px;
+  }
+}
+
+@media (max-width: 210px) {
+  /* Decoration is the only thing that goes, and only once the card is
+     genuinely out of room. */
   .visualizer-bars {
+    display: none;
+  }
+
+  .button-bar {
+    gap: 2px;
+  }
+
+  .btn-hero-play {
+    margin: 0 2px;
+  }
+
+  .speed-pill {
+    font-size: var(--fs-badge);
+  }
+
+  .setting-switch-item {
+    gap: 8px;
+  }
+
+  .status-badge {
+    padding: 2px 6px;
+    letter-spacing: 0.2px;
+  }
+
+  /* At this width a voice row cannot hold the name, the engine badge and the
+     country line at once. The name is what a reader scans for, so the badge
+     goes — the engine is still a filter in the bar above, and still shown at
+     every wider size. */
+  .voice-item-name .tag {
     display: none;
   }
 }

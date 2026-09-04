@@ -11,20 +11,14 @@
 
   <!-- Section 1: Now Playing -->
   <section class="section" id="section-playback">
-    <div class="section-header">
+    <div class="section-header" role="button" tabindex="0">
       <div class="section-title">
         <svg class="section-chevron" viewBox="0 0 16 16"><path d="M4.5 12.5l5-4.5-5-4.5.7-.7 5.8 5.2-5.8 5.2z"/></svg>
         <span>Player</span>
       </div>
       <div class="status-badge" id="status-badge">
         <span class="status-dot"></span>
-        <!-- The sizer is invisible but still measured, so the badge stays the
-             width of its longest state and never resizes as the label changes. -->
-        <span class="width-slot">
-          <span class="width-slot-sizer" aria-hidden="true">Playing 100%</span>
-          <span class="width-slot-sizer" aria-hidden="true">Tap to play</span>
-          <span id="status-text">Ready</span>
-        </span>
+        <span id="status-text">Ready</span>
       </div>
     </div>
     <div class="section-content">
@@ -46,7 +40,6 @@
           <svg class="empty-state-icon" viewBox="0 0 24 24">
             <path fill="currentColor" d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
           </svg>
-          <div class="empty-state-pulse"></div>
         </div>
         <div class="empty-state-title">Nothing queued</div>
         <div class="empty-state-text">
@@ -74,22 +67,28 @@
           <span class="source-icon" id="source-icon"></span>
           <div class="source-details">
             <div class="source-name" id="source-name">Selection</div>
-            <div class="source-sub" id="source-sub">0 words</div>
+            <!-- Kind, then counts. As a trailing column the kind was the first
+                 thing a narrow side bar clipped. -->
+            <div class="source-sub-row">
+              <span class="tag tag-editor" id="source-kind">Editor</span>
+              <span class="source-sub" id="source-sub">0 words</span>
+            </div>
           </div>
           <!-- Animated Audio Visualizer Bars -->
-          <div class="visualizer-bars" id="visualizer-bars" title="Audio Waveform">
+          <div class="visualizer-bars" id="visualizer-bars" title="Audio Waveform" aria-hidden="true">
             <span class="bar bar-1"></span>
             <span class="bar bar-2"></span>
             <span class="bar bar-3"></span>
             <span class="bar bar-4"></span>
             <span class="bar bar-5"></span>
           </div>
-          <span class="tag" id="source-kind">Editor</span>
         </div>
 
         <!-- Scrub Bar -->
         <div class="scrub-container">
-          <div class="scrub-bar-track" id="scrub-track" title="Click or drag to seek">
+          <div class="scrub-bar-track" id="scrub-track" title="Click or drag to seek"
+               role="slider" tabindex="0" aria-label="Playback position"
+               aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
             <div class="scrub-bar-fill" id="scrub-fill"></div>
             <div class="scrub-bar-thumb" id="scrub-thumb"></div>
           </div>
@@ -101,23 +100,19 @@
 
         <!-- Transport Buttons -->
         <div class="button-bar">
-          <button class="btn btn-icon btn-secondary" id="btn-prev" title="Previous Sentence">
+          <button class="btn btn-icon btn-secondary" id="btn-prev" title="Previous Sentence" aria-label="Previous sentence">
             <svg viewBox="0 0 16 16"><path d="M11 3.5v9l-6-4.5 6-4.5zM4 3h1.5v10H4V3z"/></svg>
           </button>
           <button class="btn btn-hero-play" id="btn-play-pause" title="Play / Pause (Alt+P)">
             <span class="btn-icon" id="icon-play-pause">
-              <svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5-9-5.5z"/></svg>
+              <svg class="glyph-play" viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5-9-5.5z"/></svg>
             </span>
-            <span class="width-slot" id="play-label-slot">
-              <span class="width-slot-sizer" aria-hidden="true">Resume</span>
-              <span class="width-slot-sizer" aria-hidden="true">Loading</span>
-              <span id="text-play-pause">Play</span>
-            </span>
+            <span class="sr-label" id="text-play-pause">Play</span>
           </button>
-          <button class="btn btn-icon btn-secondary" id="btn-stop" title="Stop Playback" disabled>
+          <button class="btn btn-icon btn-secondary" id="btn-stop" title="Stop Playback (Alt+Shift+P)" aria-label="Stop" disabled>
             <svg viewBox="0 0 16 16"><path d="M3.5 3.5h9v9h-9v-9z"/></svg>
           </button>
-          <button class="btn btn-icon btn-secondary" id="btn-next" title="Next Sentence">
+          <button class="btn btn-icon btn-secondary" id="btn-next" title="Next Sentence" aria-label="Next sentence">
             <svg viewBox="0 0 16 16"><path d="M5 3.5v9l6-4.5-6-4.5zM10.5 3H12v10h-1.5V3z"/></svg>
           </button>
         </div>
@@ -134,7 +129,7 @@
 
   <!-- Section 2: Text Preview -->
   <section class="section" id="section-text">
-    <div class="section-header">
+    <div class="section-header" role="button" tabindex="0">
       <div class="section-title">
         <svg class="section-chevron" viewBox="0 0 16 16"><path d="M4.5 12.5l5-4.5-5-4.5.7-.7 5.8 5.2-5.8 5.2z"/></svg>
         <span>Text Preview</span>
@@ -151,7 +146,7 @@
           <svg style="width: 13px; height: 13px; fill: currentColor;" viewBox="0 0 16 16"><path d="M9 1H3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6l-5-5zm0 1.5L12.5 6H9V2.5zM3 14V2h5v5h5v7H3z"/></svg>
           <span id="text-filename">Selection</span>
         </span>
-        <span class="tag tag-stats" id="text-stats">0 words</span>
+        <span class="text-meta-stats" id="text-stats">0 words</span>
       </div>
       <div class="text-container" id="text-container">
         Select text in any editor or terminal to preview it here. Click any word to start reading from there.
@@ -161,7 +156,7 @@
 
   <!-- Section 3: Settings -->
   <section class="section collapsed" id="section-settings">
-    <div class="section-header">
+    <div class="section-header" role="button" tabindex="0">
       <div class="section-title">
         <svg class="section-chevron" viewBox="0 0 16 16"><path d="M4.5 12.5l5-4.5-5-4.5.7-.7 5.8 5.2-5.8 5.2z"/></svg>
         <span>Settings & Voice</span>
@@ -176,7 +171,8 @@
             <label class="setting-label">Voice</label>
             <span class="setting-val" id="voice-count-summary">325 voices</span>
           </div>
-          <div class="voice-card" id="btn-open-voice-modal" title="Click to browse and change TTS voices">
+          <div class="voice-card" id="btn-open-voice-modal" role="button" tabindex="0"
+               title="Browse and change the reading voice">
             <div class="voice-avatar-wrapper" id="current-voice-avatar">
               <span class="avatar-code" id="current-voice-flag">US</span>
             </div>
@@ -191,7 +187,7 @@
                 <span id="current-voice-gender">Female</span>
               </div>
             </div>
-            <button class="btn btn-secondary btn-sm" id="btn-change-voice">Change</button>
+            <svg class="voice-card-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.7 3.3l4.9 4.7-4.9 4.7-.7-.7L9.2 8 5 3.9z"/></svg>
           </div>
         </div>
 
@@ -250,7 +246,11 @@
             <label class="setting-label">Keyboard shortcuts</label>
             <button class="btn btn-secondary" id="btn-keybindings" style="padding: 3px 8px; font-size: 11px;">Remap…</button>
           </div>
-          <div class="keybind-list">
+          <!-- Filled from the host, which resolves the contributed defaults
+               against the user's keybindings.json. These rows are only what is
+               shown until that arrives; a remap would otherwise leave the panel
+               advertising a chord that no longer does anything. -->
+          <div class="keybind-list" id="keybind-list">
             <div class="keybind-row"><span>Play / Pause in an editor</span><kbd>Alt+P</kbd></div>
             <div class="keybind-row"><span>Play / Pause in a terminal</span><kbd>Alt+P</kbd></div>
             <div class="keybind-row"><span>Play / Pause in a preview</span><kbd>Alt+P</kbd></div>

@@ -2,6 +2,29 @@
 
 All notable changes to the Audio Cursor browser extension are documented here.
 
+## [2.2.1]
+
+### Fixed
+- **A voice preview from the Voice Library gave no sign it was playing.** Pressing *Preview* on a
+  row started audio and changed nothing on screen: no way to tell which of 325 voices was
+  speaking, and nothing to press to stop it. The row's button now shows the state and turns into
+  the stop control, matching the header *Preview* button, and a second press stops it. Starting
+  another preview — from either place — clears the previous indicator, since only one plays at a
+  time. The state survives the list being re-filtered, because it is tracked by voice rather than
+  by the button element the list rebuilds.
+- **"Stop preview" no longer appears while the preview is still silent.** The header button turned
+  red the instant it was pressed, but a Natural AI voice is synthesized over the network and takes
+  a moment, so the button offered to stop something that had not started. Both buttons now show
+  *Loading…* until sound actually begins. The offscreen document reports the real start of audio —
+  `onplaying` for a neural voice, the utterance's own start event for a system one — rather than
+  the popup guessing from the acknowledgement that the request was received, which arrives before
+  synthesis has even been asked for.
+- **A stopped preview can no longer wipe the indicator of the one that replaced it.** A
+  `chrome.tts` callback cannot be cancelled, so stopping one preview to start another fired the
+  old *interrupted* event after the new one was already set up, clearing the state that had just
+  been put in place. Each preview now carries a token and a late callback from a superseded one is
+  ignored.
+
 ## [2.2.0] — 2026-09-04
 
 ### Fixed

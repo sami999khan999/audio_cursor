@@ -40,11 +40,18 @@ Whether you are proofreading code comments, reviewing documentation, listening t
 
 | Shortcut | Command | When |
 |---|---|---|
-| `Alt+P` | Toggle Play / Pause | While focused in editor or during playback |
+| `Alt+P` | Toggle Play / Pause | While focused in an editor, or during playback |
 | `Alt+P` | Read Terminal Selection | While focused in an integrated terminal |
-| `Alt+Shift+P` | Stop | While playing or paused |
-| `Alt+[` | Previous Sentence | During playback |
-| `Alt+]` | Next Sentence | During playback |
+| `Alt+P` | Toggle Play / Pause | While a Markdown preview is focused |
+| `Alt+Shift+P` | Stop | While playing or paused, from any surface |
+
+Previous / Next Sentence ship without a default shortcut — bind them yourself from
+*Audio Cursor: Configure Keyboard Shortcuts*, or the **Remap…** button in the sidebar.
+
+> Shortcuts pressed inside a terminal only reach the extension if the command is listed in
+> `terminal.integrated.commandsToSkipShell`. Audio Cursor contributes its own, so this works out of
+> the box; if you have set that value yourself it replaces the contribution, and Audio Cursor will
+> offer to add the missing entries back.
 
 ---
 

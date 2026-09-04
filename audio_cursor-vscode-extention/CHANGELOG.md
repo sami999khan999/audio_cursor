@@ -2,6 +2,137 @@
 
 All notable changes to the "audio-cursor" extension will be documented in this file.
 
+## [0.8.1]
+
+### Fixed
+- **Alt+Shift+P did nothing while terminal output was being read.** Stop worked from an editor, a
+  preview and the sidebar, but not from the terminal that had just been read — and the terminal is
+  exactly where focus still is after Alt+P starts a terminal read. VS Code sends a keystroke to the
+  shell unless the command it resolves to is named in `terminal.integrated.commandsToSkipShell`, and
+  only the two terminal-specific commands were listed there; `audioCursor.stop` was not, so the
+  shell swallowed the key. Remapping Stop to another chord did not help, because nothing about the
+  key was the problem — the command was never dispatched. It is now contributed alongside the other
+  two.
+- **…and the extension never offered to fix it for anyone who had set that setting themselves.** A
+  user-defined `terminal.integrated.commandsToSkipShell` replaces the extension's contributed
+  default outright, so Audio Cursor watches for that and offers to add back what it needs. But it
+  recorded only *that* it had asked, as a single flag — so anyone who accepted the earlier prompt
+  covering Alt+P was never asked again when Stop joined the list, and their Stop key stayed dead
+  with no indication why. It now records *which* commands it has offered, so a newly required one
+  prompts once on its own. Installs carrying the old flag get that prompt on the next start. The
+  prompt also names the keys involved rather than command ids.
+
+### Changed
+- **The player panel was redesigned.** Same controls, better read at side bar width:
+  - Transport is a media transport: skip, stop and both step buttons are unfilled circles and Play
+    is the one solid disc, so the primary action is obvious. It no longer drops its shape below
+    280px, where the panel used to shed the play label, the source tag and the equalizer all at once.
+  - The scrub bar is a thin rule that thickens under the pointer, with the handle appearing only
+    while the bar is being aimed at, instead of a permanent white dot with a drop shadow.
+  - Nesting is shown with one line weight, not four. Structure had ended up drawn entirely in
+    hairlines — a bordered section holding a bordered card holding a bordered row of bordered pills
+    — which gave every level of the hierarchy the same weight and made a panel of ordinary controls
+    look like a form. Sections are now separated by a single full-width rule, the pills inside a
+    group carry no outline of their own, and a group is marked by one hairline. Every colour the
+    panel paints for itself is now a hairline: a tinted *fill* was tried first, and a grey fill is
+    neutral by definition, so over a theme whose background carries a hue — Tokyo Night's
+    blue-black, say — each card landed as a desaturated slab that matched nothing around it.
+  - The voice browser's filter dropdowns keep their outline on every theme. Trigger and menu were
+    bordered in `dropdown.border`, which plenty of themes set to their own background colour — a
+    border they never draw — leaving the three filters as labels floating in the dialog. They use
+    the panel's own hairline now, which is defined against whatever sits behind it.
+  - The voice browser's search field is outlined in that same hairline. It had used
+    `input.border`, which a theme is equally free to set *darker* than its own background — Tokyo
+    Night draws it near-black — leaving the one text field in the panel ringed in a colour that
+    appears nowhere else in it.
+  - Secondary buttons are outlined rather than filled. `button.secondaryBackground` is a light grey
+    slab on most dark themes, which made *Remap…* the brightest thing in the Settings section and
+    louder than the shortcut list it belongs to.
+  - The status badge is the width of its own label. It was sized to fit "Playing 100%" so that it
+    would not resize as the state changed, and centring the shorter labels in that reserved width
+    did not stop "Ready" from sitting in a pill more than twice the width of the word. It hugs its
+    text now: only the badge's own left edge moves, and it is the last thing in the header, so
+    nothing shifts with it.
+  - One type scale. Nine sizes were in use between 9px and 13px, most of them half a pixel apart and
+    none of them reading as a different rank; there are now four, for titles, body, detail and badges.
+  - Reading speed is one control again. The presets under the slider were framed as a segmented
+    control, so they read as a second, competing speed setting — and one that contradicted the first,
+    since dragging the slider to 1.1x left every segment unselected. They are now plain shortcuts
+    onto the slider above them.
+  - The voice card lost its Change button. The whole card already opened the voice browser, and that
+    button was the widest fixed thing in the row: at side bar width it took its space from the voice
+    it described, clipping "United States · Female" to "United States · Fe…". A chevron says the same
+    thing in 12px, and the card now answers Enter and Space as well as a click.
+  - Quieter throughout: no drop shadow under the play disc, no accent outline on the engine badge,
+    and no dashed ring rotating forever behind an empty state whose whole message is that nothing is
+    happening.
+  - The source card puts where the text came from next to the counts — colour-coded from the theme's
+    chart palette — and shows an accent rail while sound is actually playing.
+  - The text preview's counts are figures rather than a filled badge, so they stop crowding out the
+    file name they annotate, and both counts are thousands-separated.
+- **The sidebar's shortcut list is read from your actual keybindings.** It was static markup listing
+  the four defaults, so remapping a command in the Keyboard Shortcuts editor left the panel
+  advertising a chord that no longer did anything. VS Code exposes no API for resolved keybindings,
+  so the list is now worked out the way VS Code works it out: the defaults this extension
+  contributes, with your `keybindings.json` applied over them — additions, `-command` removals, and
+  chords normalised so `Shift+Alt+P` and `alt+shift+p` count as the same binding. A command with
+  nothing bound to it reads *Unassigned* rather than a key that does nothing, a command with two
+  chords shows both, and the list refreshes when `keybindings.json` changes without reopening the
+  window. Chords are rendered the way VS Code renders them, so the panel and the Keyboard Shortcuts
+  editor agree letter for letter. It cannot see a *different* extension binding over one of these
+  chords, so a key shown here is what Audio Cursor asked for, not a promise that nothing else took
+  it.
+- **The panel is drawn in outlines, not fills.** Every grouping surface — sections, cards, wells,
+  the voice browser's chrome — is transparent and defined by its border alone, so whatever the
+  theme paints behind the side bar shows through untouched. Two earlier attempts at this tried to
+  pick a *correct* surface colour: flat grey first, which desaturated any tinted side bar and read
+  as a grey sheet laid over the theme; then the theme's own section-header colour with a faint
+  neutral lift, which was closer but still an approximation of the theme rather than the theme. A
+  surface that is not painted at all cannot be wrong. Fills are kept only for the things that are
+  not surfaces — controls, badges, and transient feedback like hover, selection and the
+  spoken-word highlight — and for the two overlays that must hide what is behind them, the voice
+  browser dialog and its filter menus.
+- Country-code chips lost their fill with everything else, which left their text set in
+  `badge.foreground` — a colour chosen to sit *on* `badge.background`. In a theme whose badge is a
+  light accent that is dark text on a dark panel, so `US` and `AU` vanished. They take the normal
+  foreground now.
+- **The panel survives a narrow side bar.** Docked at 190–240px several things were simply broken,
+  not merely tight:
+  - The voice card's "Natural AI" badge overflowed its column and painted on top of the Change
+    button — at every width, including a comfortable 250px. Nothing in that card was allowed to
+    wrap and the text column had no floor, so it refused to shrink and pushed the button out.
+  - The same fault in the voice browser put the Preview button over the voice name.
+  - Shortcut rows, the file name in the text preview header, and the voice-browser filter labels
+    were all cut mid-word to protect something less important beside them.
+  Every row is now a fixed number of single lines that clip with an ellipsis, and carries its full
+  text in a tooltip. Wrapping was tried first and was worse: it left each voice row a different
+  height, stranded a lone "Male" chip on a line of its own, and turned a shortcut into two ragged
+  lines. Where clipping would have destroyed the point of a row, the content was changed rather
+  than the layout:
+  - Shortcut labels lead with the surface — `Editor · Play / Pause`, not `Play / Pause in an
+    editor` — because the end is what gets cut, and three rows reading `Play / Pause in a…` are
+    indistinguishable while `Editor · Play…` and `Terminal · Pl…` are not.
+  - A voice's gender moved from a chip on the name line into the country line, where it costs no
+    horizontal room and cannot push the name out.
+  - The Preview button drops to its play glyph while the row is side by side, and takes its label
+    back once the row stacks and it has a line to itself.
+  Two breakpoints reclaim space by tightening padding rather than hiding content. Only two things
+  are ever dropped, both at the narrowest step and both stated: the equalizer, which is decoration,
+  and the engine badge in the voice browser, which is still a filter in the bar above it.
+- Section twisties point down when open and right when closed, matching the rest of VS Code. They
+  had it backwards: open pointed right and closed pointed up.
+- The source card no longer repeats the duration the scrub bar's clock is already counting down, and
+  the two no longer disagree — the card estimated by word count while the clock estimated by
+  character count, so the same selection advertised two different lengths a few pixels apart.
+  Changing the reading speed now updates both.
+
+### Accessibility
+- Every control has a visible focus ring; several custom ones had none.
+- The scrub bar answers the arrow keys, Page Up/Down, Home and End. Seeking was mouse-only.
+- Section headers can be opened with Enter or Space and report their expanded state.
+- Transport buttons carry labels, and the play button's changing Play/Pause/Resume/Loading text is
+  still announced although the disc itself now shows only the glyph.
+
 ## [0.8.0]
 
 ### Fixed

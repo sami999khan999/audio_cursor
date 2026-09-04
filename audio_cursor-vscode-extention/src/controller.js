@@ -1,4 +1,5 @@
 const vscode = require('vscode');
+const path = require('path');
 const log = require('./log');
 const { Session } = require('./session');
 const { ProgressTracker } = require('./progress');
@@ -7,6 +8,9 @@ const { ClipboardSelectionWatcher } = require('./clipboardWatcher');
 const { neuralEngine } = require('./neuralEngine');
 const { HostAudioPlayer } = require('./hostPlayer');
 const { HostSpeechEngine } = require('./hostEngine');
+const {
+  userKeybindingsPath, parseUserKeybindings, panelKeybindingRows, contributedKeybindings
+} = require('./keybindings');
 
 // How long a session may sit in `starting` before the host gives up on it.
 // Longer than the player's own 6s watchdog, so the player gets to explain
@@ -20,6 +24,44 @@ const HOST_START_TIMEOUT_MS = 30000;
 // with SYSTEM_VOICE in view/player.js.
 const SYSTEM_VOICE = 'system';
 
+// Keys pressed while a terminal is focused go to the shell unless the command
+// they resolve to is listed in `terminal.integrated.commandsToSkipShell`. The
+// extension contributes these through `configurationDefaults`, but a user value
+// for that setting replaces the contribution, so they are checked at runtime
+// too. Keep in step with the contributed list in package.json.
+const TERMINAL_SKIP_SHELL_COMMANDS = [
+  'audioCursor.togglePlaybackTerminal',
+  'audioCursor.readTerminalSelection',
+  'audioCursor.stop'
+];
+
+const SKIP_SHELL_PROMPTED_KEY = 'skipShellPrompted';
+
+// What each command is called in the prompt, so it names the keys the user is
+// actually pressing rather than command ids.
+const SKIP_SHELL_COMMAND_LABELS = {
+  'audioCursor.togglePlaybackTerminal': 'Alt+P (play/pause)',
+  'audioCursor.readTerminalSelection': 'Alt+P (read the selection)',
+  'audioCursor.stop': 'Alt+Shift+P (stop)'
+};
+
+function labelForCommand(command) {
+  return SKIP_SHELL_COMMAND_LABELS[command] || command;
+}
+
+/**
+ * The contributed commands a user-defined `commandsToSkipShell` list is
+ * missing. An explicit `-command` entry counts as a deliberate opt-out.
+ * @param {unknown} userValue
+ * @returns {string[]}
+ */
+function missingSkipShellCommands(userValue) {
+  if (!Array.isArray(userValue)) return [];
+  return TERMINAL_SKIP_SHELL_COMMANDS.filter(
+    command => !userValue.includes(command) && !userValue.includes(`-${command}`)
+  );
+}
+
 class AudioCursorController {
   /**
    * @param {Object} params
@@ -29,12 +71,18 @@ class AudioCursorController {
    * @param {import('./decorations').DecorationController} params.decorations
    * @param {import('./view/provider').AudioCursorViewProvider} params.viewProvider
    * @param {vscode.Memento} [params.memento]
+   * @param {{ fsPath: string } | null} [params.globalStorageUri] Locates the
+   *   user's keybindings.json, which is the only way to know what key actually
+   *   runs a command — VS Code exposes no API for it.
    * @param {import('./hostPlayer').HostAudioPlayer | null} [params.hostPlayer]
    *   Override for tests; by default one is created where the platform supports it.
    */
-  constructor({ config, selectionTracker, statusBar, decorations, viewProvider, memento, hostPlayer }) {
+  constructor({ config, selectionTracker, statusBar, decorations, viewProvider, memento, globalStorageUri, hostPlayer }) {
     this._config = config;
     this._memento = memento || null;
+    this._globalStorageUri = globalStorageUri || null;
+    /** @type {vscode.FileSystemWatcher | null} */
+    this._keybindingWatcher = null;
     this._selectionTracker = selectionTracker;
     this._statusBar = statusBar;
     this._decorations = decorations;
@@ -222,6 +270,8 @@ class AudioCursorController {
           capabilities: { hostAudio: this._hostAudioEnabled() }
         });
         this._publishTerminalState();
+        this._publishKeybindings();
+        this._watchKeybindings();
         if (this._session) {
           if (this._engine === 'host') {
             // Opened during a host read: show the text being read and mirror.
@@ -474,15 +524,65 @@ class AudioCursorController {
   }
 
   _checkTerminalKeybinding() {
-    const COMMAND = 'audioCursor.readTerminalSelection';
     const info = vscode.workspace.getConfiguration('terminal.integrated').inspect('commandsToSkipShell');
     const userValue = (info && (info.workspaceValue || info.globalValue)) || null;
-    if (Array.isArray(userValue) && !userValue.includes(COMMAND) && !userValue.includes(`-${COMMAND}`)) {
+    const missing = missingSkipShellCommands(userValue);
+    if (missing.length) {
       log.warn(
-        'Alt+P inside a terminal is being sent to the shell: your own ' +
-        `terminal.integrated.commandsToSkipShell setting replaces the extension default. Add "${COMMAND}" to it, ` +
-        'or use the "Read terminal selection" button in the Audio Cursor sidebar.'
+        'Audio Cursor shortcuts inside a terminal are being sent to the shell: your own ' +
+        'terminal.integrated.commandsToSkipShell setting replaces the extension default. Add ' +
+        `${missing.map(c => `"${c}"`).join(', ')} to it, or use the buttons in the Audio Cursor sidebar.`
       );
+    }
+  }
+
+  /**
+   * Tell the panel what its shortcut list should say. The list was static
+   * markup, so remapping a command in the Keyboard Shortcuts editor left the
+   * sidebar advertising the old chord indefinitely.
+   */
+  async _publishKeybindings() {
+    const contributed = contributedKeybindings();
+    let userEntries = [];
+
+    if (this._globalStorageUri) {
+      try {
+        const uri = vscode.Uri.file(userKeybindingsPath(this._globalStorageUri));
+        const bytes = await vscode.workspace.fs.readFile(uri);
+        userEntries = parseUserKeybindings(Buffer.from(bytes).toString('utf8'));
+      } catch (err) {
+        // No keybindings.json at all is the default state of a fresh install,
+        // and means exactly "no overrides".
+        log.info('No user keybindings.json to read; showing the contributed defaults.');
+      }
+    }
+
+    this._viewProvider.postMessage({
+      type: 'keybindings',
+      rows: panelKeybindingRows(contributed, userEntries)
+    });
+  }
+
+  /**
+   * Re-read keybindings.json when it changes, so a remap shows up in the panel
+   * without reopening the window.
+   */
+  _watchKeybindings() {
+    // onReady fires again every time the view is rebuilt, and a watcher per
+    // rebuild would multiply the reads.
+    if (this._keybindingWatcher || !this._globalStorageUri) return;
+    try {
+      const file = userKeybindingsPath(this._globalStorageUri);
+      const pattern = new vscode.RelativePattern(vscode.Uri.file(path.dirname(file)), path.basename(file));
+      const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+      const refresh = () => this._publishKeybindings();
+      watcher.onDidChange(refresh);
+      watcher.onDidCreate(refresh);
+      watcher.onDidDelete(refresh);
+      this._keybindingWatcher = watcher;
+      this._disposables.push(watcher);
+    } catch (err) {
+      log.warn('Could not watch keybindings.json; the shortcut list updates when the panel reopens.', err);
     }
   }
 
@@ -1232,36 +1332,49 @@ class AudioCursorController {
   }
 
   /**
-   * The extension contributes `audioCursor.readTerminalSelection` to
-   * `terminal.integrated.commandsToSkipShell` so Alt+P is handled by VS Code
-   * instead of the shell. A user-defined value for that setting replaces our
-   * contributed default, so offer to add it back — once.
+   * The extension contributes its terminal-reachable commands to
+   * `terminal.integrated.commandsToSkipShell` so Alt+P and Alt+Shift+P are
+   * handled by VS Code instead of the shell. A user-defined value for that
+   * setting replaces our contributed default, so offer to add them back — once.
    */
   async _offerTerminalKeybinding() {
-    const COMMAND = 'audioCursor.readTerminalSelection';
     const cfg = vscode.workspace.getConfiguration('terminal.integrated');
     const info = cfg.inspect('commandsToSkipShell');
     const userValue = (info && (info.workspaceValue || info.globalValue)) || null;
-    if (!Array.isArray(userValue)) return;
-    if (userValue.includes(COMMAND) || userValue.includes(`-${COMMAND}`)) return;
+    const missing = missingSkipShellCommands(userValue);
+    if (!missing.length) return;
 
     log.warn(
-      'Alt+P will not reach Audio Cursor from a focused terminal: your ' +
+      'Audio Cursor shortcuts will not reach the extension from a focused terminal: your ' +
       'terminal.integrated.commandsToSkipShell setting overrides the extension default. ' +
-      `Add "${COMMAND}" to that list to fix it.`
+      `Add ${missing.map(c => `"${c}"`).join(', ')} to that list to fix it.`
     );
 
-    if (!this._memento || this._memento.get('skipShellPrompted')) return;
-    await this._memento.update('skipShellPrompted', true);
+    if (!this._memento) return;
+
+    // Remember *which* commands were offered, not merely that a prompt once
+    // happened. This used to be a single boolean, so when a command was added
+    // to the list a user who had already answered the earlier prompt was never
+    // asked again — their shortcut just silently did nothing forever. Older
+    // installs stored `true` here; that counts as nothing offered yet, so they
+    // get one fresh prompt covering whatever is now missing.
+    const stored = this._memento.get(SKIP_SHELL_PROMPTED_KEY);
+    const offered = Array.isArray(stored) ? stored : [];
+    const unoffered = missing.filter(command => !offered.includes(command));
+    if (!unoffered.length) return;
+
+    await this._memento.update(SKIP_SHELL_PROMPTED_KEY, [...offered, ...unoffered]);
     const choice = await vscode.window.showInformationMessage(
-      'Audio Cursor: enable Alt+P inside the terminal? Your own `terminal.integrated.commandsToSkipShell` setting currently sends that key to the shell instead.',
+      'Audio Cursor: enable its shortcuts inside the terminal? Your own ' +
+      '`terminal.integrated.commandsToSkipShell` setting currently sends ' +
+      `${unoffered.map(labelForCommand).join(' and ')} to the shell instead.`,
       'Enable',
       'Not now'
     );
 
     if (choice === 'Enable') {
-      await cfg.update('commandsToSkipShell', [...userValue, COMMAND], vscode.ConfigurationTarget.Global);
-      log.info('Added audioCursor.readTerminalSelection to terminal.integrated.commandsToSkipShell.');
+      await cfg.update('commandsToSkipShell', [...userValue, ...missing], vscode.ConfigurationTarget.Global);
+      log.info(`Added ${missing.join(', ')} to terminal.integrated.commandsToSkipShell.`);
     }
   }
 
@@ -1433,5 +1546,6 @@ class AudioCursorController {
 }
 
 module.exports = {
-  AudioCursorController
+  AudioCursorController,
+  missingSkipShellCommands
 };

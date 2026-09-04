@@ -622,6 +622,14 @@ input[type="range"]::-webkit-slider-thumb:hover {
     animation: pulseSpeaking 1.5s infinite;
 }
 
+/* Requested, nothing audible yet — the neural synthesis is still in flight. */
+.btn-primary.loading {
+    background: var(--ac-accent-soft);
+    color: var(--ac-accent-strong);
+    box-shadow: none;
+    animation: acPreviewPulse 1.4s ease-in-out infinite;
+}
+
 @keyframes pulseSpeaking {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.92; transform: scale(0.99); }
@@ -1120,6 +1128,9 @@ button.keybind-edit:hover {
 }
 
 .btn-item-preview {
+    /* The label swaps between "▶ Preview", "Loading…" and "■ Stop", so the
+       button reserves the width of the longest and the row never shifts. */
+    min-width: 64px;
     padding: 3px 8px;
     font-size: 10px;
     font-weight: 600;
@@ -1128,11 +1139,47 @@ button.keybind-edit:hover {
     color: var(--ac-text-muted);
     border: 1px solid var(--ac-border);
     cursor: pointer;
-    transition: all 0.12s ease;
+    text-align: center;
+    white-space: nowrap;
+    transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
 
 .btn-item-preview:hover {
     background: var(--ac-accent-gradient);
     color: #0c0e15;
     border-color: transparent;
+}
+
+/* Requested, but nothing audible yet: a neural voice is synthesized over the
+   network, so there is a real wait before the first sound. */
+.btn-item-preview.loading,
+.btn-item-preview.loading:hover {
+    background: var(--ac-accent-soft);
+    color: var(--ac-accent-strong);
+    border-color: var(--ac-accent-glow);
+    animation: acPreviewPulse 1.4s ease-in-out infinite;
+}
+
+/* Speaking. Red, and reading "Stop", because that is what pressing it does —
+   the same signal the header Preview button already uses. */
+.btn-item-preview.playing,
+.btn-item-preview.playing:hover {
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
+    animation: pulseSpeaking 1.5s infinite;
+}
+
+@keyframes acPreviewPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn-item-preview.loading,
+    .btn-item-preview.playing,
+    .btn-primary.speaking {
+        animation: none;
+    }
 }

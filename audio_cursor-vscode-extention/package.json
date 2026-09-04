@@ -2,7 +2,7 @@
   "name": "audio-cursor",
   "displayName": "Audio Cursor",
   "description": "Text-to-speech reading with word highlighting directly in your editor",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "publisher": "ProdigyCorp",
   "icon": "media/icon.png",
   "license": "MIT",
@@ -218,7 +218,8 @@
     "configurationDefaults": {
       "terminal.integrated.commandsToSkipShell": [
         "audioCursor.togglePlaybackTerminal",
-        "audioCursor.readTerminalSelection"
+        "audioCursor.readTerminalSelection",
+        "audioCursor.stop"
       ]
     },
     "configuration": {
@@ -321,13 +322,14 @@
     }
   },
   "scripts": {
-    "test": "node --test test/chunk.test.js test/player-queue.test.js test/extension.test.js test/host-engine.test.js"
+    "test": "node --test test/chunk.test.js test/player-queue.test.js test/extension.test.js test/host-engine.test.js test/keybindings.test.js"
   },
   "devDependencies": {
     "@types/vscode": "^1.80.0",
     "@vscode/vsce": "^2.24.0"
   },
   "dependencies": {
+    "jsonc-parser": "^3.3.1",
     "msedge-tts": "^2.0.7"
   }
 }

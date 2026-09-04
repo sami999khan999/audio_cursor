@@ -308,3 +308,115 @@ test('host reads: a redrawing terminal does not stop playback, the sidebar stays
     controller.dispose();
   }
 });
+
+test('every shortcut that can fire from a focused terminal is kept from the shell', () => {
+  const pkg = require('../package.json');
+  const skip = pkg.contributes.configurationDefaults['terminal.integrated.commandsToSkipShell'];
+
+  // VS Code hands a keystroke to the shell unless the command it resolves to
+  // is listed here. Alt+Shift+P (Stop) was not, so it did nothing while
+  // terminal output was being read even though it worked everywhere else.
+  //
+  // A `when` clause naming another surface cannot be true with a terminal
+  // focused; anything else can be, and the last such binding for a key is the
+  // one VS Code would run.
+  const otherSurface = /editorTextFocus|activeCustomEditorId|activeWebviewPanelId/;
+  const winners = new Map();
+  for (const binding of pkg.contributes.keybindings) {
+    if (otherSurface.test(binding.when || '')) continue;
+    winners.set(binding.key, binding.command);
+  }
+
+  assert.ok(winners.size > 0, 'the keybinding contributions were not read');
+  for (const [key, command] of winners) {
+    assert.ok(
+      skip.includes(command),
+      `${key} resolves to ${command} from a focused terminal, so it must be in ` +
+      'terminal.integrated.commandsToSkipShell or the shell swallows the key'
+    );
+  }
+});
+
+test('the runtime check knows which skip-shell commands a user list is missing', () => {
+  const { missingSkipShellCommands } = require(src('controller.js'));
+  const contributed =
+    require('../package.json').contributes.configurationDefaults['terminal.integrated.commandsToSkipShell'];
+
+  // No user value at all: the contributed default is in force, nothing to add.
+  assert.deepStrictEqual(missingSkipShellCommands(undefined), []);
+  // A user value replaces the contribution, so everything is missing...
+  assert.deepStrictEqual(missingSkipShellCommands(['workbench.action.quickOpen']), contributed);
+  // ...unless it is listed, or explicitly opted out of with a `-` prefix.
+  assert.deepStrictEqual(missingSkipShellCommands(contributed), []);
+  assert.deepStrictEqual(missingSkipShellCommands(contributed.map(c => `-${c}`)), []);
+});
+
+test('a newly required skip-shell command is offered even after an earlier prompt', async () => {
+  // The real failure: a user who had already accepted the prompt for the two
+  // Alt+P commands carried `skipShellPrompted: true`, so when Stop joined the
+  // required list they were never asked, their own commandsToSkipShell kept
+  // overriding the contributed default, and Alt+Shift+P silently did nothing
+  // in a terminal forever.
+  const { AudioCursorController } = require(src('controller.js'));
+  const { config } = require(src('config.js'));
+  const { SelectionTracker } = require(src('selection.js'));
+  const { StatusBarController } = require(src('statusBar.js'));
+  const { DecorationController } = require(src('decorations.js'));
+
+  const userValue = ['audioCursor.togglePlaybackTerminal', 'audioCursor.readTerminalSelection'];
+  const updates = [];
+  const realGetConfiguration = vscode.workspace.getConfiguration;
+  const realShowInfo = vscode.window.showInformationMessage;
+  const prompts = [];
+
+  vscode.workspace.getConfiguration = (section) => {
+    if (section !== 'terminal.integrated') return realGetConfiguration(section);
+    return {
+      get: (key, fallback) => fallback,
+      inspect: (key) => (key === 'commandsToSkipShell' ? { globalValue: userValue } : undefined),
+      update: async (key, value) => { updates.push([key, value]); }
+    };
+  };
+  vscode.window.showInformationMessage = async (message) => {
+    prompts.push(message);
+    return 'Enable';
+  };
+
+  // What an install that answered the old prompt actually has stored.
+  let stored = true;
+  const memento = { get: () => stored, update: async (_k, v) => { stored = v; } };
+
+  const controller = new AudioCursorController({
+    config,
+    selectionTracker: new SelectionTracker(config),
+    statusBar: new StatusBarController(config),
+    decorations: new DecorationController(config),
+    viewProvider: {
+      postMessage() {}, onMessage: () => ({ dispose() {} }), onReady: () => ({ dispose() {} }),
+      isReady: () => true, isResolved: () => true, isVisible: () => true, show: () => true
+    },
+    memento,
+    hostPlayer: null
+  });
+
+  try {
+    await controller._offerTerminalKeybinding();
+
+    assert.strictEqual(prompts.length, 1, 'the legacy boolean does not suppress the new prompt');
+    assert.match(prompts[0], /Alt\+Shift\+P/, 'the prompt names the key that stopped working');
+    assert.deepStrictEqual(updates, [[
+      'commandsToSkipShell',
+      [...userValue, 'audioCursor.stop']
+    ]], 'accepting adds only what was missing, keeping the user list intact');
+    assert.deepStrictEqual(stored, ['audioCursor.stop'],
+      'what was offered is remembered, not merely that a prompt happened');
+
+    // Asked once. A second pass with the same gap must stay quiet.
+    await controller._offerTerminalKeybinding();
+    assert.strictEqual(prompts.length, 1, 'the prompt does not repeat for commands already offered');
+  } finally {
+    vscode.workspace.getConfiguration = realGetConfiguration;
+    vscode.window.showInformationMessage = realShowInfo;
+    controller.dispose();
+  }
+});

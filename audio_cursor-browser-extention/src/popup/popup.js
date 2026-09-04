@@ -473,6 +473,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         voiceModalList.appendChild(fragment);
+        // The buttons in this fragment are new elements, so the running
+        // preview's indicator has to be reapplied to them.
+        syncPreviewButtons();
     }
 
     function selectVoice(voiceName) {
@@ -492,11 +495,54 @@ document.addEventListener('DOMContentLoaded', () => {
     // Neural previews are synthesized and played by the offscreen document.
     let pendingPreviewOnEnd = null;
 
+    // Which voice a row-level preview is running for, and how far along it is.
+    // Tracked by voice name rather than by element so the state survives the
+    // list being re-rendered by a filter or a search.
+    let activePreviewVoice = null;
+    /** @type {'loading' | 'playing'} */
+    let activePreviewState = 'loading';
+
+    // Bumped on every start and stop. A `chrome.tts` callback cannot be
+    // cancelled, so stopping one preview to start another fires the old
+    // `interrupted` event *after* the new one is set up; without this the stale
+    // callback would clear the indicator that had just been put up.
+    let previewToken = 0;
+
+    /** Paint every row button from `activePreviewVoice` / `activePreviewState`. */
+    function syncPreviewButtons() {
+        document.querySelectorAll('.btn-item-preview').forEach((btn) => {
+            const isActive = Boolean(activePreviewVoice) && btn.dataset.voice === activePreviewVoice;
+            const loading = isActive && activePreviewState === 'loading';
+            const playing = isActive && activePreviewState === 'playing';
+
+            btn.classList.toggle('loading', loading);
+            btn.classList.toggle('playing', playing);
+            btn.textContent = loading ? 'Loading…' : (playing ? '■ Stop' : '▶ Preview');
+            btn.setAttribute('aria-label',
+                isActive ? 'Stop the preview' : 'Preview this voice');
+        });
+    }
+
+    function setPreviewState(voiceName, state) {
+        activePreviewVoice = voiceName;
+        activePreviewState = state || 'loading';
+        syncPreviewButtons();
+    }
+
+    let pendingPreviewOnStart = null;
+
     chrome.runtime.onMessage.addListener((message) => {
+        if (message.type === 'AC_PREVIEW_STARTED') {
+            const started = pendingPreviewOnStart;
+            pendingPreviewOnStart = null;
+            if (started) started();
+            return;
+        }
         if (message.type === 'AC_PREVIEW_ENDED' || message.type === 'AC_PREVIEW_ERROR') {
             if (message.type === 'AC_PREVIEW_ERROR') {
                 console.warn('Voice preview failed:', message.error);
             }
+            pendingPreviewOnStart = null;
             const cb = pendingPreviewOnEnd;
             pendingPreviewOnEnd = null;
             if (cb) cb();
@@ -504,18 +550,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function stopNeuralPreviewAudio() {
+        pendingPreviewOnStart = null;
         pendingPreviewOnEnd = null;
         chrome.runtime.sendMessage({ type: 'STOP_PREVIEW' }, () => void chrome.runtime.lastError);
     }
 
     function stopPreview() {
+        previewToken++;
         chrome.tts.stop();
         stopNeuralPreviewAudio();
         isSpeakingPreview = false;
         if (testButton) {
-            testButton.classList.remove('speaking');
+            testButton.classList.remove('loading', 'speaking');
             if (testLabel) testLabel.textContent = 'Preview';
         }
+        setPreviewState(null, 'loading');
     }
 
     function speakPreview(voice, sampleText, onStart, onEnd) {
@@ -526,6 +575,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Neural and Chrome voices are both spoken by the offscreen document, so
         // the preview keeps playing even after this popup closes.
         if (isNeural || voice.engine === 'webspeech') {
+            pendingPreviewOnStart = onStart || null;
             pendingPreviewOnEnd = onEnd || null;
             chrome.runtime.sendMessage({
                 type: 'PREVIEW_VOICE',
@@ -537,11 +587,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }, (resp) => {
                 if (chrome.runtime.lastError || !resp || !resp.ok) {
                     console.warn('Voice preview failed:', resp && resp.error);
+                    pendingPreviewOnStart = null;
                     pendingPreviewOnEnd = null;
                     if (onEnd) onEnd();
-                    return;
                 }
-                if (onStart) onStart();
+                // Otherwise the offscreen document is up; it reports the real
+                // start and end of the audio itself.
             });
             return;
         }
@@ -567,9 +618,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function previewVoice(voice) {
+        // A running preview had no indicator at all, so there was nothing to
+        // press to stop it and no sign of which row was speaking.
+        const wasPlayingThisVoice = activePreviewVoice === voice.name;
         stopPreview();
+        if (wasPlayingThisVoice) return;
+
+        const token = ++previewToken;
+        // Neural voices are synthesized over the network, so there is a real
+        // gap before any sound. The button says so rather than sitting idle.
+        setPreviewState(voice.name, 'loading');
+
         const sampleText = `Hi! I am ${voice.cleanName || voice.name}, ready to read any webpage for you.`;
-        speakPreview(voice, sampleText, null, null);
+        speakPreview(
+            voice,
+            sampleText,
+            () => {
+                if (token !== previewToken) return;
+                setPreviewState(voice.name, 'playing');
+            },
+            () => {
+                if (token !== previewToken) return;
+                setPreviewState(null, 'loading');
+            }
+        );
     }
 
     // Modal Triggers & Event Listeners
@@ -652,18 +724,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            // Also stops a row preview: one preview plays at a time, so only
+            // one indicator may be lit.
+            stopPreview();
+            const token = ++previewToken;
+
             isSpeakingPreview = true;
-            testButton.classList.add('speaking');
-            if (testLabel) testLabel.textContent = 'Stop preview';
+            // Not "Stop preview" yet — a neural voice is still being
+            // synthesized at this point and the button would be offering to
+            // stop something that has not started.
+            testButton.classList.add('loading');
+            if (testLabel) testLabel.textContent = 'Loading…';
 
             const v = getVoiceInfo(currentVoice);
             const previewText = `Hello! I am ${v.cleanName || v.name}. Select any text on a webpage and I will read it aloud for you.`;
 
-            speakPreview(v, previewText, null, () => {
-                isSpeakingPreview = false;
-                testButton.classList.remove('speaking');
-                if (testLabel) testLabel.textContent = 'Preview';
-            });
+            speakPreview(
+                v,
+                previewText,
+                () => {
+                    if (token !== previewToken) return;
+                    testButton.classList.remove('loading');
+                    testButton.classList.add('speaking');
+                    if (testLabel) testLabel.textContent = 'Stop preview';
+                },
+                () => {
+                    if (token !== previewToken) return;
+                    isSpeakingPreview = false;
+                    testButton.classList.remove('loading', 'speaking');
+                    if (testLabel) testLabel.textContent = 'Preview';
+                }
+            );
         });
     }
 
