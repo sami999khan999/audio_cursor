@@ -77,44 +77,111 @@ function uint8ToBase64(bytes) {
     return btoa(binary);
 }
 
-/**
- * Synthesize text using Edge TTS WebSocket.
- * Returns a Promise<{ base64: string, bytes: Uint8Array }> of MP3 audio.
- *
- * @param {string} text
- * @param {string} voice  e.g. 'en-US-JennyNeural'
- * @param {number} rate   0.5-2.0
- * @param {number} pitch  0.0-2.0
- * @returns {Promise<{ base64: string, bytes: Uint8Array }>}
- */
-async function synthesize(text, voice = 'en-US-JennyNeural', rate = 1.0, pitch = 1.0) {
-    const secMsGec = await generateSecMsGec();
-    const connId = uuid().replace(/-/g, '');
-    const wsUrl = `wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=${TRUSTED_CLIENT_TOKEN}&Sec-MS-GEC=${secMsGec}&Sec-MS-GEC-Version=1-143.0.3650.96&ConnectionId=${connId}`;
+const AUDIO_SEPARATOR = new TextEncoder().encode('Path:audio\r\n');
 
-    return new Promise((resolve, reject) => {
+/** Offset just past `Path:audio\r\n`, or -1 when this frame is not audio. */
+function audioBodyOffset(bytes) {
+    outer:
+    for (let i = 0; i <= bytes.length - AUDIO_SEPARATOR.length; i++) {
+        for (let j = 0; j < AUDIO_SEPARATOR.length; j++) {
+            if (bytes[i + j] !== AUDIO_SEPARATOR[j]) continue outer;
+        }
+        return i + AUDIO_SEPARATOR.length;
+    }
+    return -1;
+}
+
+function mergeChunks(chunks) {
+    const total = chunks.reduce((n, c) => n + c.byteLength, 0);
+    const merged = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) {
+        merged.set(new Uint8Array(chunk), offset);
+        offset += chunk.byteLength;
+    }
+    return merged;
+}
+
+/**
+ * Open one connection to the speech service and keep it, so many syntheses can
+ * be spoken over it in turn. Opening a socket per sentence is what made a long
+ * export slow and fragile: the handshake costs more than the synthesis, and a
+ * burst of them runs into the browser's own limit on concurrent WebSocket
+ * handshakes to one address.
+ *
+ * The returned session speaks one request at a time. Anything that goes wrong
+ * mid-request — a timeout, an abort, the service hanging up — closes the whole
+ * connection, because a half-delivered response cannot be told apart from the
+ * start of the next one. The caller opens a fresh session and tries again.
+ *
+ * @param {{ connectTimeoutMs?: number }} [options]
+ * @returns {Promise<{ speak: Function, close: Function, readonly closed: boolean }>}
+ */
+function createSession(options = {}) {
+    const connectTimeoutMs = options.connectTimeoutMs || 15000;
+
+    return generateSecMsGec().then((secMsGec) => new Promise((resolve, reject) => {
+        const connId = uuid().replace(/-/g, '');
+        const wsUrl = `wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=${TRUSTED_CLIENT_TOKEN}&Sec-MS-GEC=${secMsGec}&Sec-MS-GEC-Version=1-143.0.3650.96&ConnectionId=${connId}`;
+
         let ws;
         try {
             ws = new WebSocket(wsUrl);
         } catch (err) {
-            return reject(new Error(`WebSocket open failed: ${err.message}`));
+            reject(new Error(`WebSocket open failed: ${err.message}`));
+            return;
         }
-
         ws.binaryType = 'arraybuffer';
 
-        const requestId = uuid().replace(/-/g, '');
-        const audioChunks = [];
-        let done = false;
+        let opened = false;
+        let closed = false;
+        /** @type {null | { resolve, reject, chunks, timer, signal, onAbort, partialOk }} */
+        let pending = null;
 
-        const AUDIO_SEPARATOR = new TextEncoder().encode('Path:audio\r\n');
-
-        function cleanup() {
+        const connectTimer = setTimeout(() => {
+            if (opened || closed) return;
+            closed = true;
             try { ws.close(); } catch (_) {}
+            reject(new Error(`Speech service did not answer within ${Math.round(connectTimeoutMs / 1000)} s`));
+        }, connectTimeoutMs);
+
+        function detach(p) {
+            clearTimeout(p.timer);
+            if (p.signal && p.onAbort) p.signal.removeEventListener('abort', p.onAbort);
+        }
+
+        function finishPending(bytes) {
+            const p = pending;
+            if (!p) return;
+            pending = null;
+            detach(p);
+            p.resolve(bytes);
+        }
+
+        function failPending(message) {
+            const p = pending;
+            if (!p) return;
+            pending = null;
+            detach(p);
+            // Playback would rather have a clipped tail than nothing; an export
+            // must not, or the file quietly loses words.
+            if (p.partialOk && p.chunks.length > 0) p.resolve(mergeChunks(p.chunks));
+            else p.reject(new Error(message));
+        }
+
+        function shutdown(message) {
+            closed = true;
+            clearTimeout(connectTimer);
+            try { ws.close(); } catch (_) {}
+            failPending(message);
         }
 
         ws.onopen = () => {
+            if (closed) return;
+            opened = true;
+            clearTimeout(connectTimer);
             const ts = timestamp();
-            const configMsg =
+            ws.send(
                 `X-Timestamp:${ts}\r\n` +
                 `Content-Type:application/json; charset=utf-8\r\n` +
                 `Path:speech.config\r\n\r\n` +
@@ -130,112 +197,154 @@ async function synthesize(text, voice = 'en-US-JennyNeural', rate = 1.0, pitch =
                             }
                         }
                     }
-                });
-            ws.send(configMsg);
+                })
+            );
+            resolve(session);
+        };
 
-            const ssml = buildSsml(text, voice, rate, pitch);
-            const ssmlMsg =
-                `X-RequestId:${requestId}\r\n` +
-                `Content-Type:application/ssml+xml\r\n` +
-                `X-Timestamp:${ts}\r\n` +
-                `Path:ssml\r\n\r\n` +
-                ssml;
-            ws.send(ssmlMsg);
+        ws.onerror = () => {
+            if (!opened) {
+                closed = true;
+                clearTimeout(connectTimer);
+                reject(new Error('Edge TTS WebSocket error'));
+                return;
+            }
+            shutdown('Edge TTS WebSocket error');
+        };
+
+        ws.onclose = (event) => {
+            if (!opened) {
+                closed = true;
+                clearTimeout(connectTimer);
+                reject(new Error(`Edge TTS closed unexpectedly (code ${event && event.code})`));
+                return;
+            }
+            closed = true;
+            failPending(`Edge TTS closed unexpectedly (code ${event && event.code})`);
         };
 
         ws.onmessage = async (event) => {
-            if (done) return;
-
+            if (!pending) return;
             let data = event.data;
             if (typeof Blob !== 'undefined' && data instanceof Blob) {
                 data = await data.arrayBuffer();
+                if (!pending) return;
             }
 
             if (typeof data === 'string') {
-                if (data.includes('Path:turn.end')) {
-                    done = true;
-                    cleanup();
-                    const totalLength = audioChunks.reduce((s, c) => s + c.byteLength, 0);
-                    const merged = new Uint8Array(totalLength);
-                    let offset = 0;
-                    for (const chunk of audioChunks) {
-                        merged.set(new Uint8Array(chunk), offset);
-                        offset += chunk.byteLength;
-                    }
-                    const base64 = uint8ToBase64(merged);
-                    resolve({ base64, bytes: merged });
-                }
+                if (data.includes('Path:turn.end')) finishPending(mergeChunks(pending.chunks));
                 return;
             }
 
             if (data instanceof ArrayBuffer) {
                 const bytes = new Uint8Array(data);
-                const textHeader = new TextDecoder().decode(bytes.subarray(0, Math.min(256, bytes.length)));
-
-                if (textHeader.includes('Path:turn.end')) {
-                    done = true;
-                    cleanup();
-                    const totalLength = audioChunks.reduce((s, c) => s + c.byteLength, 0);
-                    const merged = new Uint8Array(totalLength);
-                    let offset = 0;
-                    for (const chunk of audioChunks) {
-                        merged.set(new Uint8Array(chunk), offset);
-                        offset += chunk.byteLength;
-                    }
-                    const base64 = uint8ToBase64(merged);
-                    resolve({ base64, bytes: merged });
+                const header = new TextDecoder().decode(bytes.subarray(0, Math.min(256, bytes.length)));
+                if (header.includes('Path:turn.end')) {
+                    finishPending(mergeChunks(pending.chunks));
                     return;
                 }
-
-                // Check for binary audio delimiter
-                let sepIdx = -1;
-                for (let i = 0; i <= bytes.length - AUDIO_SEPARATOR.length; i++) {
-                    let match = true;
-                    for (let j = 0; j < AUDIO_SEPARATOR.length; j++) {
-                        if (bytes[i + j] !== AUDIO_SEPARATOR[j]) {
-                            match = false;
-                            break;
-                        }
-                    }
-                    if (match) {
-                        sepIdx = i + AUDIO_SEPARATOR.length;
-                        break;
-                    }
-                }
-
-                if (sepIdx !== -1 && sepIdx < bytes.length) {
-                    audioChunks.push(data.slice(sepIdx));
-                }
+                const start = audioBodyOffset(bytes);
+                if (start !== -1 && start < bytes.length) pending.chunks.push(data.slice(start));
             }
         };
 
-        ws.onerror = () => {
-            if (!done) {
-                done = true;
-                cleanup();
-                reject(new Error('Edge TTS WebSocket error'));
-            }
-        };
+        const session = {
+            get closed() {
+                return closed;
+            },
 
-        ws.onclose = (event) => {
-            if (!done) {
-                done = true;
-                if (audioChunks.length > 0) {
-                    const totalLength = audioChunks.reduce((s, c) => s + c.byteLength, 0);
-                    const merged = new Uint8Array(totalLength);
-                    let offset = 0;
-                    for (const chunk of audioChunks) {
-                        merged.set(new Uint8Array(chunk), offset);
-                        offset += chunk.byteLength;
+            /**
+             * Speak one text over this connection.
+             * @param {string} text
+             * @param {string} voice
+             * @param {number} rate
+             * @param {number} pitch
+             * @param {{ timeoutMs?: number, signal?: AbortSignal, resolvePartialOnClose?: boolean }} [opts]
+             * @returns {Promise<Uint8Array>}
+             */
+            speak(text, voice = 'en-US-JennyNeural', rate = 1.0, pitch = 1.0, opts = {}) {
+                if (closed) return Promise.reject(new Error('Speech connection is closed'));
+                if (pending) return Promise.reject(new Error('This connection is already speaking'));
+
+                const { timeoutMs = 0, signal = null, resolvePartialOnClose = false } = opts;
+                if (signal && signal.aborted) return Promise.reject(new Error('Cancelled'));
+
+                return new Promise((res, rej) => {
+                    const p = {
+                        resolve: res,
+                        reject: rej,
+                        chunks: [],
+                        timer: null,
+                        signal,
+                        onAbort: null,
+                        partialOk: resolvePartialOnClose
+                    };
+                    pending = p;
+
+                    if (timeoutMs > 0) {
+                        p.timer = setTimeout(() => {
+                            // Close the socket too: an abandoned request would
+                            // otherwise keep the connection and its audio
+                            // arriving with nobody to receive it.
+                            shutdown(`Speech service timed out after ${Math.round(timeoutMs / 1000)} s`);
+                        }, timeoutMs);
                     }
-                    const base64 = uint8ToBase64(merged);
-                    resolve({ base64, bytes: merged });
-                } else {
-                    reject(new Error(`Edge TTS closed unexpectedly (code ${event.code})`));
-                }
+                    if (signal) {
+                        p.onAbort = () => shutdown('Cancelled');
+                        signal.addEventListener('abort', p.onAbort, { once: true });
+                    }
+
+                    const requestId = uuid().replace(/-/g, '');
+                    try {
+                        ws.send(
+                            `X-RequestId:${requestId}\r\n` +
+                            `Content-Type:application/ssml+xml\r\n` +
+                            `X-Timestamp:${timestamp()}\r\n` +
+                            `Path:ssml\r\n\r\n` +
+                            buildSsml(text, voice, rate, pitch)
+                        );
+                    } catch (err) {
+                        shutdown(`Could not send to the speech service: ${err.message}`);
+                    }
+                });
+            },
+
+            close() {
+                if (closed) return;
+                closed = true;
+                clearTimeout(connectTimer);
+                try { ws.close(); } catch (_) {}
+                failPending('Speech connection closed');
             }
         };
-    });
+    }));
 }
 
-globalThis.EdgeTTS = { synthesize, escapeXml, generateSecMsGec, uint8ToBase64, buildSsml };
+/**
+ * Synthesize one text on a connection of its own.
+ * Returns a Promise<{ base64: string, bytes: Uint8Array }> of MP3 audio.
+ *
+ * @param {string} text
+ * @param {string} voice  e.g. 'en-US-JennyNeural'
+ * @param {number} rate   0.5-2.0
+ * @param {number} pitch  0.0-2.0
+ * @param {{ timeoutMs?: number, signal?: AbortSignal, resolvePartialOnClose?: boolean }} [options]
+ * @returns {Promise<{ base64: string, bytes: Uint8Array }>}
+ */
+async function synthesize(text, voice = 'en-US-JennyNeural', rate = 1.0, pitch = 1.0, options = {}) {
+    const session = await createSession({ connectTimeoutMs: options.connectTimeoutMs || options.timeoutMs || 15000 });
+    try {
+        const bytes = await session.speak(text, voice, rate, pitch, {
+            timeoutMs: options.timeoutMs || 0,
+            signal: options.signal,
+            // Playback has always preferred a clipped tail to a failure.
+            resolvePartialOnClose: options.resolvePartialOnClose !== false
+        });
+        return { base64: uint8ToBase64(bytes), bytes };
+    } finally {
+        session.close();
+    }
+}
+
+globalThis.EdgeTTS = { synthesize, createSession, escapeXml, generateSecMsGec, uint8ToBase64, buildSsml };
+if (typeof module !== 'undefined' && module.exports) module.exports = globalThis.EdgeTTS;

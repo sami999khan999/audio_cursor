@@ -48,7 +48,7 @@ And when a page won't let you select cleanly, `Alt+S` drops a real caret into it
 | 🖱️ **Select-to-play** | Highlight text and the player appears. Deselect and playback stops automatically. |
 | 🌐 **340+ Natural AI Voices** | Access neural cloud voices across dozens of languages and accents, plus all offline system voices and Chrome's own built-in voices (including the bundled “Google …” ones). |
 | ⚡ **Auto-play on select** | Hold `Ctrl+Alt` while selecting text to automatically start playing it instantly. |
-| 💾 **Download MP3** | Press `Alt+D` or click export to synthesize and download selected text as high-quality MP3 audio. |
+| 💾 **Download MP3** | Press `Alt+D` to synthesize the selected text and save it as one MP3 file. Any length: a long article is split into segments, synthesized a few at a time in the background with a progress toast, and joined into a single file. Press ✕ on the toast to cancel. |
 | 📋 **Read Clipboard** | Quick action in the popup to read copied text from your clipboard immediately. |
 | 📄 **Google Docs & PDFs** | Full compatibility with Google Docs (canvas & text layers) and PDF documents. |
 | 🔁 **Repeat playback** | Loop audio continuously when playback finishes. |
@@ -134,7 +134,8 @@ Settings are synced to your Chrome profile with `chrome.storage.sync`:
                                                    ┌───────────────────────────────────────┐
                                                    │  offscreen.js (Edge Neural & Cloud)   │
                                                    │  • WebSocket streaming                │
-                                                   │  • MP3 audio blob generation          │
+                                                   │  • MP3 export: split, synthesize,     │
+                                                   │    join, hand back a blob: URL        │
                                                    │  • fallback to chrome.tts             │
                                                    └───────────────────────────────────────┘
 ```

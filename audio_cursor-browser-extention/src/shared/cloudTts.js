@@ -82,82 +82,68 @@ function chunkSpeechText(text) {
     return chunks;
 }
 
+// The endpoint answers one short utterance per request; anything past this
+// many characters is cut off server-side. `chunkSpeechText` splits to fit.
+const CLOUD_MAX_CHARS = 180;
+
+/**
+ * Fetch one utterance (at most CLOUD_MAX_CHARS) from the Google translate
+ * endpoint as MP3 bytes.
+ * @param {string} text
+ * @param {string} langCode e.g. 'en-US' or 'es'
+ * @param {{ signal?: AbortSignal, timeoutMs?: number }} [options]
+ * @returns {Promise<Uint8Array>}
+ */
+async function fetchCloudAudioBytes(text, langCode = 'en', options = {}) {
+    const { signal = null, timeoutMs = 0 } = options;
+    const clean = encodeURIComponent(text.trim().slice(0, CLOUD_MAX_CHARS));
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${clean}&tl=${langCode}&client=tw-ob`;
+
+    // fetch has no timeout of its own: a request left hanging would stall an
+    // export with nothing to report.
+    const control = new AbortController();
+    const onAbort = () => control.abort();
+    if (signal) {
+        if (signal.aborted) control.abort();
+        else signal.addEventListener('abort', onAbort, { once: true });
+    }
+    const timer = timeoutMs > 0 ? setTimeout(() => control.abort(), timeoutMs) : null;
+
+    try {
+        const resp = await fetch(url, { signal: control.signal });
+        if (!resp.ok) throw new Error(`Cloud TTS fetch failed: ${resp.status}`);
+        return new Uint8Array(await resp.arrayBuffer());
+    } catch (err) {
+        if (err && err.name === 'AbortError') {
+            if (signal && signal.aborted) throw new Error('Cancelled');
+            throw new Error(`Cloud TTS timed out after ${Math.round(timeoutMs / 1000)} s`);
+        }
+        throw err;
+    } finally {
+        clearTimeout(timer);
+        if (signal) signal.removeEventListener('abort', onAbort);
+    }
+}
+
 /**
  * Synthesize text using Google Cloud TTS endpoint.
- * Returns base64 MP3 string.
- * @param {string} text 
+ * Returns base64 MP3 string. Text longer than CLOUD_MAX_CHARS is cut off —
+ * split it with `chunkSpeechText` first.
+ * @param {string} text
  * @param {string} langCode e.g. 'en-US' or 'es'
  * @returns {Promise<{ base64: string }>}
  */
 async function synthesizeCloudAudio(text, langCode = 'en') {
     if (!text || !text.trim()) return { base64: '' };
-    const clean = encodeURIComponent(text.trim().slice(0, 180));
-    const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${clean}&tl=${langCode}&client=tw-ob`;
-    
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error(`Cloud TTS fetch failed: ${resp.status}`);
-    const arrayBuffer = await resp.arrayBuffer();
-    const base64 = uint8ToBase64(new Uint8Array(arrayBuffer));
-    return { base64 };
-}
-
-/**
- * Synthesize entire text into a merged MP3 Blob (handles long text automatically).
- * @param {string} text 
- * @param {string} langCode 
- * @returns {Promise<Blob>}
- */
-async function synthesizeTextToMp3Blob(text, langCode = 'en') {
-    if (!text || !text.trim()) throw new Error('No text provided to synthesize');
-    const chunks = chunkSpeechText(text);
-    if (chunks.length === 0) throw new Error('Empty text');
-
-    const buffers = [];
-    for (const chunk of chunks) {
-        const clean = encodeURIComponent(chunk.trim());
-        const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${clean}&tl=${langCode}&client=tw-ob`;
-        const resp = await fetch(url);
-        if (!resp.ok) throw new Error(`Cloud TTS synthesis failed: ${resp.status}`);
-        const ab = await resp.arrayBuffer();
-        buffers.push(new Uint8Array(ab));
-    }
-
-    const totalLen = buffers.reduce((acc, b) => acc + b.length, 0);
-    const merged = new Uint8Array(totalLen);
-    let offset = 0;
-    for (const b of buffers) {
-        merged.set(b, offset);
-        offset += b.length;
-    }
-
-    return new Blob([merged], { type: 'audio/mp3' });
-}
-
-/**
- * Download synthesized speech audio as an MP3 file directly to the user's computer.
- * @param {string} text 
- * @param {string} filename 
- * @param {string} langCode 
- */
-async function downloadSpeechMp3(text, filename = 'speech.mp3', langCode = 'en') {
-    const blob = await synthesizeTextToMp3Blob(text, langCode);
-    const blobUrl = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = filename.endsWith('.mp3') ? filename : `${filename}.mp3`;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
-    }, 1500);
+    const bytes = await fetchCloudAudioBytes(text, langCode);
+    return { base64: uint8ToBase64(bytes) };
 }
 
 globalThis.CloudTTS = {
     NATURAL_CLOUD_VOICES,
+    CLOUD_MAX_CHARS,
+    fetchCloudAudioBytes,
     synthesizeCloudAudio,
-    synthesizeTextToMp3Blob,
-    downloadSpeechMp3,
     chunkSpeechText,
     uint8ToBase64
 };
