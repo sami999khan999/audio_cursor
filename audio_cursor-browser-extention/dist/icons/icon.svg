@@ -1,4 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <!--
+    One mark for both extensions. This is the VS Code extension's activity-bar
+    glyph (audio_cursor-vscode-extention/media/icon.svg) on the Audio Cursor
+    squircle — the same artwork its Marketplace icon uses, so the toolbar button
+    here and the icon in the Extensions list are the same thing at two sizes.
+  -->
   <defs>
     <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#818cf8" />
@@ -6,31 +12,16 @@
     </linearGradient>
   </defs>
 
-  <!-- Clean Dark Background -->
   <rect width="128" height="128" rx="32" fill="#141724" />
 
-  <!-- Clean Minimal Cursor Pointer -->
-  <path d="M 34 28 
-           L 72 66 
-           L 54 70 
-           L 66 94 
-           L 56 99 
-           L 44 75 
-           L 34 85 
-           Z" 
-        fill="url(#iconGrad)" />
-
-  <!-- Simple Sound Waves -->
-  <path d="M 76 48 A 20 20 0 0 1 76 80" 
-        fill="none" 
-        stroke="url(#iconGrad)" 
-        stroke-width="7" 
-        stroke-linecap="round" />
-
-  <path d="M 92 37 A 36 36 0 0 1 92 91" 
-        fill="none" 
-        stroke="url(#iconGrad)" 
-        stroke-width="7" 
-        stroke-linecap="round" 
-        opacity="0.8" />
+  <!-- The 24x24 source glyph, scaled 4x and centred with a 16px margin. -->
+  <g transform="translate(16 16) scale(4)" fill="url(#iconGrad)">
+    <!-- Text cursor I-beam -->
+    <path d="M4 4h4v1.75H6.75v12.5H8V20H4v-1.75h1.25V5.75H4V4z" />
+    <!-- Audio sound waves emanating from the cursor -->
+    <rect x="9.5" y="8.5" width="2" height="7" rx="1" />
+    <rect x="13" y="5" width="2" height="14" rx="1" />
+    <rect x="16.5" y="3" width="2" height="18" rx="1" />
+    <rect x="20" y="7" width="2" height="10" rx="1" />
+  </g>
 </svg>

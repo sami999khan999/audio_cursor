@@ -13,18 +13,24 @@
         <header class="app-header">
             <div class="brand">
                 <div class="brand-icon-wrap" title="Audio Cursor">
-                    <svg class="brand-icon" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg class="brand-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <defs>
                             <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                 <stop offset="0%" stop-color="#818cf8" />
                                 <stop offset="100%" stop-color="#38bdf8" />
                             </linearGradient>
                         </defs>
-                        <!-- Simple Minimal Cursor Pointer -->
-                        <path d="M 34 28 L 72 66 L 54 70 L 66 94 L 56 99 L 44 75 L 34 85 Z" fill="url(#brandGrad)" />
-                        <!-- Simple Sound Waves -->
-                        <path d="M 76 48 A 20 20 0 0 1 76 80" stroke="url(#brandGrad)" stroke-width="7" stroke-linecap="round" />
-                        <path d="M 92 37 A 36 36 0 0 1 92 91" stroke="url(#brandGrad)" stroke-width="7" stroke-linecap="round" opacity="0.8" />
+                        <!-- The extension's own mark, shared with the VS Code extension.
+                             No squircle here: brand-icon-wrap already draws one. -->
+                        <g fill="url(#brandGrad)">
+                            <!-- Text cursor I-beam -->
+                            <path d="M4 4h4v1.75H6.75v12.5H8V20H4v-1.75h1.25V5.75H4V4z" />
+                            <!-- Audio sound waves emanating from the cursor -->
+                            <rect x="9.5" y="8.5" width="2" height="7" rx="1" />
+                            <rect x="13" y="5" width="2" height="14" rx="1" />
+                            <rect x="16.5" y="3" width="2" height="18" rx="1" />
+                            <rect x="20" y="7" width="2" height="10" rx="1" />
+                        </g>
                     </svg>
                 </div>
                 <div class="brand-info">

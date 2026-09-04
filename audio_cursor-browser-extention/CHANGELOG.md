@@ -4,6 +4,15 @@ All notable changes to the Audio Cursor browser extension are documented here.
 
 ## [2.2.1]
 
+### Changed
+- **One mark for both extensions.** The browser extension drew a mouse-pointer arrow with sound
+  arcs while the VS Code extension used an I-beam text cursor with a waveform — two different
+  logos for one product, on the same dark squircle in the same indigo-to-sky palette, so they read
+  as related but not the same. The I-beam mark is now used in both: the toolbar and store icons
+  (16/32/48/128 and the 512 listing logo, all re-rendered from `src/icons/icon.svg`) and the
+  popup header. It is the artwork already shipping as the VS Code extension's Marketplace icon,
+  down to the framing, so the two listings show one icon at two sizes.
+
 ### Fixed
 - **A voice preview from the Voice Library gave no sign it was playing.** Pressing *Preview* on a
   row started audio and changed nothing on screen: no way to tell which of 325 voices was
