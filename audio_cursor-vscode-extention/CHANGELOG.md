@@ -2,6 +2,21 @@
 
 All notable changes to the "audio-cursor" extension will be documented in this file.
 
+## [0.8.2]
+
+### Fixed
+- **Selecting new terminal text while terminal text was being read did not select it.** The
+  selection was captured, but nothing showed it: playback carried on reading the old text, the
+  status bar and the player preview kept showing it too, and the new selection surfaced only on the
+  next Alt+P. Every terminal selection arriving mid-read was skipped on purpose, because a terminal
+  running a full-screen program repaints constantly and — with
+  `terminal.integrated.copyOnSelection` on — each repaint re-copies the standing selection with a
+  few characters changed, which used to stop a read a second after it started. That skip is now
+  narrowed to actual repaints: a copy counts as one only when it is the text already being read,
+  within 10% of its length and with at least 85% of its characters at the same offsets. A selection
+  the user genuinely made now behaves exactly like an editor selection — playback stops, and the
+  status bar and player preview follow the new text.
+
 ## [0.8.1]
 
 ### Fixed

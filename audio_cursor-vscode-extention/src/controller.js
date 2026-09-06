@@ -37,6 +37,14 @@ const TERMINAL_SKIP_SHELL_COMMANDS = [
 
 const SKIP_SHELL_PROMPTED_KEY = 'skipShellPrompted';
 
+// A terminal running a full-screen program repaints its own cells while a
+// selection sits still, and with `copyOnSelection` on every repaint re-copies
+// that selection with a few characters changed. These say how alike such a
+// copy has to be to the text already being read before it counts as a redraw
+// of the same selection rather than a new one the user just made.
+const REDRAW_SIMILARITY = 0.85;
+const REDRAW_LENGTH_TOLERANCE = 0.1;
+
 // What each command is called in the prompt, so it names the keys the user is
 // actually pressing rather than command ids.
 const SKIP_SHELL_COMMAND_LABELS = {
@@ -227,19 +235,18 @@ class AudioCursorController {
         const isActive = this._status === 'playing' || this._status === 'paused' || this._status === 'starting';
         if (isActive && !this._isDifferentSelection(snapshot)) return;
 
-        if (isActive && snapshot.source === 'terminal') {
-          // A terminal running a full-screen program redraws constantly, and
-          // with `copyOnSelection` on every redraw re-copies the (slightly
-          // changed) selection. Treating each of those as a new selection
-          // stopped the first read within a second of it starting. So a
-          // terminal change only updates what the *next* Alt+P will read.
-          log.info('Terminal selection changed during playback; remembered for the next read, playback continues.');
+        if (isActive && snapshot.source === 'terminal' && this._isTerminalRedraw(snapshot)) {
+          // Only a redraw of the text being read is ignored, because treating
+          // each repaint as a new selection stopped the first read within a
+          // second of it starting. It still updates what the *next* Alt+P
+          // reads; a selection the user actually made falls through below.
+          log.info('Terminal selection re-copied by a redraw; remembered for the next read, playback continues.');
           this._lastTerminalSnapshot = snapshot;
           return;
         }
 
         if (isActive) {
-          log.info('Preview selection changed during playback; stopping playback.');
+          log.info(`${snapshot.source === 'terminal' ? 'Terminal' : 'Preview'} selection changed during playback; stopping playback.`);
           this.stop();
         }
 
@@ -506,6 +513,37 @@ class AudioCursorController {
       current.startOffset !== snapshot.startOffset ||
       current.endOffset !== snapshot.endOffset ||
       current.text !== snapshot.text;
+  }
+
+  /**
+   * True when an incoming terminal snapshot is the text already being read,
+   * re-copied by a redraw rather than selected afresh. The selected region
+   * has not moved, so the copy keeps its size and nearly every character
+   * keeps its offset — only the handful of cells the program repainted (a
+   * spinner, a counter, a progress bar) differ. Text selected somewhere else
+   * shares almost nothing position for position, so it reads as new.
+   * @param {Object | null} snapshot
+   * @returns {boolean}
+   */
+  _isTerminalRedraw(snapshot) {
+    const current = this._session && this._session.snapshot;
+    if (!current || current.source !== 'terminal' || !snapshot) return false;
+
+    const a = current.text || '';
+    const b = snapshot.text || '';
+    if (a === b) return true;
+
+    const longest = Math.max(a.length, b.length);
+    if (longest === 0) return true;
+    if (Math.abs(a.length - b.length) > longest * REDRAW_LENGTH_TOLERANCE) return false;
+
+    const shortest = Math.min(a.length, b.length);
+    let sameOffset = 0;
+    for (let i = 0; i < shortest; i++) {
+      if (a[i] === b[i]) sameOffset++;
+    }
+
+    return sameOffset / longest >= REDRAW_SIMILARITY;
   }
 
   /**
