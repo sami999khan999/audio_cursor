@@ -1,5 +1,37 @@
 /* Audio Cursor — floating player */
 
+/* Accent hue, drifting round the wheel in step with the popup. OKLCH keeps
+   lightness fixed so the accent is equally bright at every hue and the dark
+   glyphs on it stay readable. Scoped to our own roots (not html) so the page
+   isn't restyled every frame; a hidden player doesn't animate at all. */
+@property --ac-hue {
+    syntax: "<number>";
+    inherits: true;
+    initial-value: 95;
+}
+
+@keyframes acHueCycle {
+    from { --ac-hue: 95; }
+    to   { --ac-hue: 455; }
+}
+
+#audio-cursor-player,
+#audio-cursor-kbhint,
+#audio-cursor-toast {
+    animation: acHueCycle 24s linear infinite;
+    --ac-marker: oklch(0.86 0.14 var(--ac-hue));
+    --ac-marker-trail: oklch(0.86 0.14 calc(var(--ac-hue) - 70));
+    --ac-marker-ink: oklch(0.22 0.05 var(--ac-hue));
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #audio-cursor-player,
+    #audio-cursor-kbhint,
+    #audio-cursor-toast {
+        animation: none;
+    }
+}
+
 #audio-cursor-player {
     position: fixed !important;
     right: 20px;
@@ -11,7 +43,7 @@
     width: 56px;
     padding: 8px;
 
-    background: rgba(21, 23, 31, 0.92);
+    background: rgba(20, 26, 41, 0.92);
     backdrop-filter: blur(24px) saturate(1.6);
     -webkit-backdrop-filter: blur(24px) saturate(1.6);
     border: 1px solid rgba(255, 255, 255, 0.11);
@@ -118,15 +150,15 @@
     padding: 0;
     border: none;
     border-radius: 50%;
-    background: linear-gradient(180deg, #8d9bff 0%, #6d7df2 100%);
-    color: #10121a;
+    background: var(--ac-marker);
+    color: var(--ac-marker-ink);
     cursor: pointer;
     outline: none;
     transition:
         filter 0.15s ease,
         transform 0.15s cubic-bezier(0.32, 0.72, 0, 1);
     box-shadow:
-        0 2px 10px rgba(124, 140, 248, 0.45),
+        0 2px 10px oklch(0.86 0.14 var(--ac-hue) / 0.35),
         inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
@@ -163,8 +195,8 @@
     display: none;
     width: 16px;
     height: 16px;
-    border: 2px solid rgba(16, 18, 26, 0.25);
-    border-top-color: #10121a;
+    border: 2px solid oklch(0.22 0.05 var(--ac-hue) / 0.25);
+    border-top-color: var(--ac-marker-ink);
     border-radius: 50%;
     animation: acPlayerSpin 0.65s linear infinite;
     pointer-events: none;
@@ -197,7 +229,7 @@
         animation: none;
     }
     #audio-cursor-player.ac-loading .ac-spin {
-        border-top-color: rgba(16, 18, 26, 0.55);
+        border-top-color: oklch(0.22 0.05 var(--ac-hue) / 0.55);
     }
 }
 
@@ -271,7 +303,7 @@
 #audio-cursor-player .ac-w.ac-cur {
     color: #ffffff;
     font-weight: 650;
-    background: rgba(124, 140, 248, 0.28);
+    background: oklch(0.86 0.14 var(--ac-hue) / 0.3);
 }
 
 #audio-cursor-player.ac-paused .ac-w.ac-cur {
@@ -352,7 +384,7 @@
 #audio-cursor-player .ac-fill {
     left: 0;
     width: 0%;
-    background: linear-gradient(90deg, #7c8cf8, #98a5ff);
+    background: linear-gradient(90deg, var(--ac-marker-trail), var(--ac-marker));
     transition:
         width 0.14s linear,
         height 0.12s ease;
@@ -372,7 +404,7 @@
     width: 13px;
     height: 13px;
     border-radius: 50%;
-    background: #a5b1ff;
+    background: var(--ac-marker);
     border: 2px solid #ffffff;
     transform: translateX(-50%) scale(0);
     box-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
@@ -402,7 +434,7 @@
    pages that disable it. Selection itself keeps the page's own look. */
 html.ac-caret-mode,
 html.ac-caret-mode * {
-    caret-color: #7c8cf8 !important;
+    caret-color: #f7d84a !important;
     cursor: text !important;
     user-select: text !important;
     -webkit-user-select: text !important;
@@ -472,7 +504,7 @@ html.ac-caret-mode
     max-width: min(92vw, 520px);
     padding: 6px 13px;
 
-    background: rgba(21, 23, 31, 0.92);
+    background: rgba(20, 26, 41, 0.92);
     backdrop-filter: blur(24px) saturate(1.6);
     -webkit-backdrop-filter: blur(24px) saturate(1.6);
     border: 1px solid rgba(255, 255, 255, 0.11);
@@ -519,7 +551,7 @@ html.ac-caret-mode
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: #7c8cf8;
+    background: var(--ac-marker);
 }
 
 #audio-cursor-kbhint .ac-kb-title {
@@ -643,7 +675,7 @@ html.ac-caret-mode
 }
 
 #audio-cursor-toast.ac-toast-info .ac-toast-icon {
-    color: var(--ac-accent-strong, #98a5ff) !important;
+    color: var(--ac-marker, #f7d84a) !important;
 }
 
 #audio-cursor-toast .ac-toast-close {
@@ -679,8 +711,8 @@ html.ac-caret-mode
     width: 16px !important;
     height: 16px !important;
     box-sizing: border-box !important;
-    border: 2px solid rgba(141, 155, 255, 0.2) !important;
-    border-top-color: #8d9bff !important;
+    border: 2px solid oklch(0.86 0.14 var(--ac-hue) / 0.2) !important;
+    border-top-color: var(--ac-marker) !important;
     border-radius: 50% !important;
     animation: acSpin 0.7s linear infinite !important;
 }

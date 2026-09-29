@@ -1,16 +1,16 @@
 /* Audio Cursor — shared design tokens */
 :root {
-    --ac-bg: #0f1116;
-    --ac-surface: #161922;
-    --ac-surface-2: #1e2230;
-    --ac-surface-3: #262b3b;
+    --ac-bg: #141a29;
+    --ac-surface: #1c2438;
+    --ac-surface-2: #242d45;
+    --ac-surface-3: #2a3350;
     --ac-border: rgba(255, 255, 255, 0.07);
     --ac-border-strong: rgba(255, 255, 255, 0.14);
 
-    --ac-accent: #7c8cf8;
-    --ac-accent-strong: #98a5ff;
-    --ac-accent-soft: rgba(124, 140, 248, 0.15);
-    --ac-accent-glow: rgba(124, 140, 248, 0.35);
+    --ac-accent: #f7d84a;
+    --ac-accent-strong: #ffe36b;
+    --ac-accent-soft: rgba(247, 216, 74, 0.13);
+    --ac-accent-glow: rgba(247, 216, 74, 0.45);
 
     --ac-text: #edeff4;
     --ac-text-muted: #9ba3b4;

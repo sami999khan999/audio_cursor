@@ -64,8 +64,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const min = parseFloat(input.min);
         const max = parseFloat(input.max);
         const val = parseFloat(input.value);
-        input.style.setProperty('--val', ((val - min) / (max - min)) * 100 + '%');
+        // A 0–1 fraction; the CSS maps it onto the thumb's travel so the fill
+        // ends under the thumb's centre rather than drifting at the ends.
+        input.style.setProperty('--pct', String((val - min) / (max - min)));
     }
+
+    // Paint the markup defaults now — the stored-settings load below only
+    // repaints when a value was saved, so a fresh install would otherwise
+    // show the CSS fallback fill regardless of where the thumb sits.
+    paintRange(rateRange);
+    paintRange(pitchRange);
 
     function setRate(val) {
         val = Math.round(val * 10) / 10;
@@ -332,7 +340,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (currentVoiceName) currentVoiceName.textContent = v.cleanName || v.name;
         if (currentVoiceCountry) currentVoiceCountry.textContent = v.country || v.lang || '';
-        if (currentVoiceGender) currentVoiceGender.textContent = v.gender || (v.isNeural ? 'Natural' : 'Local');
+        // Only a real gender adds anything; 'Chrome'/'Local'/'AI' repeat the badge.
+        if (currentVoiceGender) {
+            currentVoiceGender.textContent = (v.gender === 'Female' || v.gender === 'Male') ? v.gender.toLowerCase() : '';
+        }
 
         if (currentVoiceBadge) {
             const badge = engineBadge(v);
@@ -415,9 +426,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 : 'Try searching for a different language, country, or accent.';
 
             voiceModalList.innerHTML = `
-                <div style="text-align: center; padding: 36px 12px; color: var(--text-muted);">
-                    <div style="font-weight: 700; font-size: 13px; color: var(--text-primary);">No matching voices</div>
-                    <div style="font-size: 12px; margin-top: 5px;">${hint}</div>
+                <div class="voice-empty">
+                    <div class="voice-empty-title">No matching voices</div>
+                    <div class="voice-empty-hint">${hint}</div>
                 </div>
             `;
             return;
@@ -439,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             itemEl.innerHTML = `
                 <div class="voice-item-left">
-                    <span style="font-size: 16px; font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;">${v.flag || '✨'}</span>
+                    <span class="voice-item-flag">${v.flag || '✨'}</span>
                     <div class="voice-item-details">
                         <div class="voice-item-name">
                             <span>${v.cleanName || v.name}</span>
@@ -447,7 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${genderBadge}
                         </div>
                         <div class="voice-item-sub">
-                            ${v.country || v.lang || ''} • ${v.languageName || v.lang}
+                            ${[v.languageName || v.lang, v.country].filter(Boolean).join(', ')}
                         </div>
                     </div>
                 </div>
@@ -1020,11 +1031,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (target === 'shortcuts') {
                 if (screenSettings) screenSettings.style.display = 'none';
                 if (screenShortcuts) screenShortcuts.style.display = '';
-                if (footerHintText) footerHintText.textContent = 'Configure in chrome://extensions/shortcuts';
+                if (footerHintText) footerHintText.textContent = '';
             } else {
                 if (screenSettings) screenSettings.style.display = '';
                 if (screenShortcuts) screenShortcuts.style.display = 'none';
-                if (footerHintText) footerHintText.textContent = 'Press Alt+P to read selected text';
+                if (footerHintText) footerHintText.textContent = 'Select text and press Alt+P to hear it';
             }
         });
     });
@@ -1062,7 +1073,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const originalText = keybindResetBtn.textContent;
-            keybindResetBtn.textContent = 'Reset!';
+            keybindResetBtn.textContent = 'Defaults restored';
             setTimeout(() => {
                 keybindResetBtn.textContent = originalText;
             }, 1200);

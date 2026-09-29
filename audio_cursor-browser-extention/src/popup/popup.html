@@ -16,8 +16,8 @@
                     <svg class="brand-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <defs>
                             <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#818cf8" />
-                                <stop offset="100%" stop-color="#38bdf8" />
+                                <stop offset="0%" style="stop-color: var(--marker-hover)" />
+                                <stop offset="100%" style="stop-color: var(--marker-trail)" />
                             </linearGradient>
                         </defs>
                         <!-- The extension's own mark, shared with the VS Code extension.
@@ -37,7 +37,7 @@
                     <div class="brand-title">Audio Cursor</div>
                     <div class="brand-status">
                         <span class="status-indicator"></span>
-                        <span id="status-label">ON</span>
+                        <span id="status-label">On</span>
                     </div>
                 </div>
             </div>
@@ -58,7 +58,7 @@
             <!-- Voice Selector Card -->
             <section class="card voice-section">
                 <div class="card-header">
-                    <span class="card-title">VOICE ENGINE</span>
+                    <span class="card-title">Voice</span>
                     <span class="badge-count" id="voice-count-meta">322 voices</span>
                 </div>
                 <div class="voice-selector-card" id="voice-card-trigger" role="button" tabindex="0">
@@ -69,9 +69,7 @@
                             <span class="pill-badge badge-ai" id="current-voice-badge">Natural AI</span>
                         </div>
                         <div class="voice-secondary">
-                            <span id="current-voice-country">United States</span>
-                            <span class="sep">•</span>
-                            <span id="current-voice-gender">Female</span>
+                            <span id="current-voice-country">United States</span><span id="current-voice-gender">Female</span>
                         </div>
                     </div>
                     <div class="voice-chevron">
@@ -87,7 +85,7 @@
                 <!-- Speed Slider & Pills -->
                 <div class="setting-group">
                     <div class="setting-header">
-                        <span class="setting-label">SPEED</span>
+                        <span class="setting-label">Speed</span>
                         <span id="rate-value" class="setting-val">1.0×</span>
                     </div>
                     <div class="slider-wrap">
@@ -107,11 +105,16 @@
                 <!-- Pitch Slider -->
                 <div class="setting-group">
                     <div class="setting-header">
-                        <span class="setting-label">PITCH</span>
+                        <span class="setting-label">Pitch</span>
                         <span id="pitch-value" class="setting-val">1.0</span>
                     </div>
                     <div class="slider-wrap">
                         <input type="range" id="pitch-range" min="0.5" max="1.5" step="0.1" value="1.0">
+                    </div>
+                    <div class="slider-scale" aria-hidden="true">
+                        <span>Lower</span>
+                        <span>Normal</span>
+                        <span>Higher</span>
                     </div>
                 </div>
 
@@ -120,8 +123,8 @@
                 <!-- Repeat Toggle -->
                 <div class="setting-row">
                     <div class="setting-label-block">
-                        <span class="setting-label">REPEAT PLAYBACK</span>
-                        <span class="setting-desc">Loop audio continuously</span>
+                        <span class="setting-label">Repeat</span>
+                        <span class="setting-desc">Start again from the top when it finishes</span>
                     </div>
                     <label class="switch-modern sm" title="Automatically repeat audio">
                         <input type="checkbox" id="repeat-toggle">
@@ -152,7 +155,7 @@
         <main class="app-main screen" id="screen-shortcuts" style="display:none;">
             <section class="card shortcuts-full-card">
                 <div class="card-header">
-                    <span class="card-title">KEYBOARD SHORTCUTS</span>
+                    <span class="card-title">Keyboard shortcuts</span>
                 </div>
                 <div class="keybind-list" id="keybind-list"></div>
                 <div class="shortcuts-footer">
@@ -177,8 +180,8 @@
         </main>
 
         <footer class="app-footer">
-            <span class="footer-hint" id="footer-hint-text">Press Alt+P to read selected text</span>
-            <button class="footer-reset-btn" id="keybind-reset" type="button" title="Reset settings to default">Reset</button>
+            <span class="footer-hint" id="footer-hint-text">Select text and press Alt+P to hear it</span>
+            <button class="footer-reset-btn" id="keybind-reset" type="button" title="Reset speed, pitch, repeat and voice">Reset defaults</button>
         </footer>
     </div>
 
@@ -188,7 +191,7 @@
             <!-- Modal Header -->
             <div class="voice-modal-header">
                 <div class="voice-modal-title">
-                    <span>Voice Library</span>
+                    <span>Voice library</span>
                     <span class="badge-count" id="modal-voice-count">322</span>
                 </div>
                 <button class="btn-modal-close" id="btn-close-voice-modal" type="button" aria-label="Close">
@@ -215,13 +218,13 @@
                 <!-- Language Dropdown -->
                 <div class="custom-dropdown" id="dropdown-lang">
                     <button class="custom-dropdown-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
-                        <span class="custom-dropdown-val">🌐 All Languages</span>
+                        <span class="custom-dropdown-val">All languages</span>
                         <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
                     </button>
                     <div class="custom-dropdown-menu" role="listbox">
-                        <div class="custom-dropdown-item active" data-val="all">🌐 All Languages</div>
+                        <div class="custom-dropdown-item active" data-val="all">All languages</div>
                         <div class="custom-dropdown-item" data-val="en-US">🇺🇸 US English</div>
                         <div class="custom-dropdown-item" data-val="en-GB">🇬🇧 UK English</div>
                         <div class="custom-dropdown-item" data-val="en-AU">🇦🇺 Australia</div>
@@ -241,31 +244,31 @@
                 <!-- Gender Dropdown -->
                 <div class="custom-dropdown" id="dropdown-gender">
                     <button class="custom-dropdown-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
-                        <span class="custom-dropdown-val">⚧ All Genders</span>
+                        <span class="custom-dropdown-val">Any gender</span>
                         <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
                     </button>
                     <div class="custom-dropdown-menu" role="listbox">
-                        <div class="custom-dropdown-item active" data-val="all">⚧ All Genders</div>
-                        <div class="custom-dropdown-item" data-val="Female">♀ Female</div>
-                        <div class="custom-dropdown-item" data-val="Male">♂ Male</div>
+                        <div class="custom-dropdown-item active" data-val="all">Any gender</div>
+                        <div class="custom-dropdown-item" data-val="Female">Female</div>
+                        <div class="custom-dropdown-item" data-val="Male">Male</div>
                     </div>
                 </div>
 
                 <!-- Engine Type Dropdown -->
                 <div class="custom-dropdown" id="dropdown-type">
                     <button class="custom-dropdown-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
-                        <span class="custom-dropdown-val">⚡ All Types</span>
+                        <span class="custom-dropdown-val">All types</span>
                         <svg class="custom-dropdown-arrow" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
                     </button>
                     <div class="custom-dropdown-menu" role="listbox">
-                        <div class="custom-dropdown-item active" data-val="all">⚡ All Types</div>
-                        <div class="custom-dropdown-item" data-val="neural">✨ Natural AI</div>
-                        <div class="custom-dropdown-item" data-val="local">💻 Offline</div>
-                        <div class="custom-dropdown-item" data-val="chrome">🌐 Chrome</div>
+                        <div class="custom-dropdown-item active" data-val="all">All types</div>
+                        <div class="custom-dropdown-item" data-val="neural">Natural AI</div>
+                        <div class="custom-dropdown-item" data-val="local">Offline</div>
+                        <div class="custom-dropdown-item" data-val="chrome">Chrome</div>
                     </div>
                 </div>
             </div>
