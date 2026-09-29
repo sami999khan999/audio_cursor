@@ -737,14 +737,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // ── Context Menu & Keyboard Command ───────────────────────────────────────────
 
+// onInstalled and onStartup can both fire in one worker lifetime; chain the
+// setups so a second removeAll/create pair can't interleave with the first
+// and hit "duplicate id".
+let contextMenuSetup = Promise.resolve();
+
 function setupContextMenu() {
-    chrome.contextMenus.removeAll(() => {
-        chrome.contextMenus.create({
-            id: 'audio-cursor-play',
-            title: 'Read with Audio Cursor',
-            contexts: ['selection']
+    contextMenuSetup = contextMenuSetup.then(() => new Promise((resolve) => {
+        chrome.contextMenus.removeAll(() => {
+            chrome.contextMenus.create({
+                id: 'audio-cursor-play',
+                title: 'Read with Audio Cursor',
+                contexts: ['selection']
+            }, () => {
+                void chrome.runtime.lastError;
+                resolve();
+            });
         });
-    });
+    }));
 }
 
 chrome.runtime.onInstalled.addListener(setupContextMenu);
