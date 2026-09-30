@@ -2,6 +2,14 @@
 
 All notable changes to the "audio-cursor" extension will be documented in this file.
 
+## [0.8.4]
+
+### Fixed
+- **The status bar tooltip flickered while hovered during playback.** It carried the percentage,
+  so it was reassigned on every percent, and VS Code redraws an open hover each time its tooltip
+  is set. The percentage now lives only in the item's text, and text and tooltip are assigned only
+  when they actually change.
+
 ## [0.8.3]
 
 ### Fixed

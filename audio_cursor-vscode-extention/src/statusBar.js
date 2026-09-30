@@ -44,6 +44,17 @@ class StatusBarController {
     this._render();
   }
 
+  /**
+   * Assign text and tooltip only when they change. VS Code redraws an open
+   * hover whenever the tooltip is reassigned, so a tooltip carrying the
+   * percentage made it vanish and reappear on every percent while hovered.
+   */
+  _set(text, tooltip) {
+    if (this._item.text !== text) this._item.text = text;
+    if (this._item.tooltip !== tooltip) this._item.tooltip = tooltip;
+    this._item.show();
+  }
+
   _render() {
     const mode = this._config.get('statusBar');
     if (mode === 'never') {
@@ -56,26 +67,17 @@ class StatusBarController {
 
     switch (status) {
       case 'starting':
-        this._item.text = '$(loading~spin) Audio Cursor';
-        this._item.tooltip = 'Audio Cursor: Initializing playback...';
-        this._item.show();
+        this._set('$(loading~spin) Audio Cursor', 'Audio Cursor: Initializing playback...');
         break;
 
-      case 'playing': {
-        const rounded = Math.round(percent);
-        this._item.text = `$(debug-pause) ${rounded}%`;
-        this._item.tooltip = `Audio Cursor: Playing (${rounded}%) · Alt+P to pause`;
-        this._item.show();
+      // The percentage lives in the text only: see _set.
+      case 'playing':
+        this._set(`$(debug-pause) ${Math.round(percent)}%`, 'Audio Cursor: Playing · Alt+P to pause');
         break;
-      }
 
-      case 'paused': {
-        const rounded = Math.round(percent);
-        this._item.text = `$(play) Paused ${rounded}%`;
-        this._item.tooltip = `Audio Cursor: Paused (${rounded}%) · Alt+P to resume`;
-        this._item.show();
+      case 'paused':
+        this._set(`$(play) Paused ${Math.round(percent)}%`, 'Audio Cursor: Paused · Alt+P to resume');
         break;
-      }
 
       case 'idle':
       case 'stopped':
@@ -83,13 +85,9 @@ class StatusBarController {
         if (snapshot && snapshot.text && snapshot.text.trim()) {
           const words = snapshot.wordCount || 0;
           const duration = formatEstimatedDuration(words, rate);
-          this._item.text = '$(play) Read';
-          this._item.tooltip = `${words} words · ~${duration} · Alt+P to read`;
-          this._item.show();
+          this._set('$(play) Read', `${words} words · ~${duration} · Alt+P to read`);
         } else if (mode === 'always') {
-          this._item.text = '$(play) Audio Cursor';
-          this._item.tooltip = 'Audio Cursor: Select text to read aloud · Alt+P';
-          this._item.show();
+          this._set('$(play) Audio Cursor', 'Audio Cursor: Select text to read aloud · Alt+P');
         } else {
           this._item.hide();
         }
