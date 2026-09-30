@@ -15,13 +15,39 @@
  * opened while the current one is still speaking; opening takes a few hundred
  * milliseconds, which would otherwise be a gap between every chunk.
  *
- * The webview stays the UI; it just no longer owns the speaker. Other
- * platforms fall back to the webview engine (see `isSupported`).
+ * On Linux the same job is done by mpv, driven over its JSON IPC socket:
+ * `time-pos` changes become the position ticks, `end-file` the chunk end.
+ *
+ * The webview stays the UI; it just no longer owns the speaker. Platforms
+ * without either player fall back to the webview engine (see `isSupported`).
  */
 
 const { spawn } = require('child_process');
 const { EventEmitter } = require('events');
+const fs = require('fs');
+const net = require('net');
+const os = require('os');
+const path = require('path');
 const log = require('./log');
+
+/** Full path of an executable on PATH, or null. */
+function findOnPath(name) {
+  for (const dir of (process.env.PATH || '').split(path.delimiter)) {
+    if (!dir) continue;
+    const full = path.join(dir, name);
+    try {
+      fs.accessSync(full, fs.constants.X_OK);
+      return full;
+    } catch (_) {
+      // not here
+    }
+  }
+  return null;
+}
+
+// mpv reports `time-pos` far more often than the highlight needs; the Windows
+// daemon ticks every 40 ms, so match that.
+const MPV_TICK_MS = 40;
 
 // The stdin reader is a real StreamReader over the raw handle, because
 // Console.In's ReadLineAsync is synchronous on .NET Framework and would stall
@@ -124,7 +150,8 @@ const READY_TIMEOUT_MS = 15000;
 class HostAudioPlayer extends EventEmitter {
   /** Whether this platform has a host-side player at all. */
   static isSupported() {
-    return process.platform === 'win32';
+    if (process.platform === 'win32') return true;
+    return process.platform === 'linux' && findOnPath('mpv') !== null;
   }
 
   constructor() {
@@ -138,6 +165,10 @@ class HostAudioPlayer extends EventEmitter {
     this._buffer = '';
     this._tokenSeq = 0;
     this._currentToken = null;
+    /** @type {import('net').Socket | null} mpv's IPC connection (Linux) */
+    this._ipc = null;
+    this._ipcPath = null;
+    this._mpv = null;
   }
 
   isReady() {
@@ -162,6 +193,11 @@ class HostAudioPlayer extends EventEmitter {
         this._starting = null;
         resolve(ok);
       };
+
+      if (process.platform !== 'win32') {
+        this._startMpv(done);
+        return;
+      }
 
       let proc;
       try {
@@ -210,45 +246,254 @@ class HostAudioPlayer extends EventEmitter {
             done(true);
             continue;
           }
-          if (msg.event === 'ended' || msg.event === 'stopped' || msg.event === 'failure') {
-            if (msg.token === this._currentToken) this._currentToken = null;
-          }
-          this.emit(msg.event, msg);
+          this._emitEvent(msg);
         }
       });
 
-      proc.stderr.setEncoding('utf8');
-      proc.stderr.on('data', (text) => {
-        const line = String(text).trim();
-        if (line) log.warn('Host audio player stderr: ' + line);
-      });
-
-      proc.on('error', (err) => {
-        log.warn('Host audio player process error:', err);
-        clearTimeout(timer);
-        this._proc = null;
-        this._ready = false;
-        done(false);
-      });
-
-      proc.on('exit', (code) => {
-        log.info(`Host audio player exited (code ${code}).`);
-        clearTimeout(timer);
-        this._proc = null;
-        this._ready = false;
-        const token = this._currentToken;
-        this._currentToken = null;
-        if (token && !this._disposed) {
-          this.emit('failure', { token, message: 'The audio player process exited.' });
-        }
-        done(false);
-      });
+      this._watchProcess(proc, timer, done);
     });
 
     return this._starting;
   }
 
+  /** Emit a player event, keeping `_currentToken` in step with it. */
+  _emitEvent(msg) {
+    if (msg.event === 'ended' || msg.event === 'stopped' || msg.event === 'failure') {
+      if (msg.token === this._currentToken) this._currentToken = null;
+    }
+    this.emit(msg.event, msg);
+  }
+
+  /** stderr, error and exit handling shared by both players. */
+  _watchProcess(proc, timer, done) {
+    proc.stderr.setEncoding('utf8');
+    proc.stderr.on('data', (text) => {
+      const line = String(text).trim();
+      if (line) log.warn('Host audio player stderr: ' + line);
+    });
+
+    proc.on('error', (err) => {
+      log.warn('Host audio player process error:', err);
+      clearTimeout(timer);
+      this._proc = null;
+      this._ready = false;
+      done(false);
+    });
+
+    proc.on('exit', (code) => {
+      log.info(`Host audio player exited (code ${code}).`);
+      clearTimeout(timer);
+      if (this._proc === proc) {
+        this._proc = null;
+        this._ready = false;
+      }
+      this._closeIpc();
+      const token = this._currentToken;
+      this._currentToken = null;
+      if (token && !this._disposed) {
+        this.emit('failure', { token, message: 'The audio player process exited.' });
+      }
+      done(false);
+    });
+  }
+
+  // --- Linux: mpv over its JSON IPC socket ---------------------------------
+
+  _startMpv(done) {
+    const bin = findOnPath('mpv');
+    if (!bin) {
+      log.warn('mpv is not installed; using the panel engine.');
+      done(false);
+      return;
+    }
+    const sock = path.join(os.tmpdir(), `audio-cursor-mpv-${process.pid}-${Date.now()}.sock`);
+    let proc;
+    try {
+      // --no-config: the user's own mpv.conf (video filters, OSC, save-position…)
+      // has no business in a speech player.
+      proc = spawn(bin, [
+        '--idle=yes', '--no-config', '--no-video', '--no-terminal', '--really-quiet',
+        '--audio-display=no', '--keep-open=no', `--input-ipc-server=${sock}`
+      ], { stdio: ['ignore', 'ignore', 'pipe'] });
+    } catch (err) {
+      log.warn('Host audio player (mpv) could not be spawned:', err);
+      done(false);
+      return;
+    }
+
+    this._proc = proc;
+    this._ready = false;
+    this._buffer = '';
+    this._ipcPath = sock;
+    this._mpv = { tokens: [], entries: new Map(), entry: null, started: false, duration: 0, lastTick: 0 };
+
+    const timer = setTimeout(() => {
+      log.warn(`Host audio player (mpv) was not ready within ${READY_TIMEOUT_MS}ms; using the panel engine.`);
+      this._kill();
+      done(false);
+    }, READY_TIMEOUT_MS);
+
+    this._watchProcess(proc, timer, done);
+
+    // mpv creates the socket a moment after it starts.
+    const connect = (tries) => {
+      if (this._proc !== proc) return;
+      const conn = net.createConnection(sock);
+      conn.once('connect', () => {
+        conn.removeAllListeners('error');
+        conn.on('error', (err) => log.warn('mpv IPC error:', err));
+        conn.setEncoding('utf8');
+        conn.on('data', (chunk) => this._onMpvData(chunk));
+        this._ipc = conn;
+        this._mpvCommand(['observe_property', 1, 'time-pos']);
+        this._mpvCommand(['observe_property', 2, 'duration']);
+        clearTimeout(timer);
+        this._ready = true;
+        log.info('Host audio player is ready (mpv).');
+        done(true);
+      });
+      conn.once('error', () => {
+        conn.destroy();
+        if (tries > 0) setTimeout(() => connect(tries - 1), 50);
+      });
+    };
+    connect(200);
+  }
+
+  _mpvCommand(command) {
+    if (!this._ipc || this._ipc.destroyed) return false;
+    try {
+      this._ipc.write(JSON.stringify({ command }) + '\n');
+      return true;
+    } catch (err) {
+      log.warn('Could not send to mpv:', err);
+      return false;
+    }
+  }
+
+  /** Our play/pause/stop protocol, translated to mpv commands. */
+  _sendMpv(cmd) {
+    const m = this._mpv;
+    const current = () => (m.entry !== null ? m.entries.get(m.entry) : null);
+    switch (cmd.op) {
+      case 'preload':
+        return true; // local files open in a few ms: nothing to gain
+      case 'play':
+        // Tokens are matched to mpv's playlist entries in `start-file` order,
+        // so a late event from a replaced file is never taken for the new one.
+        m.tokens.push(cmd.token);
+        this._mpvCommand(['set_property', 'pause', false]);
+        return this._mpvCommand(['loadfile', cmd.file, 'replace']);
+      case 'pause': {
+        const token = current();
+        this._mpvCommand(['set_property', 'pause', true]);
+        if (token) setImmediate(() => this._emitEvent({ event: 'paused', token, position: m.position || 0 }));
+        return true;
+      }
+      case 'resume': {
+        const token = current();
+        this._mpvCommand(['set_property', 'pause', false]);
+        if (token) setImmediate(() => this._emitEvent({ event: 'resumed', token }));
+        return true;
+      }
+      case 'stop': {
+        const token = current();
+        m.tokens = [];
+        m.entry = null;
+        this._mpvCommand(['stop']);
+        if (token) setImmediate(() => this._emitEvent({ event: 'stopped', token }));
+        return true;
+      }
+      case 'volume':
+        return this._mpvCommand(['set_property', 'volume', Math.round(Number(cmd.value) * 100)]);
+      case 'quit':
+        return this._mpvCommand(['quit']);
+      default:
+        return false;
+    }
+  }
+
+  _onMpvData(chunk) {
+    this._buffer += chunk;
+    let nl;
+    while ((nl = this._buffer.indexOf('\n')) >= 0) {
+      const line = this._buffer.slice(0, nl).trim();
+      this._buffer = this._buffer.slice(nl + 1);
+      if (!line) continue;
+      let msg;
+      try {
+        msg = JSON.parse(line);
+      } catch (_) {
+        continue;
+      }
+      if (msg.event) this._onMpvEvent(msg);
+    }
+  }
+
+  _onMpvEvent(msg) {
+    const m = this._mpv;
+    if (!m) return;
+    switch (msg.event) {
+      case 'start-file': {
+        const token = m.tokens.shift();
+        if (!token) return; // a file we did not ask for (should not happen)
+        m.entries.set(msg.playlist_entry_id, token);
+        m.entry = msg.playlist_entry_id;
+        m.started = false;
+        m.duration = 0;
+        m.position = 0;
+        return;
+      }
+      case 'playback-restart': {
+        const token = m.entries.get(m.entry);
+        if (token && !m.started) {
+          m.started = true;
+          this._emitEvent({ event: 'started', token, duration: m.duration });
+        }
+        return;
+      }
+      case 'property-change': {
+        const token = m.entries.get(m.entry);
+        if (msg.name === 'duration' && typeof msg.data === 'number') m.duration = msg.data;
+        if (msg.name !== 'time-pos' || typeof msg.data !== 'number') return;
+        m.position = msg.data;
+        const now = Date.now();
+        if (!token || !m.started || m.duration <= 0 || now - m.lastTick < MPV_TICK_MS) return;
+        m.lastTick = now;
+        this._emitEvent({ event: 'progress', token, position: msg.data, duration: m.duration });
+        return;
+      }
+      case 'end-file': {
+        const token = m.entries.get(msg.playlist_entry_id);
+        m.entries.delete(msg.playlist_entry_id);
+        if (msg.playlist_entry_id === m.entry) m.entry = null;
+        if (!token) return;
+        if (msg.reason === 'eof') {
+          this._emitEvent({ event: 'ended', token });
+        } else if (msg.reason === 'error') {
+          this._emitEvent({ event: 'failure', token, message: msg.file_error || 'mpv could not play the audio.' });
+        }
+        // 'stop' / 'quit' / 'redirect': replaced or stopped on purpose.
+        return;
+      }
+      default:
+    }
+  }
+
+  _closeIpc() {
+    const conn = this._ipc;
+    this._ipc = null;
+    if (conn) {
+      try { conn.destroy(); } catch (_) {}
+    }
+    if (this._ipcPath) {
+      try { fs.unlinkSync(this._ipcPath); } catch (_) {}
+      this._ipcPath = null;
+    }
+  }
+
   _send(cmd) {
+    if (this._mpv) return this._proc ? this._sendMpv(cmd) : false;
     if (!this._proc || !this._proc.stdin.writable) return false;
     try {
       this._proc.stdin.write(JSON.stringify(cmd) + '\n');
@@ -298,8 +543,9 @@ class HostAudioPlayer extends EventEmitter {
     const proc = this._proc;
     this._proc = null;
     this._ready = false;
+    this._closeIpc();
     if (!proc) return;
-    try { proc.stdin.end(); } catch (_) {}
+    try { if (proc.stdin) proc.stdin.end(); } catch (_) {}
     try { proc.kill(); } catch (_) {}
   }
 

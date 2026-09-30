@@ -1061,6 +1061,34 @@
     }
   }
 
+  // Scrolling the text box (or the sidebar) by hand pauses the follow-along
+  // for a moment, so the reader can look elsewhere without being yanked back.
+  const USER_SCROLL_HOLD_MS = 4000;
+  let userScrollUntil = 0;
+  const holdFollow = () => { userScrollUntil = Date.now() + USER_SCROLL_HOLD_MS; };
+  for (const type of ['wheel', 'touchmove', 'mousedown']) {
+    document.addEventListener(type, holdFollow, { passive: true, capture: true });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(e.key)) holdFollow();
+  }, { capture: true });
+
+  /**
+   * Keep the spoken word inside the text box's visible area. Only the box
+   * itself is scrolled: `scrollIntoView` also scrolled every scrollable
+   * ancestor, which dragged the whole sidebar along on every word.
+   */
+  function followWord(word) {
+    if (Date.now() < userScrollUntil) return;
+    const box = elTextContainer.getBoundingClientRect();
+    const r = word.getBoundingClientRect();
+    const margin = 8;
+    let delta = 0;
+    if (r.top < box.top + margin) delta = r.top - box.top - margin;
+    else if (r.bottom > box.bottom - margin) delta = r.bottom - box.bottom + margin;
+    if (delta) elTextContainer.scrollBy({ top: delta, behavior: 'smooth' });
+  }
+
   function highlightWordInTextPane(charIndex) {
     if (!elTextContainer) return;
     const prevActive = elTextContainer.querySelector('.word.active');
@@ -1075,7 +1103,7 @@
       const end = parseInt(w.dataset.end, 10);
       if (charIndex >= start && charIndex < end) {
         w.classList.add('active');
-        w.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        followWord(w);
         break;
       }
     }

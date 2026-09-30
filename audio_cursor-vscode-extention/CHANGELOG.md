@@ -2,6 +2,20 @@
 
 All notable changes to the "audio-cursor" extension will be documented in this file.
 
+## [0.8.3]
+
+### Fixed
+- **On Linux the first read of a window was silent until Play was clicked in the sidebar.** VS Code
+  does not let a panel make a sound until it has been clicked, and Alt+P never counts as that
+  click. Windows already avoided this by playing from the extension host; Linux had no host player
+  and fell back to the panel. It now plays through `mpv` (driven over its JSON IPC socket, with
+  `time-pos` ticks for the word highlight), so the first read speaks straight away and the sidebar
+  is not opened for it. Without `mpv` on PATH the panel engine is used as before.
+- **Scrolling the preview text or the sidebar during playback kept snapping back.** The word
+  highlight called `scrollIntoView` on every word, which scrolls every scrollable ancestor — the
+  whole sidebar included — several times a second. Now only the text box scrolls to follow the
+  word, and any wheel, drag, touch or scroll key pauses that follow-along for four seconds.
+
 ## [0.8.2]
 
 ### Fixed

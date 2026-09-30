@@ -2,7 +2,7 @@
   "name": "audio-cursor",
   "displayName": "Audio Cursor",
   "description": "Text-to-speech reading with word highlighting directly in your editor",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "publisher": "ProdigyCorp",
   "icon": "media/icon.png",
   "license": "MIT",
@@ -311,7 +311,7 @@
         "audioCursor.hostAudio": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Play audio from the extension host instead of inside the sidebar panel (Windows). VS Code does not let a panel make a sound until it has been clicked, so with this off the first read of every window waits for a click in the player. Natural Neural voices only; the offline system voice always plays in the panel."
+          "markdownDescription": "Play audio from the extension host instead of inside the sidebar panel (Windows: built in; Linux: needs `mpv`). VS Code does not let a panel make a sound until it has been clicked, so with this off the first read of every window waits for a click in the player. Natural Neural voices only; the offline system voice always plays in the panel."
         },
         "audioCursor.sanitizeCode": {
           "type": "boolean",
