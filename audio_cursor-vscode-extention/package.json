@@ -296,7 +296,7 @@
         "audioCursor.watchTerminalSelection": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Show terminal selections in the player preview automatically, the same way editor selections appear. Requires `#terminal.integrated.copyOnSelection#` (Audio Cursor offers to turn it on), because VS Code exposes no terminal-selection API — the clipboard is only ever read, never written, and only while a terminal is the focused surface."
+          "markdownDescription": "Show terminal selections in the player preview automatically, the same way editor selections appear. Requires `#terminal.integrated.copyOnSelection#` (Audio Cursor offers to turn it on), because VS Code exposes no terminal-selection API — the clipboard is only ever read, never written, and only while a terminal is the focused surface. On Hyprland it also covers the kitty that kitty-pair opens beside each VS Code window (window class `code-term-<address>`): its selection is read from the Wayland primary selection while that kitty has the focus."
         },
         "audioCursor.watchPreviewSelection": {
           "type": "boolean",

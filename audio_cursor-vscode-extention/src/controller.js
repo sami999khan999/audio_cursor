@@ -5,6 +5,7 @@ const { Session } = require('./session');
 const { ProgressTracker } = require('./progress');
 const { getSnapshot, createTextSnapshot, getActivePreviewTarget, resolvePreviewSnapshot } = require('./selection');
 const { ClipboardSelectionWatcher } = require('./clipboardWatcher');
+const { ExternalTerminalWatcher } = require('./externalTerminalWatcher');
 const { neuralEngine } = require('./neuralEngine');
 const { HostAudioPlayer } = require('./hostPlayer');
 const { HostSpeechEngine } = require('./hostEngine');
@@ -110,6 +111,8 @@ class AudioCursorController {
     /** @type {{ key: string, snapshot: Object } | null} */
     this._lastPreviewSelection = null;
     this._clipboardWatcher = new ClipboardSelectionWatcher(config);
+    // The terminal beside the window (outside VS Code), where one is paired.
+    this._externalTerminalWatcher = new ExternalTerminalWatcher(config);
     this._status = 'idle'; // 'idle' | 'starting' | 'playing' | 'paused' | 'stopped'
     this._progressTracker = new ProgressTracker();
     this._neuralVoices = neuralEngine.getVoicesSync();
@@ -230,39 +233,42 @@ class AudioCursorController {
 
     // 5. Terminal selection listener — same contract as the editor one:
     //    update the preview, stop anything playing, never start playback.
+    //    Selections in the external terminal beside the window arrive the same way.
+    const onTerminalSelection = (snapshot) => {
+      const isActive = this._status === 'playing' || this._status === 'paused' || this._status === 'starting';
+      if (isActive && !this._isDifferentSelection(snapshot)) return;
+
+      if (isActive && snapshot.source === 'terminal' && this._isTerminalRedraw(snapshot)) {
+        // Only a redraw of the text being read is ignored, because treating
+        // each repaint as a new selection stopped the first read within a
+        // second of it starting. It still updates what the *next* Alt+P
+        // reads; a selection the user actually made falls through below.
+        log.info('Terminal selection re-copied by a redraw; remembered for the next read, playback continues.');
+        this._lastTerminalSnapshot = snapshot;
+        return;
+      }
+
+      if (isActive) {
+        log.info(`${snapshot.source === 'terminal' ? 'Terminal' : 'Preview'} selection changed during playback; stopping playback.`);
+        this.stop();
+      }
+
+      if (snapshot.source === 'preview') {
+        // A selection inside a preview replaces the whole-document snapshot
+        // for that preview until the tab is re-activated.
+        this._lastSource = 'editor';
+        this._lastPreviewSelection = { key: snapshot.previewKey, snapshot };
+      } else {
+        this._lastSource = 'terminal';
+        this._lastTerminalSnapshot = snapshot;
+      }
+
+      this._statusBar.update({ snapshot });
+      this._publishSnapshot(snapshot, isActive ? 'selectionChanged' : undefined);
+    };
     this._disposables.push(
-      this._clipboardWatcher.onDidChange((snapshot) => {
-        const isActive = this._status === 'playing' || this._status === 'paused' || this._status === 'starting';
-        if (isActive && !this._isDifferentSelection(snapshot)) return;
-
-        if (isActive && snapshot.source === 'terminal' && this._isTerminalRedraw(snapshot)) {
-          // Only a redraw of the text being read is ignored, because treating
-          // each repaint as a new selection stopped the first read within a
-          // second of it starting. It still updates what the *next* Alt+P
-          // reads; a selection the user actually made falls through below.
-          log.info('Terminal selection re-copied by a redraw; remembered for the next read, playback continues.');
-          this._lastTerminalSnapshot = snapshot;
-          return;
-        }
-
-        if (isActive) {
-          log.info(`${snapshot.source === 'terminal' ? 'Terminal' : 'Preview'} selection changed during playback; stopping playback.`);
-          this.stop();
-        }
-
-        if (snapshot.source === 'preview') {
-          // A selection inside a preview replaces the whole-document snapshot
-          // for that preview until the tab is re-activated.
-          this._lastSource = 'editor';
-          this._lastPreviewSelection = { key: snapshot.previewKey, snapshot };
-        } else {
-          this._lastSource = 'terminal';
-          this._lastTerminalSnapshot = snapshot;
-        }
-
-        this._statusBar.update({ snapshot });
-        this._publishSnapshot(snapshot, isActive ? 'selectionChanged' : undefined);
-      })
+      this._clipboardWatcher.onDidChange(onTerminalSelection),
+      this._externalTerminalWatcher.onDidChange(onTerminalSelection)
     );
 
     // 6. Webview ready listener
@@ -1573,6 +1579,7 @@ class AudioCursorController {
   dispose() {
     this._clearStartWatchdog();
     this._clipboardWatcher.dispose();
+    this._externalTerminalWatcher.dispose();
     this.stop();
     if (this._hostEngine) this._hostEngine.dispose();
     if (this._hostPlayer) this._hostPlayer.dispose();
