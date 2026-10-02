@@ -2,6 +2,23 @@
 
 All notable changes to the "audio-cursor" extension will be documented in this file.
 
+## [0.8.5]
+
+### Added
+- **Read text selected outside VS Code, from another program's shortcut.** Each window now
+  listens on a Unix socket, `$XDG_RUNTIME_DIR/audio-cursor/<pid>.sock`, and describes itself in
+  `<pid>.json` beside it (its folders, and when it last had the focus), so a program outside VS Code
+  can choose the window for the project the text came from. A request is one JSON line:
+  `{"action": "read", "text": "…"}` reads the text at once, and `{"action": "toggle"}` does what
+  Alt+P does. agentmux uses it for Ctrl+Alt+L: select text in a thread, press it, and that
+  project's VS Code window reads the text aloud. Nothing listens on Windows, and nothing VS Code
+  does on its own changes.
+- **Reading aloud with no VS Code window open.** `bin/speak.js` reads the text on its stdin with the
+  same neural voices and `mpv` player, using the voice, speed and pitch from VS Code's user
+  settings. While it runs it takes the same socket requests as a window, so agentmux's key pauses,
+  resumes and replays it; it exits after ten idle minutes. A VS Code window, once one is open, is
+  always chosen over it.
+
 ## [0.8.4]
 
 ### Fixed

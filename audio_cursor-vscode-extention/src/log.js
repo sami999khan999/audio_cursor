@@ -1,11 +1,17 @@
-const vscode = require('vscode');
+// Outside VS Code (bin/speak.js, the standalone reader) lines go to stderr.
+let vscode = null;
+try {
+  vscode = require('vscode');
+} catch (_) { /* not in the extension host */ }
 
-/** @type {vscode.OutputChannel | null} */
+/** @type {{ appendLine(line: string): void, show(preserveFocus?: boolean): void, dispose(): void } | null} */
 let channel = null;
 
 function getChannel() {
   if (!channel) {
-    channel = vscode.window.createOutputChannel('Audio Cursor');
+    channel = vscode
+      ? vscode.window.createOutputChannel('Audio Cursor')
+      : { appendLine: line => process.stderr.write(line + '\n'), show() {}, dispose() {} };
   }
   return channel;
 }

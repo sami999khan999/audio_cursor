@@ -59,11 +59,15 @@ const vscode = {
     onDidOpenTerminal: event,
     onDidCloseTerminal: event,
     onDidChangeActiveTerminal: event,
+    state: { focused: false },
+    onDidChangeWindowState: event,
     registerWebviewViewProvider: () => noopDisposable
   },
   workspace: {
     getConfiguration: workspaceConfig,
     onDidChangeConfiguration: event,
+    onDidChangeWorkspaceFolders: event,
+    workspaceFolders: undefined,
     textDocuments: [],
     openTextDocument: async () => { throw new Error('no document'); },
     findFiles: async () => []

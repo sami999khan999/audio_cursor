@@ -11,6 +11,9 @@ Module._resolveFilename = function (request, ...rest) {
   return originalResolve.call(this, request, ...rest);
 };
 
+// Controllers open an external-control socket: keep it out of the real runtime dir.
+process.env.XDG_RUNTIME_DIR = require('fs').mkdtempSync(path.join(require('os').tmpdir(), 'audio-cursor-test-'));
+
 const vscode = require('./vscode-stub.js');
 const src = (name) => path.join(__dirname, '..', 'src', name);
 

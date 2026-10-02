@@ -6,6 +6,7 @@ const { ProgressTracker } = require('./progress');
 const { getSnapshot, createTextSnapshot, getActivePreviewTarget, resolvePreviewSnapshot } = require('./selection');
 const { ClipboardSelectionWatcher } = require('./clipboardWatcher');
 const { ExternalTerminalWatcher } = require('./externalTerminalWatcher');
+const { ExternalControl } = require('./externalControl');
 const { neuralEngine } = require('./neuralEngine');
 const { HostAudioPlayer } = require('./hostPlayer');
 const { HostSpeechEngine } = require('./hostEngine');
@@ -113,6 +114,8 @@ class AudioCursorController {
     this._clipboardWatcher = new ClipboardSelectionWatcher(config);
     // The terminal beside the window (outside VS Code), where one is paired.
     this._externalTerminalWatcher = new ExternalTerminalWatcher(config);
+    // Text handed over by programs outside VS Code (agentmux's read-aloud key).
+    this._externalControl = new ExternalControl();
     this._status = 'idle'; // 'idle' | 'starting' | 'playing' | 'paused' | 'stopped'
     this._progressTracker = new ProgressTracker();
     this._neuralVoices = neuralEngine.getVoicesSync();
@@ -268,7 +271,8 @@ class AudioCursorController {
     };
     this._disposables.push(
       this._clipboardWatcher.onDidChange(onTerminalSelection),
-      this._externalTerminalWatcher.onDidChange(onTerminalSelection)
+      this._externalTerminalWatcher.onDidChange(onTerminalSelection),
+      this._externalControl.onRequest(request => this._handleExternalRequest(request))
     );
 
     // 6. Webview ready listener
@@ -503,6 +507,27 @@ class AudioCursorController {
    * @param {Object | null} snapshot
    * @returns {boolean}
    */
+  /**
+   * A request from outside VS Code: `read` reads the text it carries at once
+   * (whatever is playing stops), `toggle` is Alt+P — pause, resume or replay.
+   * @param {{ action: string, text?: string, label?: string }} request
+   */
+  async _handleExternalRequest(request) {
+    if (request.action === 'toggle') {
+      await this.togglePlayback();
+      return;
+    }
+    const label = typeof request.label === 'string' && request.label ? request.label : 'agentmux';
+    const snapshot = createTextSnapshot(request.text, { label, source: 'terminal' });
+    if (!snapshot) return;
+    snapshot.external = true;
+    log.info(`External read request (${snapshot.wordCount} words from ${label}).`);
+    this._lastSource = 'terminal';
+    this._lastTerminalSnapshot = snapshot;
+    this._statusBar.update({ snapshot });
+    await this.play(snapshot);
+  }
+
   _isDifferentSelection(snapshot) {
     const current = this._session && this._session.snapshot;
     if (!current) return false;
@@ -1580,6 +1605,7 @@ class AudioCursorController {
     this._clearStartWatchdog();
     this._clipboardWatcher.dispose();
     this._externalTerminalWatcher.dispose();
+    this._externalControl.dispose();
     this.stop();
     if (this._hostEngine) this._hostEngine.dispose();
     if (this._hostPlayer) this._hostPlayer.dispose();

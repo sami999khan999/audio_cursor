@@ -2,7 +2,7 @@
   "name": "audio-cursor",
   "displayName": "Audio Cursor",
   "description": "Text-to-speech reading with word highlighting directly in your editor",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "publisher": "ProdigyCorp",
   "icon": "media/icon.png",
   "license": "MIT",
@@ -322,7 +322,7 @@
     }
   },
   "scripts": {
-    "test": "node --test test/chunk.test.js test/player-queue.test.js test/extension.test.js test/host-engine.test.js test/keybindings.test.js"
+    "test": "node --test test/chunk.test.js test/player-queue.test.js test/extension.test.js test/host-engine.test.js test/keybindings.test.js test/external-control.test.js"
   },
   "devDependencies": {
     "@types/vscode": "^1.80.0",
