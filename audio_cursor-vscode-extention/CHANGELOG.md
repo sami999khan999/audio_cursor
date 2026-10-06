@@ -2,6 +2,15 @@
 
 All notable changes to the "audio-cursor" extension will be documented in this file.
 
+## [0.8.6]
+
+### Fixed
+- **Selections made in opencode, in the kitty beside VS Code, were never read.** opencode selects
+  with the mouse itself and copies what you select to the clipboard, not to the primary selection
+  that kitty and tmux use, so the terminal watcher never saw it. It now watches the clipboard too,
+  under the same rule (only while that window's own kitty has the focus). The copy tmux makes of a
+  selection already read, on Ctrl+C, isn't read twice.
+
 ## [0.8.5]
 
 ### Added

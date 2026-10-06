@@ -11,6 +11,9 @@ const PAIR_PREFIX = 'code-term-';
 const CODE_CLASSES = new Set(['code', 'com.microsoft.VSCode', 'code-oss', 'Code']);
 const APP_SUFFIX = ' - Visual Studio Code';
 const DEBOUNCE_MS = 50;
+// tmux's Ctrl+C copies a selection already sent to the primary one: the same
+// text arriving in the clipboard this soon after is that copy, not a new selection.
+const ECHO_MS = 3000;
 
 function run(cmd, args) {
   return new Promise(resolve => {
@@ -40,8 +43,9 @@ function titleFolder(title) {
  * Watches the terminal that sits *outside* VS Code, beside this window — the
  * kitty that kitty-pair opens next to each VS Code window on Hyprland.
  *
- * Selecting text in kitty sets the Wayland primary selection. `wl-paste
- * --watch` reports every change to it; a change counts only when the window
+ * Selecting text in kitty sets the Wayland primary selection; a TUI that does
+ * its own mouse selection (opencode) copies it to the clipboard instead. `wl-paste
+ * --watch` reports every change to either; a change counts only when the window
  * focused at that moment is the kitty paired with this VS Code window (matched
  * through its class and this window's title), so selections in the editor, the
  * browser or another project's kitty never land here. The focus is followed
@@ -57,14 +61,15 @@ class ExternalTerminalWatcher {
   constructor(config) {
     this._config = config;
     this._listeners = new Set();
-    this._proc = null;
+    this._procs = [];
     this._socket = null;
     this._timer = null;
+    /** The last text loaded, and when: see ECHO_MS. */
+    this._last = { text: null, at: 0 };
     /** Address of the focused window, kept current from Hyprland's events. */
     this._focused = null;
     /** Focused window when the pending selection change happened. */
     this._changedIn = null;
-    this._seeded = false;
     this._disposed = false;
 
     if (ExternalTerminalWatcher.isSupported()) {
@@ -89,33 +94,41 @@ class ExternalTerminalWatcher {
 
   _start() {
     this._followFocus();
+    this._watch(['--primary']);
+    this._watch([]);
+  }
 
-    // `--watch` runs the command once per change (and once at start, which is
-    // skipped); the selection itself is read afterwards, only when the paired
-    // terminal had the focus as it changed.
+  /**
+   * `--watch` runs the command once per change (and once at start, which is
+   * skipped); the selection itself is read afterwards, only when the paired
+   * terminal had the focus as it changed.
+   * @param {string[]} which `['--primary']` for the primary selection, `[]` for the clipboard
+   */
+  _watch(which) {
     let proc;
     try {
-      proc = spawn('wl-paste', ['--primary', '--watch', 'echo', 'change'], { stdio: ['ignore', 'pipe', 'ignore'] });
+      proc = spawn('wl-paste', [...which, '--watch', 'echo', 'change'], { stdio: ['ignore', 'pipe', 'ignore'] });
     } catch (err) {
       log.warn('External terminal watcher unavailable (wl-paste):', err);
       return;
     }
-    this._proc = proc;
+    this._procs.push(proc);
     proc.on('error', err => {
       log.warn('External terminal watcher unavailable (wl-paste):', err.message);
-      this._proc = null;
+      this._procs = this._procs.filter(p => p !== proc);
     });
     proc.on('exit', () => {
-      if (this._proc === proc) this._proc = null;
+      this._procs = this._procs.filter(p => p !== proc);
     });
+    let seeded = false;
     proc.stdout.on('data', () => {
-      if (!this._seeded) {
-        this._seeded = true;
+      if (!seeded) {
+        seeded = true;
         return;
       }
       this._changedIn = this._focused;
       clearTimeout(this._timer);
-      this._timer = setTimeout(() => this._check(this._changedIn), DEBOUNCE_MS);
+      this._timer = setTimeout(() => this._check(this._changedIn, which), DEBOUNCE_MS);
     });
   }
 
@@ -150,8 +163,11 @@ class ExternalTerminalWatcher {
     });
   }
 
-  /** @param {string | null} focusedAddress window focused when the selection changed */
-  async _check(focusedAddress) {
+  /**
+   * @param {string | null} focusedAddress window focused when the selection changed
+   * @param {string[]} which the selection that changed (see _watch)
+   */
+  async _check(focusedAddress, which) {
     if (this._disposed || !focusedAddress || !this._config.get('watchTerminalSelection')) return;
 
     const clients = await hyprJson('clients');
@@ -162,8 +178,11 @@ class ExternalTerminalWatcher {
 
     // Selecting the same text again still counts: something else may have
     // been loaded into the player in between.
-    const text = await run('wl-paste', ['--primary', '--no-newline']);
+    const text = await run('wl-paste', [...which, '--no-newline']);
     if (text === null) return;
+    const now = Date.now();
+    if (!which.length && text === this._last.text && now - this._last.at < ECHO_MS) return;
+    this._last = { text, at: now };
 
     const snapshot = createTextSnapshot(text, { label: 'Terminal: kitty', source: 'terminal' });
     if (!snapshot) return;
@@ -199,10 +218,8 @@ class ExternalTerminalWatcher {
   dispose() {
     this._disposed = true;
     clearTimeout(this._timer);
-    if (this._proc) {
-      this._proc.kill();
-      this._proc = null;
-    }
+    for (const proc of this._procs) proc.kill();
+    this._procs = [];
     if (this._socket) {
       this._socket.destroy();
       this._socket = null;
