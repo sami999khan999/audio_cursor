@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadAllVoices() {
         let neuralVoices = [];
         try {
-            const url = chrome.runtime.getURL('dist/voices.json');
+            const url = chrome.runtime.getURL('extension-build/voices.json');
             const resp = await fetch(url);
             neuralVoices = await resp.json();
         } catch (e) {

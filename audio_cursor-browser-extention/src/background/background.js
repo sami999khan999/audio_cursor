@@ -46,7 +46,7 @@ async function ensureOffscreenDocument() {
     if (await chrome.offscreen.hasDocument()) return;
     if (!offscreenReadyPromise) {
         offscreenReadyPromise = chrome.offscreen.createDocument({
-            url: 'dist/offscreen.html',
+            url: 'extension-build/offscreen.html',
             // AUDIO_PLAYBACK alone is the reason Chrome retires a document it
             // sees as idle, and an export makes no sound for minutes at a
             // time. BLOBS is equally true of it — the exported file is built

@@ -43,41 +43,41 @@
     ]
   },
   "icons": {
-    "16": "dist/icons/icon16.png",
-    "32": "dist/icons/icon32.png",
-    "48": "dist/icons/icon48.png",
-    "128": "dist/icons/icon128.png"
+    "16": "extension-build/icons/icon16.png",
+    "32": "extension-build/icons/icon32.png",
+    "48": "extension-build/icons/icon48.png",
+    "128": "extension-build/icons/icon128.png"
   },
   "action": {
     "default_popup": "src/popup/popup.html",
     "default_icon": {
-      "16": "dist/icons/icon16.png",
-      "32": "dist/icons/icon32.png",
-      "48": "dist/icons/icon48.png",
-      "128": "dist/icons/icon128.png"
+      "16": "extension-build/icons/icon16.png",
+      "32": "extension-build/icons/icon32.png",
+      "48": "extension-build/icons/icon48.png",
+      "128": "extension-build/icons/icon128.png"
     }
   },
   "background": {
-    "service_worker": "dist/background.js"
+    "service_worker": "extension-build/background.js"
   },
   "web_accessible_resources": [
     {
-      "resources": ["src/shared/voices.json", "dist/voices.json", "dist/offscreen.html", "dist/offscreen.js"],
+      "resources": ["src/shared/voices.json", "extension-build/voices.json", "extension-build/offscreen.html", "extension-build/offscreen.js"],
       "matches": ["<all_urls>"]
     }
   ],
   "content_scripts": [
     {
       "matches": ["*://docs.google.com/*"],
-      "js": ["dist/docs-bridge.js"],
+      "js": ["extension-build/docs-bridge.js"],
       "world": "MAIN",
       "run_at": "document_start",
       "all_frames": true
     },
     {
       "matches": ["<all_urls>"],
-      "js": ["dist/content.js"],
-      "css": ["dist/content.css"],
+      "js": ["extension-build/content.js"],
+      "css": ["extension-build/content.css"],
       "run_at": "document_start",
       "all_frames": true,
       "match_about_blank": true

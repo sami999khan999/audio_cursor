@@ -2,9 +2,9 @@ const fs = require('fs');
 const path = require('path');
 
 const SRC_DIR = path.join(__dirname, 'src');
-const DIST_DIR = path.join(__dirname, 'dist');
+const DIST_DIR = path.join(__dirname, 'extension-build');
 
-// Ensure dist directory exists
+// Ensure extension-build directory exists
 if (!fs.existsSync(DIST_DIR)) {
     fs.mkdirSync(DIST_DIR, { recursive: true });
 }
@@ -28,7 +28,7 @@ function bundle(files, outputName, isCss = false) {
     }
 
     fs.writeFileSync(outputPath, output, 'utf-8');
-    console.log(`✅ Build complete: dist/${outputName} (${(fs.statSync(outputPath).size / 1024).toFixed(1)} KB)`);
+    console.log(`✅ Build complete: extension-build/${outputName} (${(fs.statSync(outputPath).size / 1024).toFixed(1)} KB)`);
 }
 
 function copyFile(srcRel, distRel) {
@@ -36,7 +36,7 @@ function copyFile(srcRel, distRel) {
     const distPath = path.join(DIST_DIR, distRel);
     if (fs.existsSync(srcPath)) {
         fs.copyFileSync(srcPath, distPath);
-        console.log(`✅ Copied: dist/${distRel}`);
+        console.log(`✅ Copied: extension-build/${distRel}`);
     }
 }
 
@@ -70,6 +70,6 @@ const rootRules = path.join(__dirname, 'rules.json');
 const distRules = path.join(DIST_DIR, 'rules.json');
 if (fs.existsSync(rootRules)) {
     fs.copyFileSync(rootRules, distRules);
-    console.log('✅ Copied: dist/rules.json');
+    console.log('✅ Copied: extension-build/rules.json');
 }
 
