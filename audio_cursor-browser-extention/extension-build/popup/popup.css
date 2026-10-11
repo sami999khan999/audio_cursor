@@ -1,0 +1,1144 @@
+/* Audio Cursor — popup
+   "Highlighter": an ink-blue page with one marker accent, the same stroke the
+   extension paints over words as it reads them. The marker is kept for
+   whatever is live or chosen (the fill, the selected speed, Preview, On);
+   everything else stays in the ink scale.
+
+   The marker's hue drifts slowly round the whole wheel. It is built in OKLCH
+   so lightness and chroma hold still while only the hue moves — every colour
+   it passes through is equally bright, and the dark text on it stays
+   readable the whole way round (HSL would flare at yellow and sink at blue). */
+
+@property --hue {
+    syntax: "<number>";
+    inherits: true;
+    initial-value: 95; /* marker yellow */
+}
+
+@keyframes acHueCycle {
+    from { --hue: 95; }
+    to   { --hue: 455; }
+}
+
+:root {
+    animation: acHueCycle 24s linear infinite;
+
+    --marker-l: 0.86;
+    --marker-c: 0.14;
+    --ink: #141a29;          /* page */
+    --panel: #1c2438;        /* grouped settings */
+    --raised: #242d45;       /* hover, inputs, keys */
+    --line: #2a3350;
+    --line-strong: #3a4566;
+
+    --text: #eceff6;
+    --muted: #a3abc2;
+    --dim: #828ba5;
+
+    --marker: oklch(var(--marker-l) var(--marker-c) var(--hue));
+    --marker-hover: oklch(0.91 0.12 var(--hue));
+    --marker-ink: oklch(0.22 0.05 var(--hue));   /* text on marker */
+    --marker-soft: oklch(var(--marker-l) var(--marker-c) var(--hue) / 0.14);
+    --marker-line: oklch(var(--marker-l) var(--marker-c) var(--hue) / 0.45);
+    /* A short run of the spectrum trailing behind the current hue, so filled
+       tracks read as a stroke of the cycle rather than a flat block. */
+    --marker-trail: oklch(var(--marker-l) var(--marker-c) calc(var(--hue) - 70));
+
+    --stop: #f07a6e;         /* speaking — press to stop */
+    --stop-ink: #2a0d0a;
+
+    --font: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    --r-sm: 6px;
+    --r-md: 10px;
+    --r-lg: 14px;
+
+    /* Older names still read by shared/theme.css consumers and inline styles. */
+    --ac-accent: var(--marker);
+    --ac-accent-strong: var(--marker);
+    --ac-accent-soft: var(--marker-soft);
+    --ac-accent-glow: var(--marker-line);
+    --ac-surface: var(--panel);
+    --ac-text: var(--text);
+    --ac-text-muted: var(--muted);
+    --ac-danger: var(--stop);
+}
+
+/* ── Reset ─────────────────────────────────────────────────── */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+    display: none;
+}
+
+html, body {
+    width: 350px;
+    background: var(--ink);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    line-height: 1.4;
+    user-select: none;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+button {
+    font-family: inherit;
+    color: inherit;
+}
+
+button:focus-visible,
+[role="button"]:focus-visible,
+.switch-modern input:focus-visible + .switch-slider,
+.custom-dropdown-item:focus-visible {
+    outline: 2px solid var(--marker);
+    outline-offset: 2px;
+}
+
+.app {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 16px 12px;
+}
+
+.app.off .app-main,
+.app.off .app-footer {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+/* ── Header ────────────────────────────────────────────────── */
+
+.app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-icon-wrap {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    display: grid;
+    place-items: center;
+}
+
+.brand-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.brand-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-title {
+    font-size: 15px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+}
+
+.brand-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: var(--muted);
+}
+
+.status-indicator {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--marker);
+}
+
+.app.off .status-indicator {
+    background: var(--dim);
+}
+
+/* ── Tabs ──────────────────────────────────────────────────── */
+
+.popup-tabs {
+    display: flex;
+    gap: 18px;
+    border-bottom: 1px solid var(--line);
+}
+
+.popup-tab {
+    padding: 4px 0 9px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dim);
+    background: none;
+    border: none;
+    cursor: pointer;
+    box-shadow: inset 0 -2px 0 transparent;
+    transition: color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.popup-tab:hover {
+    color: var(--text);
+}
+
+.popup-tab.active {
+    color: var(--text);
+    box-shadow: inset 0 -2px 0 var(--marker);
+}
+
+/* ── Panels ────────────────────────────────────────────────── */
+
+.app-main {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+}
+
+.card-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+}
+
+.card-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.badge-count {
+    font-size: 11.5px;
+    color: var(--dim);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Voice ─────────────────────────────────────────────────── */
+
+.voice-section {
+    gap: 8px;
+}
+
+.voice-selector-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 -6px;
+    padding: 6px;
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.voice-selector-card:hover {
+    background: var(--raised);
+}
+
+.voice-avatar {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--r-md);
+    display: grid;
+    place-items: center;
+    background: var(--ink);
+    border: 1px solid var(--line);
+    font-family: "Segoe UI Emoji", "Apple Color Emoji", var(--font);
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+}
+
+.voice-meta {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.voice-primary {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+
+.voice-name {
+    font-size: 15px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.voice-secondary {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#current-voice-country:not(:empty) + #current-voice-gender:not(:empty)::before {
+    content: ", ";
+}
+
+.voice-chevron {
+    display: flex;
+    color: var(--dim);
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.voice-selector-card:hover .voice-chevron {
+    color: var(--text);
+    transform: translateX(2px);
+}
+
+/* ── Badges ────────────────────────────────────────────────── */
+
+.pill-badge {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 1px 6px;
+    border-radius: 5px;
+    border: 1px solid var(--line-strong);
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--muted);
+}
+
+/* Natural AI voices are the ones worth pointing out; the rest stay neutral. */
+.badge-ai {
+    color: var(--marker);
+    background: var(--marker-soft);
+    border-color: transparent;
+}
+
+/* ── Speed, pitch, repeat ──────────────────────────────────── */
+
+.settings-section {
+    gap: 12px;
+}
+
+.setting-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.setting-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+}
+
+.setting-label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.setting-val {
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--marker);
+}
+
+.setting-desc {
+    font-size: 11.5px;
+    color: var(--dim);
+}
+
+.divider {
+    height: 1px;
+    margin: 0 -14px;
+    background: var(--line);
+}
+
+.slider-wrap {
+    display: flex;
+    align-items: center;
+    padding: 3px 0;
+}
+
+input[type="range"] {
+    --thumb: 16px;
+    /* The thumb's centre travels from thumb/2 to 100% - thumb/2, so the fill
+       stop sits on that same line. --pct is 0–1, set by popup.js. */
+    --stop-at: calc(var(--thumb) / 2 + (100% - var(--thumb)) * var(--pct, 0.5));
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background:
+        linear-gradient(to right, transparent var(--stop-at), var(--line) var(--stop-at)),
+        linear-gradient(to right, var(--marker-trail), var(--marker));
+    background-size: 100% 100%, var(--stop-at) 100%;
+    background-repeat: no-repeat;
+    outline: none;
+    cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: var(--thumb);
+    height: var(--thumb);
+    border-radius: 50%;
+    background: var(--text);
+    border: 3px solid var(--panel);
+    box-shadow: 0 0 0 1px var(--line-strong);
+    cursor: grab;
+    transition: box-shadow 0.15s ease;
+}
+
+input[type="range"]:hover::-webkit-slider-thumb,
+input[type="range"]:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 1px var(--marker), 0 0 0 6px var(--marker-soft);
+}
+
+input[type="range"]:active::-webkit-slider-thumb {
+    cursor: grabbing;
+}
+
+.slider-scale {
+    display: flex;
+    justify-content: space-between;
+    margin-top: -2px;
+    font-size: 11px;
+    color: var(--dim);
+}
+
+.speed-chips {
+    display: flex;
+    gap: 5px;
+}
+
+.speed-pill {
+    flex: 1;
+    padding: 5px 0;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: none;
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+
+.speed-pill:hover {
+    color: var(--text);
+    border-color: var(--line-strong);
+}
+
+.speed-pill.active {
+    background: var(--marker);
+    border-color: var(--marker);
+    color: var(--marker-ink);
+}
+
+.setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.setting-label-block {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+/* ── Switches ──────────────────────────────────────────────── */
+
+.switch-modern {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    width: 36px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.switch-modern input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch-slider {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: var(--line);
+    transition: background 0.2s ease;
+}
+
+.switch-slider::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.switch-modern input:checked + .switch-slider {
+    background: var(--marker);
+}
+
+.switch-modern input:checked + .switch-slider::before {
+    transform: translateX(16px);
+    background: var(--marker-ink);
+}
+
+.switch-modern.sm {
+    width: 32px;
+    height: 18px;
+}
+
+.switch-modern.sm .switch-slider::before {
+    width: 12px;
+    height: 12px;
+}
+
+.switch-modern.sm input:checked + .switch-slider::before {
+    transform: translateX(14px);
+}
+
+/* ── Actions ───────────────────────────────────────────────── */
+
+.actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.btn-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 12px;
+    border-radius: var(--r-md);
+    border: 1px solid transparent;
+    font-size: 13px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-action:active {
+    transform: translateY(1px);
+}
+
+.btn-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.btn-primary {
+    background: var(--marker);
+    color: var(--marker-ink);
+}
+
+.btn-primary:hover {
+    background: var(--marker-hover);
+}
+
+/* Requested, nothing audible yet — the neural synthesis is still in flight. */
+.btn-primary.loading {
+    background: var(--marker-soft);
+    color: var(--marker);
+    animation: acPreviewPulse 1.4s ease-in-out infinite;
+}
+
+.btn-primary.speaking {
+    background: var(--stop);
+    color: var(--stop-ink);
+}
+
+.btn-secondary {
+    background: none;
+    border-color: var(--line-strong);
+    color: var(--text);
+}
+
+.btn-secondary:hover {
+    background: var(--raised);
+}
+
+/* ── Shortcuts ─────────────────────────────────────────────── */
+
+/* The tab already names this screen. */
+.shortcuts-full-card > .card-header {
+    display: none;
+}
+
+.keybind-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.keybind-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    font-size: 12.5px;
+    color: var(--muted);
+}
+
+.keybind-row + .keybind-row {
+    border-top: 1px solid var(--line);
+}
+
+.keybind-row-editable {
+    align-items: flex-start;
+}
+
+.keybind-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.keybind-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.keybind-note {
+    font-size: 11.5px;
+    color: var(--dim);
+    line-height: 1.35;
+}
+
+.keybind-error {
+    color: var(--stop);
+}
+
+.keybind-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.keybind-key,
+kbd {
+    padding: 3px 8px;
+    border-radius: var(--r-sm);
+    background: var(--raised);
+    border: 1px solid var(--line-strong);
+    border-bottom-width: 2px;
+    font-family: var(--font);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+button.keybind-edit {
+    min-width: 66px;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+}
+
+button.keybind-edit:hover {
+    border-color: var(--marker-line);
+}
+
+.keybind-row-editable.capturing .keybind-edit {
+    border-color: var(--marker);
+    background: var(--marker-soft);
+    color: var(--marker);
+    animation: acPreviewPulse 1.2s ease-in-out infinite;
+}
+
+.keybind-reset-one {
+    padding: 3px 5px;
+    border: none;
+    border-radius: var(--r-sm);
+    background: none;
+    font-size: 13px;
+    line-height: 1;
+    color: var(--dim);
+    cursor: pointer;
+}
+
+.keybind-reset-one:hover {
+    color: var(--text);
+    background: var(--raised);
+}
+
+.keybind-static {
+    color: var(--muted);
+}
+
+.shortcuts-footer {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    font-size: 11.5px;
+    line-height: 1.4;
+    color: var(--dim);
+}
+
+.info-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.shortcuts-change-hint {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    padding: 0 2px;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--dim);
+}
+
+.shortcuts-change-hint svg {
+    flex-shrink: 0;
+}
+
+.link-btn {
+    padding: 0;
+    border: none;
+    background: none;
+    font-size: 11.5px;
+    color: var(--text);
+    text-decoration: underline;
+    text-decoration-color: var(--marker-line);
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.link-btn:hover {
+    text-decoration-color: var(--marker);
+}
+
+/* ── Footer ────────────────────────────────────────────────── */
+
+.app-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0 2px;
+    font-size: 11.5px;
+    color: var(--dim);
+}
+
+.footer-hint {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.footer-reset-btn {
+    flex-shrink: 0;
+    padding: 2px 0;
+    border: none;
+    background: none;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.footer-reset-btn:hover {
+    color: var(--text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* ── Voice library ─────────────────────────────────────────── */
+
+.voice-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    background: var(--ink);
+}
+
+.voice-modal-dialog {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.voice-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px 10px;
+}
+
+.voice-modal-title {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 650;
+}
+
+.btn-modal-close {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.btn-modal-close:hover {
+    background: var(--raised);
+    color: var(--text);
+}
+
+.voice-modal-search-wrap {
+    padding: 0 16px 8px;
+}
+
+.search-input-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-svg {
+    position: absolute;
+    left: 11px;
+    width: 14px;
+    height: 14px;
+    color: var(--dim);
+    pointer-events: none;
+}
+
+#voice-search-input {
+    width: 100%;
+    padding: 8px 10px 8px 32px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-md);
+    background: var(--panel);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 12.5px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+#voice-search-input:focus {
+    border-color: var(--marker);
+    box-shadow: 0 0 0 3px var(--marker-soft);
+}
+
+#voice-search-input::placeholder {
+    color: var(--dim);
+}
+
+.voice-modal-filters-bar {
+    position: relative;
+    z-index: 50;
+    display: flex;
+    gap: 6px;
+    padding: 0 16px 10px;
+    border-bottom: 1px solid var(--line);
+}
+
+.custom-dropdown {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+
+.custom-dropdown-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    padding: 6px 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    font-size: 11.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.12s ease;
+}
+
+.custom-dropdown-btn:hover,
+.custom-dropdown.open .custom-dropdown-btn {
+    border-color: var(--line-strong);
+}
+
+.custom-dropdown-val {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: left;
+}
+
+.custom-dropdown-arrow {
+    flex-shrink: 0;
+    color: var(--dim);
+    transition: transform 0.15s ease;
+}
+
+.custom-dropdown.open .custom-dropdown-arrow {
+    transform: rotate(180deg);
+    color: var(--text);
+}
+
+.custom-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 100;
+    min-width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 4px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-md);
+    background: var(--panel);
+    box-shadow: 0 12px 28px rgba(5, 8, 16, 0.6);
+}
+
+#dropdown-lang {
+    flex: 1.25;
+}
+
+#dropdown-lang .custom-dropdown-menu {
+    min-width: 160px;
+}
+
+.custom-dropdown.open .custom-dropdown-menu {
+    display: block;
+}
+
+.custom-dropdown-item {
+    padding: 6px 8px;
+    border-radius: var(--r-sm);
+    font-size: 12px;
+    white-space: nowrap;
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.custom-dropdown-item:hover {
+    background: var(--raised);
+    color: var(--text);
+}
+
+.custom-dropdown-item.active {
+    color: var(--marker);
+    font-weight: 600;
+}
+
+.voice-modal-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 10px;
+    overflow-y: auto;
+}
+
+.voice-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px;
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+
+.voice-item:hover {
+    background: var(--panel);
+}
+
+.voice-item.selected {
+    background: var(--panel);
+    box-shadow: inset 3px 0 0 var(--marker);
+}
+
+.voice-item-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.voice-item-flag {
+    flex-shrink: 0;
+    width: 22px;
+    text-align: center;
+    font-family: "Segoe UI Emoji", "Apple Color Emoji", var(--font);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--dim);
+}
+
+/* In a long list the yellow badge would repeat on every row and drown out
+   the selection marker, so it goes quiet here. */
+.voice-item .badge-ai {
+    color: var(--muted);
+    background: none;
+    border-color: var(--line-strong);
+}
+
+.voice-item-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.voice-item-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.voice-item-sub {
+    font-size: 11.5px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.voice-empty {
+    padding: 36px 12px;
+    text-align: center;
+}
+
+.voice-empty-title {
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.voice-empty-hint {
+    margin-top: 5px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.btn-item-preview {
+    /* The label swaps between "▶ Preview", "Loading…" and "■ Stop", so the
+       button reserves the width of the longest and the row never shifts. */
+    flex-shrink: 0;
+    min-width: 70px;
+    padding: 4px 8px;
+    border: 1px solid var(--line-strong);
+    border-radius: 7px;
+    background: none;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.btn-item-preview:hover {
+    background: var(--marker);
+    border-color: var(--marker);
+    color: var(--marker-ink);
+}
+
+/* Requested, but nothing audible yet: a neural voice is synthesized over the
+   network, so there is a real wait before the first sound. */
+.btn-item-preview.loading,
+.btn-item-preview.loading:hover {
+    background: var(--marker-soft);
+    border-color: var(--marker-line);
+    color: var(--marker);
+    animation: acPreviewPulse 1.4s ease-in-out infinite;
+}
+
+/* Speaking. Coral, and reading "Stop", because that is what pressing it does —
+   the same signal the main Preview button uses. */
+.btn-item-preview.playing,
+.btn-item-preview.playing:hover {
+    background: var(--stop);
+    border-color: var(--stop);
+    color: var(--stop-ink);
+}
+
+@keyframes acPreviewPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before {
+        transition: none !important;
+        animation: none !important;
+    }
+}

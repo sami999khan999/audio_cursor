@@ -75,10 +75,10 @@ node build.js          # bundles src/ → extension-build/
 
 1. Open `chrome://extensions` in your browser.
 2. Toggle **Developer mode** on (top right).
-3. Click **Load unpacked** and select the project folder.
+3. Click **Load unpacked** and select the `extension-build/` folder.
 4. Pin **Audio Cursor** to your toolbar 📌.
 
-> `extension-build/` is committed, so you can skip the build step if you only want to try it.
+> `extension-build/` is the complete extension and is committed, so on any device you can skip the build step and load it straight from a clone.
 
 ---
 
@@ -151,10 +151,10 @@ Settings are synced to your Chrome profile with `chrome.storage.sync`:
 
 ```
 audio_cursor/
-├── manifest.json              # MV3 extension manifest
 ├── build.js                   # Lightweight zero-dependency bundler
 ├── rules.json                 # DeclarativeNetRequest rules
 ├── src/
+│   ├── manifest.json          # MV3 extension manifest (paths relative to extension-build/)
 │   ├── background/
 │   │   └── background.js      # Background service worker & orchestration
 │   ├── content/
@@ -182,7 +182,7 @@ audio_cursor/
 │       ├── webSpeech.js       # Chrome's built-in speechSynthesis voices
 │       ├── theme.css          # Shared design tokens
 │       └── voices.json        # 340+ voice catalog
-└── extension-build/           # Bundled build output loaded by Chrome
+└── extension-build/           # The built extension (committed): Load unpacked selects this
 ```
 
 ---

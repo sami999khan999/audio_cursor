@@ -2,6 +2,8 @@ const fs = require('fs');
 const path = require('path');
 
 const SRC_DIR = path.join(__dirname, 'src');
+// extension-build/ is the whole extension (manifest, popup, icons): Load unpacked selects it.
+// It is committed, so any device can load it without building.
 const DIST_DIR = path.join(__dirname, 'extension-build');
 
 // Ensure extension-build directory exists
@@ -35,6 +37,7 @@ function copyFile(srcRel, distRel) {
     const srcPath = path.join(SRC_DIR, srcRel);
     const distPath = path.join(DIST_DIR, distRel);
     if (fs.existsSync(srcPath)) {
+        fs.mkdirSync(path.dirname(distPath), { recursive: true });
         fs.copyFileSync(srcPath, distPath);
         console.log(`✅ Copied: extension-build/${distRel}`);
     }
@@ -52,6 +55,13 @@ bundle(['shared/chunk.js', 'shared/cloudTts.js', 'background/background.js'], 'b
 // Synthesis lives here because declarativeNetRequest header rules are not applied
 // to WebSocket upgrades started from a service worker (crbug.com/1285664).
 bundle(['shared/chunk.js', 'shared/cloudTts.js', 'shared/edgeTts.js', 'shared/webSpeech.js', 'shared/exportPipeline.js', 'shared/exportStore.js', 'offscreen/offscreen.js'], 'offscreen.js');
+
+// Copy the manifest (its paths are relative to extension-build/)
+copyFile('manifest.json', 'manifest.json');
+
+// Copy the Popup as-is: popup.html loads its own files and ../shared/ scripts directly
+['popup/popup.html', 'popup/popup.css', 'popup/popup.js',
+ 'shared/theme.css', 'shared/cloudTts.js', 'shared/webSpeech.js'].forEach(file => copyFile(file, file));
 
 // Copy Offscreen shell and Shared Assets
 copyFile('offscreen/offscreen.html', 'offscreen.html');

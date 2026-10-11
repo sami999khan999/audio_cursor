@@ -223,17 +223,10 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadAllVoices() {
         let neuralVoices = [];
         try {
-            const url = chrome.runtime.getURL('extension-build/voices.json');
-            const resp = await fetch(url);
+            const resp = await fetch(chrome.runtime.getURL('voices.json'));
             neuralVoices = await resp.json();
-        } catch (e) {
-            try {
-                const url2 = chrome.runtime.getURL('src/shared/voices.json');
-                const resp2 = await fetch(url2);
-                neuralVoices = await resp2.json();
-            } catch (err) {
-                console.warn('Could not load voices.json:', err);
-            }
+        } catch (err) {
+            console.warn('Could not load voices.json:', err);
         }
 
         const chromeVoices = await WebSpeech.listVoices();
