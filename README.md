@@ -52,13 +52,13 @@ node build.js
 ```
 1. Navigate to `chrome://extensions` in Chromium browsers.
 2. Enable **Developer mode** (top right).
-3. Click **Load unpacked** and select `audio_cursor-browser-extention/extension-build/` (committed, so building is optional).
+3. Click **Load unpacked** and select `audio_cursor-browser-extention/release/` (committed, so building is optional).
 
 ### 2. VS Code Extension
 ```bash
 cd audio_cursor-vscode-extention
-npx @vscode/vsce package
-code --install-extension audio-cursor-0.7.0.vsix --force
+code --install-extension release/audio-cursor-0.8.6.vsix --force   # committed, no build needed
+npm run package   # rebuilds release/audio-cursor-<version>.vsix
 ```
 
 ---
@@ -76,7 +76,7 @@ audio_cursor/
 │   │   ├── offscreen/
 │   │   ├── popup/
 │   │   └── shared/
-│   └── extension-build/   # the built extension, committed
+│   └── release/   # the built extension, committed
 └── audio_cursor-vscode-extention/      # Visual Studio Code extension
     ├── package.json
     ├── media/

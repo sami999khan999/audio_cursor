@@ -70,15 +70,15 @@ Audio Cursor can be loaded directly as an unpacked extension:
 ```bash
 git clone https://github.com/sami999khan999/audio_cursor.git audio-cursor
 cd audio-cursor
-node build.js          # bundles src/ → extension-build/
+node build.js          # bundles src/ → release/
 ```
 
 1. Open `chrome://extensions` in your browser.
 2. Toggle **Developer mode** on (top right).
-3. Click **Load unpacked** and select the `extension-build/` folder.
+3. Click **Load unpacked** and select the `release/` folder.
 4. Pin **Audio Cursor** to your toolbar 📌.
 
-> `extension-build/` is the complete extension and is committed, so on any device you can skip the build step and load it straight from a clone.
+> `release/` is the complete extension and is committed, so on any device you can skip the build step and load it straight from a clone.
 
 ---
 
@@ -154,7 +154,7 @@ audio_cursor/
 ├── build.js                   # Lightweight zero-dependency bundler
 ├── rules.json                 # DeclarativeNetRequest rules
 ├── src/
-│   ├── manifest.json          # MV3 extension manifest (paths relative to extension-build/)
+│   ├── manifest.json          # MV3 extension manifest (paths relative to release/)
 │   ├── background/
 │   │   └── background.js      # Background service worker & orchestration
 │   ├── content/
@@ -182,7 +182,7 @@ audio_cursor/
 │       ├── webSpeech.js       # Chrome's built-in speechSynthesis voices
 │       ├── theme.css          # Shared design tokens
 │       └── voices.json        # 340+ voice catalog
-└── extension-build/           # The built extension (committed): Load unpacked selects this
+└── release/           # The built extension (committed): Load unpacked selects this
 ```
 
 ---

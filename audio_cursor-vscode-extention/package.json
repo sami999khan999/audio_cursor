@@ -322,6 +322,7 @@
     }
   },
   "scripts": {
+    "package": "npx --yes @vscode/vsce package --out release/",
     "test": "node --test test/chunk.test.js test/player-queue.test.js test/extension.test.js test/host-engine.test.js test/keybindings.test.js test/external-control.test.js"
   },
   "devDependencies": {

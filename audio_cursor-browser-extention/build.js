@@ -2,11 +2,11 @@ const fs = require('fs');
 const path = require('path');
 
 const SRC_DIR = path.join(__dirname, 'src');
-// extension-build/ is the whole extension (manifest, popup, icons): Load unpacked selects it.
+// release/ is the whole extension (manifest, popup, icons): Load unpacked selects it.
 // It is committed, so any device can load it without building.
-const DIST_DIR = path.join(__dirname, 'extension-build');
+const DIST_DIR = path.join(__dirname, 'release');
 
-// Ensure extension-build directory exists
+// Ensure release directory exists
 if (!fs.existsSync(DIST_DIR)) {
     fs.mkdirSync(DIST_DIR, { recursive: true });
 }
@@ -30,7 +30,7 @@ function bundle(files, outputName, isCss = false) {
     }
 
     fs.writeFileSync(outputPath, output, 'utf-8');
-    console.log(`✅ Build complete: extension-build/${outputName} (${(fs.statSync(outputPath).size / 1024).toFixed(1)} KB)`);
+    console.log(`✅ Build complete: release/${outputName} (${(fs.statSync(outputPath).size / 1024).toFixed(1)} KB)`);
 }
 
 function copyFile(srcRel, distRel) {
@@ -39,7 +39,7 @@ function copyFile(srcRel, distRel) {
     if (fs.existsSync(srcPath)) {
         fs.mkdirSync(path.dirname(distPath), { recursive: true });
         fs.copyFileSync(srcPath, distPath);
-        console.log(`✅ Copied: extension-build/${distRel}`);
+        console.log(`✅ Copied: release/${distRel}`);
     }
 }
 
@@ -56,7 +56,7 @@ bundle(['shared/chunk.js', 'shared/cloudTts.js', 'background/background.js'], 'b
 // to WebSocket upgrades started from a service worker (crbug.com/1285664).
 bundle(['shared/chunk.js', 'shared/cloudTts.js', 'shared/edgeTts.js', 'shared/webSpeech.js', 'shared/exportPipeline.js', 'shared/exportStore.js', 'offscreen/offscreen.js'], 'offscreen.js');
 
-// Copy the manifest (its paths are relative to extension-build/)
+// Copy the manifest (its paths are relative to release/)
 copyFile('manifest.json', 'manifest.json');
 
 // Copy the Popup as-is: popup.html loads its own files and ../shared/ scripts directly
@@ -80,6 +80,6 @@ const rootRules = path.join(__dirname, 'rules.json');
 const distRules = path.join(DIST_DIR, 'rules.json');
 if (fs.existsSync(rootRules)) {
     fs.copyFileSync(rootRules, distRules);
-    console.log('✅ Copied: extension-build/rules.json');
+    console.log('✅ Copied: release/rules.json');
 }
 
