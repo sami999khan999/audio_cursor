@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Audio Cursor",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "Read any page like a text editor — click to place a cursor, select with the keyboard, and listen to it.",
   "permissions": [
     "storage",
@@ -15,6 +15,7 @@
   "host_permissions": [
     "*://speech.platform.bing.com/*",
     "wss://speech.platform.bing.com/*",
+    "wss://api.msedgeservices.com/*",
     "https://translate.google.com/*"
   ],
   "commands": {

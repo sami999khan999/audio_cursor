@@ -2,6 +2,13 @@
 
 All notable changes to the "audio-cursor" extension will be documented in this file.
 
+## [0.8.7]
+
+### Fixed
+- **Every neural voice failed with "Unexpected server response: 403".** Microsoft moved the Edge
+  read-aloud service to `api.msedgeservices.com`, with the client key in `Ocp-Apim-Subscription-Key`,
+  and now refuses the old address. msedge-tts 2.1.0 uses the new one.
+
 ## [0.8.6]
 
 ### Fixed

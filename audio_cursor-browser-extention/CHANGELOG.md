@@ -2,6 +2,13 @@
 
 All notable changes to the Audio Cursor browser extension are documented here.
 
+## [2.2.2]
+
+### Fixed
+- **Every neural voice failed with "Unexpected server response: 403".** Microsoft moved the Edge
+  read-aloud service to `api.msedgeservices.com`, with the client key in `Ocp-Apim-Subscription-Key`,
+  and now refuses the old address. Speech connects there (host permission and header rule added).
+
 ## [2.2.1]
 
 ### Changed

@@ -2,7 +2,7 @@
   "name": "audio-cursor",
   "displayName": "Audio Cursor",
   "description": "Text-to-speech reading with word highlighting directly in your editor",
-  "version": "0.8.6",
+  "version": "0.8.7",
   "publisher": "ProdigyCorp",
   "icon": "media/icon.png",
   "license": "MIT",
@@ -331,6 +331,6 @@
   },
   "dependencies": {
     "jsonc-parser": "^3.3.1",
-    "msedge-tts": "^2.0.7"
+    "msedge-tts": "^2.1.0"
   }
 }
