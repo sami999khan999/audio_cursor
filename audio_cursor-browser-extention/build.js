@@ -54,7 +54,7 @@ bundle(['shared/chunk.js', 'shared/cloudTts.js', 'background/background.js'], 'b
 // Bundle the Offscreen document with the Edge Neural TTS client.
 // Synthesis lives here because declarativeNetRequest header rules are not applied
 // to WebSocket upgrades started from a service worker (crbug.com/1285664).
-bundle(['shared/chunk.js', 'shared/cloudTts.js', 'shared/edgeTts.js', 'shared/webSpeech.js', 'shared/exportPipeline.js', 'shared/exportStore.js', 'offscreen/offscreen.js'], 'offscreen.js');
+bundle(['shared/chunk.js', 'shared/cloudTts.js', 'shared/edgeToken.js', 'shared/edgeTts.js', 'shared/webSpeech.js', 'shared/exportPipeline.js', 'shared/exportStore.js', 'offscreen/offscreen.js'], 'offscreen.js');
 
 // Copy the manifest (its paths are relative to release/)
 copyFile('manifest.json', 'manifest.json');

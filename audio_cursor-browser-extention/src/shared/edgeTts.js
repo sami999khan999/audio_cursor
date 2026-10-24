@@ -2,8 +2,8 @@
 // Connects to Microsoft Edge TTS cloud service and streams MP3 audio.
 // Runs natively in Chrome MV3 service worker, popup, and offscreen document.
 
-const TRUSTED_CLIENT_TOKEN = '6A5AA1D4EAFF4E9FB37E23D68491D6F4';
-const WINDOWS_FILE_TIME_EPOCH = 11644473600n;
+// The socket address and its Sec-MS-GEC token come from edgeToken.js (bundled before this file).
+const EdgeToken = globalThis.EdgeToken || require('./edgeToken.js');
 const OUTPUT_FORMAT = 'audio-24khz-48kbitrate-mono-mp3';
 
 function uuid() {
@@ -35,21 +35,6 @@ function rateToPercent(rate) {
 function pitchToHz(pitch) {
     const hz = Math.round((pitch - 1.0) * 50);
     return hz >= 0 ? `+${hz}Hz` : `${hz}Hz`;
-}
-
-async function generateSecMsGec() {
-    try {
-        const ticks = BigInt(Math.floor(Date.now() / 1000) + Number(WINDOWS_FILE_TIME_EPOCH));
-        const roundedTicks = (ticks - (ticks % 300n)) * 10000000n;
-        const strToHash = `${roundedTicks}${TRUSTED_CLIENT_TOKEN}`;
-        const encoder = new TextEncoder();
-        const data = encoder.encode(strToHash);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
-    } catch (e) {
-        return '6A5AA1D4EAFF4E9FB37E23D68491D6F4';
-    }
 }
 
 function buildSsml(text, voice = 'en-US-JennyNeural', rate = 1.0, pitch = 1.0) {
@@ -120,9 +105,8 @@ function mergeChunks(chunks) {
 function createSession(options = {}) {
     const connectTimeoutMs = options.connectTimeoutMs || 15000;
 
-    return generateSecMsGec().then((secMsGec) => new Promise((resolve, reject) => {
-        const connId = uuid().replace(/-/g, '');
-        const wsUrl = `wss://api.msedgeservices.com/tts/cognitiveservices/websocket/v1?Ocp-Apim-Subscription-Key=${TRUSTED_CLIENT_TOKEN}&Sec-MS-GEC=${secMsGec}&Sec-MS-GEC-Version=1-143.0.3650.96&ConnectionId=${connId}`;
+    return new Promise((resolve, reject) => {
+        const wsUrl = EdgeToken.edgeSynthUrl();
 
         let ws;
         try {
@@ -317,7 +301,7 @@ function createSession(options = {}) {
                 failPending('Speech connection closed');
             }
         };
-    }));
+    });
 }
 
 /**
@@ -346,5 +330,5 @@ async function synthesize(text, voice = 'en-US-JennyNeural', rate = 1.0, pitch =
     }
 }
 
-globalThis.EdgeTTS = { synthesize, createSession, escapeXml, generateSecMsGec, uint8ToBase64, buildSsml };
+globalThis.EdgeTTS = { synthesize, createSession, escapeXml, uint8ToBase64, buildSsml };
 if (typeof module !== 'undefined' && module.exports) module.exports = globalThis.EdgeTTS;

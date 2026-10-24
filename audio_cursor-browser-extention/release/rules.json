@@ -18,7 +18,7 @@
       ]
     },
     "condition": {
-      "regexFilter": "^(https?|wss?)://(speech\\.platform\\.bing\\.com|api\\.msedgeservices\\.com)/",
+      "regexFilter": "^(https?|wss?)://speech\\.platform\\.bing\\.com/",
       "resourceTypes": [
         "websocket",
         "xmlhttprequest",

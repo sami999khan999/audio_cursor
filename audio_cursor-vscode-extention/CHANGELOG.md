@@ -2,6 +2,15 @@
 
 All notable changes to the "audio-cursor" extension will be documented in this file.
 
+## [0.8.8]
+
+### Fixed
+- **Every neural voice failed again, now with "Unexpected server response: 200".**
+  `api.msedgeservices.com` stopped opening the socket, and `speech.platform.bing.com` wants a new
+  `Sec-MS-GEC` token (version `2-143.0.3650.75`: a SHA-256 resumed from a fixed state plus
+  Microsoft's CS64 checksum). `edgeToken.js` makes it, ported from edge-tts 7.3.1, and speech
+  connects to `speech.platform.bing.com` again (msedge-tts 2.1.0 still sends the old token, so its address is replaced).
+
 ## [0.8.7]
 
 ### Fixed

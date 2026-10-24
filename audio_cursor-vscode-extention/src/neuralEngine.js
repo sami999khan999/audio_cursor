@@ -1,6 +1,12 @@
 const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
+const { edgeSynthUrl } = require('./edgeToken');
 const log = require('./log');
 const defaultVoices = require('./voices.json');
+
+// msedge-tts 2.1.0 still sends the version 1 token to api.msedgeservices.com, which no longer
+// opens the socket (it answers 200). Our own address and version 2 token, on msedge-tts' clock
+// (it corrects it from the server's Date when a handshake is refused).
+MsEdgeTTS.getSynthUrl = async () => edgeSynthUrl(Date.now() + (MsEdgeTTS._clockOffsetMs || 0));
 
 /**
  * Escapes XML special characters for safe inclusion in SSML.
